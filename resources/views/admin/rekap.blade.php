@@ -126,11 +126,18 @@
                             Reset Filter
                         </a>
                     @endif
-                    <button type="button" onclick="window.print()"
-                        class="ml-auto px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
-                        <i class="ph ph-printer text-base"></i>
-                        Cetak Laporan
-                    </button>
+                    <div class="ml-auto flex items-center gap-2">
+                        <a href="{{ route('rekap.export', request()->query()) }}"
+                            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
+                            <i class="ph ph-file-csv text-base"></i>
+                            Export Excel / CSV
+                        </a>
+                        <button type="button" onclick="window.print()"
+                            class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
+                            <i class="ph ph-printer text-base"></i>
+                            Cetak PDF / Print
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

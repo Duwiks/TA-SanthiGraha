@@ -74,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Rekap & Laporan Route
     Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+    Route::get('/rekap/export', [RekapController::class, 'export'])->name('rekap.export');
 
     // Data Akun Pegawai
     Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
