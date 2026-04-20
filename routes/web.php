@@ -5,6 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\RekapController;
 
 Route::get('/', function () {
     return redirect('/dashboard');
@@ -70,7 +73,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
 
     // Rekap & Laporan Route
-    Route::get('/rekap', function () {
-        return view('admin.rekap');
-    })->name('rekap.index');
+    Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+
+    // Data Akun Pegawai
+    Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
+    Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword'])->name('pegawai.resetPassword');
+
+    // Pengaturan Akun
+    Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+    Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
 });

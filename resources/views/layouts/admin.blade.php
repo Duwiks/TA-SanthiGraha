@@ -81,6 +81,11 @@
                 <span class="text-[15px]">Manajemen Proyek</span>
             </a>
 
+            <a href="{{ route('pegawai.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors @if(request()->routeIs('pegawai.*')) bg-indigo-50/70 text-brand-600 font-medium @endif">
+                <i class="ph ph-identification-badge text-[22px]"></i>
+                <span class="text-[15px]">Data Akun Pegawai</span>
+            </a>
+
             <!-- Dropdown Master Data -->
             <div x-data="{ open: true }" class="pt-1">
                 <button type="button" onclick="toggleDropdown()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
@@ -103,7 +108,7 @@
                 <span class="text-[15px]">Rekap & Laporan</span>
             </a>
 
-            <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+            <a href="{{ route('account.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors @if(request()->routeIs('account.*')) bg-indigo-50/70 text-brand-600 font-medium @endif">
                 <i class="ph ph-gear text-[22px]"></i>
                 <span class="text-[15px]">Pengaturan Akun</span>
             </a>

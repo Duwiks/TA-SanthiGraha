@@ -63,7 +63,7 @@
                 <span class="text-[15px]">Transaksi</span>
             </a>
 
-            <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+            <a href="{{ route('account.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors @if(request()->routeIs('account.*')) bg-emerald-50/70 text-brand-600 font-medium @endif">
                 <i class="ph ph-gear text-[22px]"></i>
                 <span class="text-[15px]">Pengaturan Akun</span>
             </a>
