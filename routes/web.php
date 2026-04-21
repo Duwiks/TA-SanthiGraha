@@ -31,7 +31,39 @@ Route::middleware(['auth'])->group(function () {
                 $proyekAktif = \App\Models\Project::count();
                 $menungguApproval = \App\Models\Transaction::where('status', 'pending')->count();
                 $totalTransaksi = \App\Models\Transaction::count();
-                return view('admin.dashboard', compact('totalPegawai', 'proyekAktif', 'menungguApproval', 'totalTransaksi'));
+
+                // Chart Logic (Pemasukan vs Pengeluaran per Bulan)
+                $projectId = request('project_id');
+                $year = date('Y');
+
+                $chartQuery = \App\Models\Transaction::where('status', 'approved')
+                    ->whereYear('transaction_date', $year);
+
+                if ($projectId) {
+                    $chartQuery->where('project_id', $projectId);
+                }
+
+                $chartTransactions = $chartQuery->get(['amount', 'type', 'transaction_date']);
+
+                $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+                $pemasukanData = array_fill(0, 12, 0);
+                $pengeluaranData = array_fill(0, 12, 0);
+
+                foreach ($chartTransactions as $trx) {
+                    $monthIndex = (int)date('n', strtotime($trx->transaction_date)) - 1;
+                    if ($trx->type == 'pemasukan') {
+                        $pemasukanData[$monthIndex] += $trx->amount;
+                    } elseif ($trx->type == 'pengeluaran') {
+                        $pengeluaranData[$monthIndex] += $trx->amount;
+                    }
+                }
+
+                $projects = \App\Models\Project::orderBy('project_name')->get();
+
+                return view('admin.dashboard', compact(
+                    'totalPegawai', 'proyekAktif', 'menungguApproval', 'totalTransaksi',
+                    'months', 'pemasukanData', 'pengeluaranData', 'projects', 'projectId', 'year'
+                ));
             } else {
                 $transaksiDiajukan = \App\Models\Transaction::where('user_id', auth()->id())->count();
                 $menungguProses = \App\Models\Transaction::where('user_id', auth()->id())->where('status', 'pending')->count();
