@@ -22,6 +22,7 @@ class Transaction extends Model
         'receipt_photo',
         'status',
         'approved_by',
+        'nota_merah_id',
     ];
 
     // Relasi ke User pembuat (Pegawai)
@@ -52,5 +53,11 @@ class Transaction extends Model
     public function rejections()
     {
         return $this->hasMany(TransactionRejection::class, 'transaction_id');
+    }
+
+    // Relasi ke NotaMerah (jika transaksi ini berasal dari konfirmasi nota merah)
+    public function notaMerah()
+    {
+        return $this->belongsTo(NotaMerah::class, 'nota_merah_id');
     }
 }

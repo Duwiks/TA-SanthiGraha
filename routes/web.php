@@ -8,6 +8,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\RekapController;
+use App\Http\Controllers\NotaMerahController;
 
 Route::get('/', function () {
     return redirect('/dashboard');
@@ -115,4 +116,22 @@ Route::middleware(['auth'])->group(function () {
     // Pengaturan Akun
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+
+    // -------------------------------------------------------
+    // Nota Merah (Pre-Transaction Fund Request)
+    // -------------------------------------------------------
+    Route::get('/nota-merah', [NotaMerahController::class, 'index'])->name('nota-merah.index');
+    Route::get('/nota-merah/create', [NotaMerahController::class, 'create'])->name('nota-merah.create');
+    Route::post('/nota-merah', [NotaMerahController::class, 'store'])->name('nota-merah.store');
+    Route::get('/nota-merah/{id}', [NotaMerahController::class, 'show'])->name('nota-merah.show');
+    Route::delete('/nota-merah/{id}', [NotaMerahController::class, 'destroy'])->name('nota-merah.destroy');
+
+    // Aksi Admin
+    Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'approve'])->name('nota-merah.approve');
+    Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
+    Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
+
+    // Upload Realisasi (Pegawai setelah nota disetujui)
+    Route::get('/nota-merah/{id}/realisasi', [NotaMerahController::class, 'realisasiForm'])->name('nota-merah.realisasi.form');
+    Route::post('/nota-merah/{id}/realisasi', [NotaMerahController::class, 'storeRealisasi'])->name('nota-merah.realisasi.store');
 });
