@@ -69,10 +69,33 @@ class TransactionController extends Controller
             abort(403);
         }
 
-        $query = Transaction::query()->where('status', 'pending')->with(['user:id,name', 'project:id,project_name', 'category:id,category_name']);
-        $transactions = $query->orderBy('transaction_date', 'asc')->paginate(10);
+        // Antrean pending (menunggu aksi admin)
+        $transactions = Transaction::query()
+            ->where('status', 'pending')
+            ->with(['user:id,name', 'project:id,project_name', 'category:id,category_name'])
+            ->orderBy('created_at', 'asc')
+            ->paginate(10);
 
-        return view('admin.approvals', compact('transactions'));
+        // Riwayat: transaksi yang sudah diproses, dengan filter opsional
+        $historyQuery = Transaction::query()
+            ->with(['user:id,name', 'project:id,project_name', 'category:id,category_name', 'approver:id,name', 'rejections']);
+
+        if ($request->filled('filter_status') && in_array($request->filter_status, ['approved', 'rejected'])) {
+            $historyQuery->where('status', $request->filter_status);
+        } else {
+            $historyQuery->whereIn('status', ['approved', 'rejected']);
+        }
+
+        $history = $historyQuery->orderBy('updated_at', 'desc')
+            ->paginate(12, ['*'], 'history_page')
+            ->withQueryString();
+
+        $historyApprovedCount  = Transaction::where('status', 'approved')->count();
+        $historyRejectedCount  = Transaction::where('status', 'rejected')->count();
+
+        return view('admin.approvals', compact(
+            'transactions', 'history', 'historyApprovedCount', 'historyRejectedCount'
+        ));
     }
 
     public function create()
