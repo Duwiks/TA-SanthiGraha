@@ -161,11 +161,10 @@
                                             title="Perbaiki Data Transaksi">
                                             <i class="ph ph-pencil-simple"></i>
                                         </a>
-                                        <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" class="inline"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?');">
+                                        <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" id="delete-form-{{ $trx->id }}" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"
+                                            <button type="button" onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Apakah Anda yakin ingin membatalkan pengajuan ini?')"
                                                 class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200"
                                                 title="Batal/Hapus">
                                                 <i class="ph ph-trash"></i>

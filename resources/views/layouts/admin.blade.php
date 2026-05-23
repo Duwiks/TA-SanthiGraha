@@ -231,6 +231,28 @@
                 title: '{{ session('success') }}'
             });
         @endif
+
+        function confirmDelete(formId, message = 'Apakah Anda yakin ingin menghapus data ini?') {
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm mr-2',
+                    cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
     </script>
 </body>
 </html>

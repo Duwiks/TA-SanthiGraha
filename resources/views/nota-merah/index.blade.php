@@ -108,10 +108,9 @@
                                 <i class="ph ph-eye text-base"></i>
                             </a>
                             @if(in_array($nota->status, ['menunggu_persetujuan', 'ditolak']))
-                                <form action="{{ route('nota-merah.destroy', $nota->id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Hapus nota merah ini?')">
+                                <form action="{{ route('nota-merah.destroy', $nota->id) }}" method="POST" id="delete-form-{{ $nota->id }}" class="inline">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Hapus">
+                                    <button type="button" onclick="confirmDelete('delete-form-{{ $nota->id }}', 'Apakah Anda yakin ingin menghapus nota merah ini?')" class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Hapus">
                                         <i class="ph ph-trash text-base"></i>
                                     </button>
                                 </form>

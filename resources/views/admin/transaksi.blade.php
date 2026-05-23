@@ -149,10 +149,10 @@
                                 <a href="{{ route('transactions.edit', $trx->id) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors border border-blue-200" title="Edit Transaksi">
                                     <i class="ph ph-pencil-simple"></i>
                                 </a>
-                                <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini permanen?');">
+                                <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" id="delete-form-{{ $trx->id }}" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200" title="Hapus Permanen">
+                                    <button type="button" onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Apakah Anda yakin ingin menghapus transaksi ini secara permanen?')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200" title="Hapus Permanen">
                                         <i class="ph ph-trash"></i>
                                     </button>
                                 </form>
