@@ -334,356 +334,143 @@
         }
 
         @media print {
-
             /* Page settings */
             @page {
                 size: A4 landscape;
-                margin: 10mm 10mm 10mm 10mm;
+                margin: 15mm 15mm 15mm 15mm;
             }
 
-            /* Reset everything */
-            html,
-            body {
+            /* Reset HTML and Body for clean printing */
+            html, body {
                 width: 100% !important;
                 height: auto !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: visible !important;
                 background: #fff !important;
-                display: block !important;
+                font-family: 'Inter', sans-serif !important;
             }
 
-            /* Kill sidebar and all non-print content */
-            body>* {
-                display: none !important;
-                visibility: hidden !important;
-            }
-
-            /* Hide non-print elements */
-            .no-print,
-            aside,
+            /* Hide sidebar, overlay, top navbar, and any non-print elements */
+            #sidebarOverlay,
+            #sidebar,
             header,
-            nav {
+            .no-print {
                 display: none !important;
             }
 
-            /* Show print area as full-page block */
-            #printArea,
-            #printArea *,
-            #printArea~style {
-                visibility: visible !important;
-            }
-
-            body>main,
-            body>main>*,
-            body>div {
+            /* Ensure main wrapper and content div allow printing */
+            body > main,
+            body > main > div {
                 display: block !important;
-                visibility: visible !important;
-            }
-
-            #printArea {
-                display: block !important;
-                position: fixed;
-                left: 0;
-                top: 0;
-                right: 0;
                 width: 100% !important;
-                max-width: none !important;
+                height: auto !important;
+                overflow: visible !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                background: #fff !important;
-                z-index: 99999;
+                position: static !important;
             }
 
-            /* ====== PRINT HEADER ====== */
+            /* Force display on print area and all its children */
+            #printArea {
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                position: relative !important;
+                overflow: visible !important;
+                background: #fff !important;
+            }
+
+            /* Show print header and footer during print */
             .print-header {
                 display: block !important;
-                margin-bottom: 16px;
-                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+                margin-bottom: 20px;
+                width: 100% !important;
+            }
+
+            .print-footer {
+                display: block !important;
+                margin-top: 40px;
+                width: 100% !important;
+                page-break-inside: avoid;
             }
 
             .print-header h1 {
                 text-align: center;
-                font-size: 20px;
+                font-size: 22px;
                 font-weight: 800;
-                letter-spacing: 3px;
-                margin: 0 0 2px 0;
+                margin: 0 0 4px 0;
                 color: #000;
             }
 
             .print-header .subtitle {
                 text-align: center;
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 600;
-                letter-spacing: 1.5px;
                 color: #333;
-                margin: 0 0 8px 0;
+                margin: 0 0 10px 0;
             }
 
             .print-header .divider {
-                height: 3px;
-                background: #000;
-                border: none;
-                margin: 0;
+                height: 2px;
+                border-bottom: 2px solid #000;
+                margin: 0 0 15px 0;
             }
 
-            .print-header .divider::after {
-                content: '';
-                display: block;
-                height: 1.5px;
-                background: #000;
-                margin-top: 2px;
-            }
-
-            .print-header .meta-info {
-                margin-top: 12px;
-            }
-
-            .print-header .meta-table {
-                font-size: 10px;
-                color: #222;
-                border-collapse: collapse;
-                border: none;
-                width: auto;
-            }
-
-            .print-header .meta-table td {
-                padding: 1.5px 6px 1.5px 0;
-                border: none !important;
-                font-size: 10px;
-                line-height: 1.5;
-                vertical-align: top;
-                background: transparent !important;
-            }
-
-            /* ====== DATA TABLE ====== */
+            /* Table print styling */
             .print-table-container {
                 border: none !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
-                overflow: visible !important;
-                background: transparent !important;
-            }
-
-            .print-table-container>div {
                 overflow: visible !important;
             }
 
             .print-table {
                 width: 100% !important;
                 border-collapse: collapse !important;
-                table-layout: fixed !important;
-                font-size: 9px !important;
+                font-size: 10px !important;
                 color: #000 !important;
-                background: #fff !important;
-            }
-
-            /* Column widths */
-            .print-table th:nth-child(1) {
-                width: 30px !important;
-            }
-
-            /* NO */
-            .print-table th:nth-child(2) {
-                width: 70px !important;
-            }
-
-            /* TANGGAL */
-            .print-table th:nth-child(3) {
-                width: 100px !important;
-            }
-
-            /* PROYEK */
-            .print-table th:nth-child(4) {
-                width: 80px !important;
-            }
-
-            /* KATEGORI */
-            .print-table th:nth-child(5) {
-                width: auto !important;
-            }
-
-            /* DESKRIPSI */
-            .print-table th:nth-child(6) {
-                width: auto !important;
-            }
-
-            /* TIPE */
-            .print-table th:nth-child(7) {
-                width: auto !important;
-            }
-
-            /* METODE */
-            .print-table th:nth-child(8) {
-                width: auto !important;
-            }
-
-            /* NOMINAL */
-
-            .print-table thead tr {
-                background: #e2e8f0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
 
             .print-table th {
-                border: 1.5px solid #64748b !important;
-                padding: 6px 6px !important;
-                font-size: 8px !important;
-                font-weight: 700 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.3px !important;
+                border: 1px solid #000 !important;
+                padding: 8px !important;
+                background-color: #f1f5f9 !important;
                 color: #000 !important;
-                text-align: left !important;
-                background: #e2e8f0 !important;
+                font-weight: 700 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                white-space: nowrap !important;
-            }
-
-            .print-table th:first-child,
-            .print-table td:first-child {
-                text-align: center !important;
-            }
-
-            .print-table th:nth-child(6),
-            .print-table td:nth-child(6),
-            .print-table th:nth-child(7),
-            .print-table td:nth-child(7) {
-                text-align: center !important;
-            }
-
-            .print-table th:last-child,
-            .print-table td:last-child {
-                text-align: right !important;
             }
 
             .print-table td {
-                border: 1px solid #94a3b8 !important;
-                padding: 5px 6px !important;
-                font-size: 9px !important;
-                color: #111 !important;
-                vertical-align: top !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
+                border: 1px solid #000 !important;
+                padding: 6px 8px !important;
                 background: #fff !important;
             }
 
-            .print-table td:last-child {
-                white-space: nowrap !important;
-                font-weight: 600 !important;
-            }
-
             .print-table tbody tr:nth-child(even) td {
-                background: #f8fafc !important;
+                background-color: #f8fafc !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
 
-            /* Reset inline badge styles for print */
-            .print-table span {
-                background: transparent !important;
-                border: none !important;
-                padding: 0 !important;
-                font-size: 9px !important;
-                color: #111 !important;
-                font-weight: 600 !important;
-            }
-
-            /* ====== FOOTER TOTALS ====== */
-            .print-table tfoot tr {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .print-table tfoot td {
-                border: 1.5px solid #64748b !important;
-                padding: 6px 6px !important;
-                font-size: 9px !important;
-                font-weight: 700 !important;
-                color: #000 !important;
-                background: #f1f5f9 !important;
-                white-space: nowrap !important;
-            }
-
-            .print-table tfoot tr:last-child td {
-                font-size: 10px !important;
-                font-weight: 800 !important;
-                border-top: 2.5px solid #000 !important;
-                background: #e2e8f0 !important;
-            }
-
-            /* Force all text colors to black for print */
-            .text-emerald-600,
-            .text-red-600,
-            .text-indigo-700,
-            .text-indigo-600,
-            .text-slate-600,
-            .text-slate-800 {
-                color: #000 !important;
-            }
-
-            /* ====== SIGNATURE / FOOTER ====== */
-            .print-footer {
-                display: block !important;
-                margin-top: 30px;
-                page-break-inside: avoid;
-            }
-
+            /* Signature layout */
             .signature-area {
                 display: flex !important;
                 justify-content: space-between;
-                padding: 0 60px;
+                width: 100%;
+                margin-top: 30px;
             }
 
             .signature-box {
+                width: 200px;
                 text-align: center;
-                font-size: 10px;
-                color: #222;
-            }
-
-            .signature-box p {
-                margin: 0;
             }
 
             .signature-line {
-                width: 160px;
-                height: 50px;
-                margin: 0 auto;
-            }
-
-            .signature-name {
-                font-weight: 700;
-                margin-top: 2px !important;
-            }
-
-            .signature-title {
-                font-size: 9px;
-                color: #555;
-            }
-
-            /* Kill all Tailwind decorative stuff */
-            .rounded-2xl,
-            .rounded-t-2xl,
-            .rounded-b-2xl,
-            .shadow-sm,
-            .shadow-lg {
-                border-radius: 0 !important;
-                box-shadow: none !important;
-            }
-
-            .border-slate-100,
-            .border-indigo-200 {
-                border-color: transparent !important;
-            }
-
-            /* Backgrounds reset */
-            .bg-white,
-            .bg-slate-50,
-            .bg-emerald-50,
-            .bg-red-50,
-            .bg-indigo-50 {
-                background: transparent !important;
+                height: 60px;
+                border-bottom: 1px solid #000;
+                margin-bottom: 5px;
             }
         }
     </style>
