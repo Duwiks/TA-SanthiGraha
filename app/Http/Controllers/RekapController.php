@@ -56,7 +56,7 @@ class RekapController extends Controller
         $totalTransaksi = (clone $summaryQuery)->count();
 
         // Data untuk tabel
-        $transactions = $query->orderBy('transaction_date', 'desc')->paginate(15)->withQueryString();
+        $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
         return view('admin.rekap', compact(
             'projects',
@@ -99,7 +99,7 @@ class RekapController extends Controller
             $query->where('type', $request->type);
         }
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->get();
+        $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->get();
 
         $fileName = 'lap_transaksi_' . date('Y-m-d_His') . '.xls';
 

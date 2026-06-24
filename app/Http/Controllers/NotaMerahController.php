@@ -44,7 +44,7 @@ class NotaMerahController extends Controller
             });
         }
 
-        $notaMerahs = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $notaMerahs = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         if (auth()->user()->role === 'admin') {
             // Hitung antrean yang butuh aksi admin

@@ -17,7 +17,7 @@ class ProjectController extends Controller
                   ->orWhere('location', 'like', "%{$search}%");
         }
 
-        $projects = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $projects = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         return view('admin.projects.index', compact('projects'));
     }

@@ -120,6 +120,10 @@
                                         <i class="ph ph-trash text-base"></i>
                                     </button>
                                 </form>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-400 text-xs font-semibold border border-slate-100 cursor-not-allowed" title="Terkunci (Nota merah sudah valid/diproses)">
+                                    <i class="ph ph-lock text-sm"></i> Terkunci
+                                </span>
                             @endif
                         </div>
                     </td>

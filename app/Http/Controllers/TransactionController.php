@@ -49,7 +49,7 @@ class TransactionController extends Controller
             $query->where('status', $request->status);
         }
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->paginate(10)->withQueryString();
+        $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         $summaryQuery = clone $query;
         $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
@@ -73,7 +73,8 @@ class TransactionController extends Controller
         $transactions = Transaction::query()
             ->where('status', 'pending')
             ->with(['user:id,name', 'project:id,project_name', 'category:id,category_name'])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         // Riwayat: transaksi yang sudah diproses, dengan filter opsional
@@ -87,14 +88,18 @@ class TransactionController extends Controller
         }
 
         $history = $historyQuery->orderBy('updated_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(12, ['*'], 'history_page')
             ->withQueryString();
 
-        $historyApprovedCount  = Transaction::where('status', 'approved')->count();
-        $historyRejectedCount  = Transaction::where('status', 'rejected')->count();
+        $historyApprovedCount = Transaction::where('status', 'approved')->count();
+        $historyRejectedCount = Transaction::where('status', 'rejected')->count();
 
         return view('admin.approvals', compact(
-            'transactions', 'history', 'historyApprovedCount', 'historyRejectedCount'
+            'transactions',
+            'history',
+            'historyApprovedCount',
+            'historyRejectedCount'
         ));
     }
 
@@ -186,6 +191,7 @@ class TransactionController extends Controller
             abort(403);
         }
 
+        $transaction->load('rejections');
         $categories = Category::all();
         $projects = Project::all();
         return view('transactions.form', compact('transaction', 'categories', 'projects'));

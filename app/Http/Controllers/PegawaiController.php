@@ -25,7 +25,7 @@ class PegawaiController extends Controller
             });
         }
 
-        $pegawai = $query->orderBy('name', 'asc')->paginate(10)->withQueryString();
+        $pegawai = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         // Ambil user_id yang memiliki session aktif (login) dari tabel sessions
         $activeUserIds = DB::table('sessions')

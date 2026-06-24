@@ -17,7 +17,7 @@ class CategoryController extends Controller
                   ->orWhere('description', 'like', "%{$search}%");
         }
 
-        $categories = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $categories = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
         return view('admin.categories.index', compact('categories'));
     }
