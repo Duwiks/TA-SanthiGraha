@@ -13,6 +13,19 @@ class PegawaiController extends Controller
      */
     public function index(Request $request)
     {
+        // Ambil user_id yang memiliki session aktif (login) dari tabel sessions
+        $activeUserIds = DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', now()->subMinutes(config('session.lifetime', 120))->getTimestamp())
+            ->pluck('user_id')
+            ->unique()
+            ->toArray();
+
+        // Hitung total pegawai, online, offline secara absolute (tanpa filter/pagination)
+        $totalPegawai = User::where('role', 'pegawai')->count();
+        $totalOnline = User::where('role', 'pegawai')->whereIn('id', $activeUserIds)->count();
+        $totalOffline = $totalPegawai - $totalOnline;
+
         $query = User::where('role', 'pegawai');
 
         // Search by name or username
@@ -27,15 +40,7 @@ class PegawaiController extends Controller
 
         $pegawai = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
 
-        // Ambil user_id yang memiliki session aktif (login) dari tabel sessions
-        $activeUserIds = DB::table('sessions')
-            ->whereNotNull('user_id')
-            ->where('last_activity', '>=', now()->subMinutes(config('session.lifetime', 120))->getTimestamp())
-            ->pluck('user_id')
-            ->unique()
-            ->toArray();
-
-        return view('admin.pegawai.index', compact('pegawai', 'activeUserIds'));
+        return view('admin.pegawai.index', compact('pegawai', 'activeUserIds', 'totalPegawai', 'totalOnline', 'totalOffline'));
     }
 
     /**

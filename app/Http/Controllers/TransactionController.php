@@ -22,6 +22,12 @@ class TransactionController extends Controller
             $query->where('user_id', auth()->id());
         }
 
+        // Calculate overall totals before applying filters or search
+        $summaryQuery = clone $query;
+        $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
+        $totalPengeluaran = (clone $summaryQuery)->where('type', 'pengeluaran')->where('status', 'approved')->sum('amount');
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($search) {
@@ -50,11 +56,6 @@ class TransactionController extends Controller
         }
 
         $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
-
-        $summaryQuery = clone $query;
-        $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
-        $totalPengeluaran = (clone $summaryQuery)->where('type', 'pengeluaran')->where('status', 'approved')->sum('amount');
-        $saldo = $totalPemasukan - $totalPengeluaran;
 
         if (auth()->user()->role === 'admin') {
             return view('admin.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo'));

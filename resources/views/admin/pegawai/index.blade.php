@@ -13,7 +13,7 @@
         </div>
         <div>
             <p class="text-xs font-medium text-slate-500 mb-0.5">Total Pegawai</p>
-            <h3 class="text-lg font-bold text-slate-800">{{ $pegawai->total() }}</h3>
+            <h3 class="text-lg font-bold text-slate-800">{{ $totalPegawai }}</h3>
         </div>
     </div>
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
@@ -22,7 +22,7 @@
         </div>
         <div>
             <p class="text-xs font-medium text-slate-500 mb-0.5">Sedang Online</p>
-            <h3 class="text-lg font-bold text-emerald-600">{{ count(array_intersect($activeUserIds, $pegawai->pluck('id')->toArray())) }}</h3>
+            <h3 class="text-lg font-bold text-emerald-600">{{ $totalOnline }}</h3>
         </div>
     </div>
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
@@ -31,7 +31,7 @@
         </div>
         <div>
             <p class="text-xs font-medium text-slate-500 mb-0.5">Offline</p>
-            <h3 class="text-lg font-bold text-slate-600">{{ $pegawai->total() - count(array_intersect($activeUserIds, $pegawai->pluck('id')->toArray())) }}</h3>
+            <h3 class="text-lg font-bold text-slate-600">{{ $totalOffline }}</h3>
         </div>
     </div>
 </div>

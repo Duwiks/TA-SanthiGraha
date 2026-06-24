@@ -32,8 +32,7 @@
             <div>
                 <p class="text-xs font-medium text-slate-500 mb-0.5">Saldo Berjalan</p>
                 <h3 class="text-lg font-bold {{ $saldo >= 0 ? 'text-slate-800' : 'text-red-600' }}">
-                    Rp {{ number_format(abs($saldo), 0, ',', '.') }}
-                    @if($saldo < 0)<span class="text-sm font-medium text-red-500">(minus)</span>@endif
+                    Rp {{ number_format($saldo, 0, ',', '.') }}
                 </h3>
             </div>
         </div>
