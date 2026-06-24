@@ -107,6 +107,12 @@
                                class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors" title="Lihat Detail">
                                 <i class="ph ph-eye text-base"></i>
                             </a>
+                            @if($nota->status === 'ditolak')
+                                <a href="{{ route('nota-merah.edit', $nota->id) }}"
+                                   class="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors" title="Edit & Kirim Ulang">
+                                    <i class="ph ph-pencil-simple text-base"></i>
+                                </a>
+                            @endif
                             @if(in_array($nota->status, ['menunggu_persetujuan', 'ditolak']))
                                 <form action="{{ route('nota-merah.destroy', $nota->id) }}" method="POST" id="delete-form-{{ $nota->id }}" class="inline">
                                     @csrf @method('DELETE')

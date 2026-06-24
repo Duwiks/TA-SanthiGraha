@@ -209,5 +209,19 @@
     </div>
     @endif
 
+    {{-- Tombol Edit & Kirim Ulang (saat ditolak) --}}
+    @if($nota->status === 'ditolak' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
+    <div class="mt-5 p-5 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between flex-wrap gap-4">
+        <div>
+            <p class="font-bold text-red-800 text-sm">Pengajuan ini ditolak oleh Admin.</p>
+            <p class="text-sm text-red-600 mt-0.5">Perbaiki data sesuai alasan penolakan di atas, lalu kirim ulang untuk ditinjau.</p>
+        </div>
+        <a href="{{ route('nota-merah.edit', $nota->id) }}"
+           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 transition-colors whitespace-nowrap">
+            <i class="ph ph-pencil-simple"></i> Edit & Kirim Ulang
+        </a>
+    </div>
+    @endif
+
 </div>
 @endsection

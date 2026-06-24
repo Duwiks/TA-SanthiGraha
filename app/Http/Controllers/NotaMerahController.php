@@ -291,6 +291,93 @@ class NotaMerahController extends Controller
     }
 
     // ---------------------------------------------------------------
+    // EDIT – Form Edit Nota Merah yang Ditolak (Pegawai)
+    // ---------------------------------------------------------------
+    public function edit($id)
+    {
+        if (auth()->user()->role !== 'pegawai') {
+            abort(403);
+        }
+
+        $nota = NotaMerah::with(['project', 'category'])->findOrFail($id);
+
+        if ($nota->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($nota->status !== 'ditolak') {
+            return redirect()->route('nota-merah.show', $id)
+                ->with('error', 'Hanya nota merah yang ditolak yang dapat diedit ulang.');
+        }
+
+        $categories = Category::all();
+        $projects   = Project::all();
+
+        return view('nota-merah.edit', compact('nota', 'categories', 'projects'));
+    }
+
+    // ---------------------------------------------------------------
+    // UPDATE – Simpan Edit Nota Merah yang Ditolak → Kembali menunggu_persetujuan
+    // ---------------------------------------------------------------
+    public function update(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'pegawai') {
+            abort(403);
+        }
+
+        $nota = NotaMerah::findOrFail($id);
+
+        if ($nota->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($nota->status !== 'ditolak') {
+            return redirect()->route('nota-merah.show', $id)
+                ->with('error', 'Hanya nota merah yang ditolak yang dapat diedit ulang.');
+        }
+
+        $request->validate([
+            'project_id'     => 'required|exists:projects,id',
+            'category_id'    => 'required|exists:categories,id',
+            'description'    => 'nullable|string',
+            'amount'         => 'required|numeric|min:0',
+            'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
+            'nota_photo'     => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:20480',
+        ], [
+            'project_id.required'     => 'Proyek wajib dipilih.',
+            'category_id.required'    => 'Kategori wajib dipilih.',
+            'amount.required'         => 'Nominal wajib diisi.',
+            'payment_method.required' => 'Metode pencairan wajib dipilih.',
+            'nota_photo.mimes'        => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
+            'nota_photo.max'          => 'Ukuran file terlalu besar (maksimal 20MB).',
+        ]);
+
+        $data = [
+            'project_id'       => $request->project_id,
+            'category_id'      => $request->category_id,
+            'description'      => $request->description,
+            'amount'           => $request->amount,
+            'payment_method'   => $request->payment_method,
+            'status'           => 'menunggu_persetujuan',
+            'rejection_reason' => null,
+            'approved_by'      => null,
+        ];
+
+        if ($request->hasFile('nota_photo')) {
+            // Hapus file lama
+            if ($nota->nota_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($nota->nota_photo)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($nota->nota_photo);
+            }
+            $data['nota_photo'] = $this->handleUpload($request->file('nota_photo'), 'nota-merah');
+        }
+
+        $nota->update($data);
+
+        return redirect()->route('nota-merah.index')
+            ->with('success', 'Pengajuan nota merah berhasil diperbarui dan dikirim ulang untuk persetujuan Admin.');
+    }
+
+    // ---------------------------------------------------------------
     // DESTROY – Hapus Nota Merah (hanya status menunggu/ditolak oleh pegawai)
     // ---------------------------------------------------------------
     public function destroy($id)

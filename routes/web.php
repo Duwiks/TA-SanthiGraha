@@ -124,6 +124,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/nota-merah/create', [NotaMerahController::class, 'create'])->name('nota-merah.create');
     Route::post('/nota-merah', [NotaMerahController::class, 'store'])->name('nota-merah.store');
     Route::get('/nota-merah/{id}', [NotaMerahController::class, 'show'])->name('nota-merah.show');
+    Route::get('/nota-merah/{id}/edit', [NotaMerahController::class, 'edit'])->name('nota-merah.edit');
+    Route::put('/nota-merah/{id}', [NotaMerahController::class, 'update'])->name('nota-merah.update');
     Route::delete('/nota-merah/{id}', [NotaMerahController::class, 'destroy'])->name('nota-merah.destroy');
 
     // Aksi Admin
