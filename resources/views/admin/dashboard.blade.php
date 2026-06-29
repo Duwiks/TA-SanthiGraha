@@ -166,9 +166,21 @@
                 yaxis: {
                     labels: {
                         formatter: function (value) {
-                            if (value >= 1000000) {
-                                return 'Rp ' + (value / 1000000).toFixed(0) + ' Jt';
+                            if (value >= 1000000000000) {
+                                return 'Rp ' + (value / 1000000000000).toFixed(1).replace('.0', '') + ' T';
                             }
+                            if (value >= 1000000000) {
+                                return 'Rp ' + (value / 1000000000).toFixed(1).replace('.0', '') + ' M';
+                            }
+
+                            if (value >= 1000000) {
+                                return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + ' Jt';
+                            }
+
+                            if (value >= 1000) {
+                                return 'Rp ' + (value / 1000).toFixed(1).replace('.0', '') + ' Rb';
+                            }
+
                             return 'Rp ' + value.toLocaleString('id-ID');
                         },
                         style: {
