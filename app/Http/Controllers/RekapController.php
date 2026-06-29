@@ -146,7 +146,7 @@ class RekapController extends Controller
             $html .= '<td align="center" style="background-color: ' . $bgType . '; color: ' . $colorType . '; font-weight: bold;">' . strtoupper($trx->type) . '</td>';
 
             $html .= '<td align="center" style="background-color: #f1f5f9; color: #475569; font-weight: bold;">' . strtoupper($trx->payment_method ?? '-') . '</td>';
-            $html .= '<td align="right" style="font-weight: bold;">Rp ' . number_format($nom, 0, ',', '.') . '</td>';
+            $html .= '<td align="right" style="font-weight: bold;">Rp ' . number_format($nom, 2, ',', '.') . '</td>';
             $html .= '</tr>';
         }
 
@@ -156,7 +156,7 @@ class RekapController extends Controller
         if (!$request->filled('type') || $request->type == 'pemasukan') {
             $html .= '<tr>';
             $html .= '<td colspan="7" align="right" style="font-weight: bold; background-color: #d1fae5; color: #047857;">TOTAL PEMASUKAN</td>';
-            $html .= '<td align="right" style="font-weight: bold; background-color: #d1fae5; color: #047857;">Rp ' . number_format($totalPemasukan, 0, ',', '.') . '</td>';
+            $html .= '<td align="right" style="font-weight: bold; background-color: #d1fae5; color: #047857;">Rp ' . number_format($totalPemasukan, 2, ',', '.') . '</td>';
             $html .= '</tr>';
         }
 
@@ -164,7 +164,7 @@ class RekapController extends Controller
         if (!$request->filled('type') || $request->type == 'pengeluaran') {
             $html .= '<tr>';
             $html .= '<td colspan="7" align="right" style="font-weight: bold; background-color: #fee2e2; color: #b91c1c;">TOTAL PENGELUARAN</td>';
-            $html .= '<td align="right" style="font-weight: bold; background-color: #fee2e2; color: #b91c1c;">Rp ' . number_format($totalPengeluaran, 0, ',', '.') . '</td>';
+            $html .= '<td align="right" style="font-weight: bold; background-color: #fee2e2; color: #b91c1c;">Rp ' . number_format($totalPengeluaran, 2, ',', '.') . '</td>';
             $html .= '</tr>';
         }
 
@@ -172,7 +172,7 @@ class RekapController extends Controller
         if (!$request->filled('type')) {
             $html .= '<tr>';
             $html .= '<td colspan="7" align="right" style="font-weight: bold; background-color: #e0e7ff; color: #4338ca; font-size: 14px;">SALDO AKHIR</td>';
-            $html .= '<td align="right" style="font-weight: bold; background-color: #e0e7ff; color: #4338ca; font-size: 14px;">Rp ' . number_format($totalPemasukan - $totalPengeluaran, 0, ',', '.') . '</td>';
+            $html .= '<td align="right" style="font-weight: bold; background-color: #e0e7ff; color: #4338ca; font-size: 14px;">Rp ' . number_format($totalPemasukan - $totalPengeluaran, 2, ',', '.') . '</td>';
             $html .= '</tr>';
         }
 
