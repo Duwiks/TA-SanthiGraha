@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,26 +42,39 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-4 font-sans text-slate-800">
 
-    <div class="glass-panel w-full max-w-md rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300">
-        
+<body
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-4 font-sans text-slate-800">
+
+    <div
+        class="glass-panel w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300">
+
         @if(session('success'))
-            <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 text-sm font-medium animate-[slideDown_0.3s_ease-out]">
+            <div
+                class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 text-sm font-medium animate-[slideDown_0.3s_ease-out]">
                 {{ session('success') }}
             </div>
         @endif
 
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-pink-500 mb-2">
+        <div class="text-center mb-6 sm:mb-8">
+            <!-- Logo & Brand Name -->
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <img src="{{ asset('images/santhigraha-logo.png') }}" alt="Logo SanthiGraha"
+                    class="w-10 h-10 sm:w-14 sm:h-14 object-contain">
+                <span
+                    class="text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-pink-500 tracking-tight">SanthiGraha</span>
+            </div>
+
+            <h1 class="text-base sm:text-lg font-bold text-slate-700 mb-1">
                 @yield('header_title')
             </h1>
-            <p class="text-slate-500 text-sm font-medium">@yield('header_subtitle')</p>
+            <p class="text-slate-500 text-xs sm:text-sm font-medium">@yield('header_subtitle')</p>
         </div>
 
         @yield('content')
-        
+
     </div>
 
 </body>
+
 </html>
