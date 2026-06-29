@@ -41,11 +41,22 @@ class AccountController extends Controller
 
         // Verifikasi password lama
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'Password lama tidak sesuai.']);
+            return back()->withErrors([
+                'current_password' => 'Password lama tidak sesuai.'
+            ]);
+        }
+
+        // ============================
+        // TAMBAHKAN BAGIAN INI
+        // ============================
+        if (Hash::check($request->new_password, $user->password)) {
+            return back()->withErrors([
+                'new_password' => 'Password baru tidak boleh sama dengan password lama.'
+            ]);
         }
 
         // Update password
-        $user->password = bcrypt($request->new_password);
+        $user->password = Hash::make($request->new_password);
         $user->save();
 
         return back()->with('success', 'Password berhasil diubah!');
