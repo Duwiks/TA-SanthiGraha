@@ -101,8 +101,8 @@
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-sm">Rp</span>
-                        <input type="number" id="amount" name="amount" min="0" step="any"
-                            value="{{ old('amount', intval($nota->amount)) }}"
+                        <input type="text" id="amount" name="amount" inputmode="decimal" data-rupiah
+                            value="{{ old('amount', $nota->amount) }}"
                             placeholder="0"
                             class="w-full pl-10 pr-4 py-3 rounded-xl border @error('amount') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                     </div>

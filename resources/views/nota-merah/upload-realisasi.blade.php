@@ -30,7 +30,7 @@
             </div>
             <div>
                 <span class="text-blue-600">Nominal Disetujui:</span>
-                <span class="font-bold text-red-600 ml-1">Rp {{ number_format($nota->amount, 0, ',', '.') }}</span>
+                <span class="font-bold text-red-600 ml-1">Rp {{ number_format($nota->amount, 2, ',', '.') }}</span>
             </div>
             <div>
                 <span class="text-blue-600">Metode:</span>

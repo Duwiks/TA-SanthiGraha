@@ -15,7 +15,7 @@
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-slate-500 mb-0.5">Total Pemasukan</p>
                     <h3 class="text-lg font-bold text-emerald-600 whitespace-nowrap">Rp
-                        {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
+                        {{ number_format($totalPemasukan, 2, ',', '.') }}</h3>
                 </div>
             </div>
         @endif
@@ -27,7 +27,7 @@
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-slate-500 mb-0.5">Total Pengeluaran</p>
                     <h3 class="text-lg font-bold text-red-600 whitespace-nowrap">Rp
-                        {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+                        {{ number_format($totalPengeluaran, 2, ',', '.') }}</h3>
                 </div>
             </div>
         @endif
@@ -39,7 +39,7 @@
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-slate-500 mb-0.5">Saldo</p>
                     <h3 class="text-lg font-bold {{ $saldo >= 0 ? 'text-indigo-600' : 'text-red-600' }} whitespace-nowrap">Rp
-                        {{ number_format($saldo, 0, ',', '.') }}</h3>
+                        {{ number_format($saldo, 2, ',', '.') }}</h3>
                 </div>
             </div>
         @endif
@@ -251,7 +251,7 @@
                                 </td>
                                 <td
                                     class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $trx->type == 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                                    Rp {{ number_format($trx->amount, 2, ',', '.') }}
                                 </td>
                             </tr>
                         @empty
@@ -272,7 +272,7 @@
                                         class="px-6 py-3 text-right font-bold text-slate-600 text-xs uppercase tracking-wider">Total
                                         Pemasukan</td>
                                     <td class="px-6 py-3 text-right font-bold text-emerald-600 whitespace-nowrap">Rp
-                                        {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+                                        {{ number_format($totalPemasukan, 2, ',', '.') }}</td>
                                 </tr>
                             @endif
                             @if(!$filterType || $filterType == 'pengeluaran')
@@ -281,7 +281,7 @@
                                         class="px-6 py-3 text-right font-bold text-slate-600 text-xs uppercase tracking-wider">Total
                                         Pengeluaran</td>
                                     <td class="px-6 py-3 text-right font-bold text-red-600 whitespace-nowrap">Rp
-                                        {{ number_format($totalPengeluaran, 0, ',', '.') }}</td>
+                                        {{ number_format($totalPengeluaran, 2, ',', '.') }}</td>
                                 </tr>
                             @endif
                             @if(!$filterType)
@@ -290,7 +290,7 @@
                                         class="px-6 py-3 text-right font-bold text-slate-800 text-sm uppercase tracking-wider">SALDO
                                     </td>
                                     <td class="px-6 py-3 text-right font-bold text-indigo-700 text-base whitespace-nowrap">Rp
-                                        {{ number_format($saldo, 0, ',', '.') }}</td>
+                                        {{ number_format($saldo, 2, ',', '.') }}</td>
                                 </tr>
                             @endif
                         </tfoot>

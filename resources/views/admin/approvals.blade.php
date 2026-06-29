@@ -70,7 +70,7 @@ BAGIAN 1: ANTREAN PENDING
                     {{-- Nominal --}}
                     <td class="px-5 py-4 whitespace-nowrap">
                         <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                            {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                            {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->amount, 2, ',', '.') }}
                         </span>
                         <div class="flex items-center gap-1.5 mt-0.5">
                             <span class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
@@ -222,7 +222,7 @@ BAGIAN 2: RIWAYAT PERSETUJUAN
                         {{-- Nominal --}}
                         <td class="px-5 py-4 whitespace-nowrap">
                             <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->amount, 0, ',', '.') }}
+                                {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp {{ number_format($trx->amount, 2, ',', '.') }}
                             </span>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded

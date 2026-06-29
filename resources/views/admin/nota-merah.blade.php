@@ -94,7 +94,7 @@
 
                     {{-- Nominal --}}
                     <td class="px-5 py-4 whitespace-nowrap">
-                        <span class="font-bold text-red-600">Rp {{ number_format($nota->amount, 0, ',', '.') }}</span>
+                        <span class="font-bold text-red-600">Rp {{ number_format($nota->amount, 2, ',', '.') }}</span>
                         <div class="text-[11px] text-slate-400 mt-0.5 uppercase font-medium tracking-wide">{{ $nota->payment_method }}</div>
                     </td>
 

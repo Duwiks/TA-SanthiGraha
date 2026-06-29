@@ -37,6 +37,9 @@
 
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Rupiah Formatter -->
+    <script src="{{ asset('js/rupiah.js') }}"></script>
 </head>
 
 <body class="bg-slate-50 font-sans text-slate-800 antialiased flex h-screen overflow-hidden">

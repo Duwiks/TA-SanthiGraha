@@ -13,7 +13,7 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-slate-500 mb-0.5">Total Pemasukan</p>
-                <h3 class="text-lg font-bold text-emerald-600">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h3>
+                <h3 class="text-lg font-bold text-emerald-600">Rp {{ number_format($totalPemasukan, 2, ',', '.') }}</h3>
             </div>
         </div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
@@ -22,7 +22,7 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-slate-500 mb-0.5">Total Pengeluaran</p>
-                <h3 class="text-lg font-bold text-red-600">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h3>
+                <h3 class="text-lg font-bold text-red-600">Rp {{ number_format($totalPengeluaran, 2, ',', '.') }}</h3>
             </div>
         </div>
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
@@ -32,7 +32,7 @@
             <div>
                 <p class="text-xs font-medium text-slate-500 mb-0.5">Saldo Berjalan</p>
                 <h3 class="text-lg font-bold {{ $saldo >= 0 ? 'text-slate-800' : 'text-red-600' }}">
-                    Rp {{ number_format($saldo, 0, ',', '.') }}
+                    Rp {{ number_format($saldo, 2, ',', '.') }}
                 </h3>
             </div>
         </div>
@@ -120,7 +120,7 @@
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
                                     {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp
-                                    {{ number_format($trx->amount, 0, ',', '.') }}
+                                    {{ number_format($trx->amount, 2, ',', '.') }}
                                 </span>
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span

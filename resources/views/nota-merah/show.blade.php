@@ -96,7 +96,7 @@
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-slate-500">Nominal</dt>
-                    <dd class="font-bold text-red-600 text-base">Rp {{ number_format($nota->amount, 0, ',', '.') }}</dd>
+                    <dd class="font-bold text-red-600 text-base">Rp {{ number_format($nota->amount, 2, ',', '.') }}</dd>
                 </div>
                 <div class="flex justify-between">
                     <dt class="text-slate-500">Metode Pencairan</dt>
