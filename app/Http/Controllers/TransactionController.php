@@ -119,19 +119,32 @@ class TransactionController extends Controller
             'transaction_date' => 'required|date',
             'type' => 'required|in:pemasukan,pengeluaran',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
-            'receipt_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:20480',
+            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek tidak valid.',
+
             'category_id.required' => 'Kategori wajib dipilih.',
+            'category_id.exists' => 'Kategori tidak valid.',
+
             'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
+            'transaction_date.date' => 'Format tanggal tidak valid.',
+
             'type.required' => 'Tipe transaksi wajib dipilih.',
+            'type.in' => 'Tipe transaksi tidak valid.',
+
             'amount.required' => 'Nominal wajib diisi.',
-            'payment_method.required' => 'Metode transfer wajib dipilih.',
-            'receipt_photo.required' => 'Bukti transaksi wajib dilampirkan.',
-            'receipt_photo.mimes' => 'Format foto harus berupa jpeg, png, jpg, atau pdf.',
-            'receipt_photo.max' => 'Ukuran asli foto gagal diunggah ke server (melewati batas maksimal 20MB).',
+            'amount.numeric' => 'Nominal harus berupa angka.',
+            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
+
+            'payment_method.required' => 'Metode pembayaran wajib dipilih.',
+            'payment_method.in' => 'Metode pembayaran tidak valid.',
+
+            'receipt_photo.file' => 'File bukti transaksi tidak valid.',
+            'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
+            'receipt_photo.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         $receiptPath = null;
@@ -212,18 +225,32 @@ class TransactionController extends Controller
             'transaction_date' => 'required|date',
             'type' => 'required|in:pemasukan,pengeluaran',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
-            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:20480',
+            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek tidak valid.',
+
             'category_id.required' => 'Kategori wajib dipilih.',
+            'category_id.exists' => 'Kategori tidak valid.',
+
             'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
+            'transaction_date.date' => 'Format tanggal tidak valid.',
+
             'type.required' => 'Tipe transaksi wajib dipilih.',
+            'type.in' => 'Tipe transaksi tidak valid.',
+
             'amount.required' => 'Nominal wajib diisi.',
-            'payment_method.required' => 'Metode transfer wajib dipilih.',
-            'receipt_photo.mimes' => 'Format foto harus berupa jpeg, png, jpg, atau pdf.',
-            'receipt_photo.max' => 'Ukuran asli foto gagal diunggah ke server (melewati batas maksimal 20MB).',
+            'amount.numeric' => 'Nominal harus berupa angka.',
+            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
+
+            'payment_method.required' => 'Metode pembayaran wajib dipilih.',
+            'payment_method.in' => 'Metode pembayaran tidak valid.',
+
+            'receipt_photo.file' => 'File bukti transaksi tidak valid.',
+            'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
+            'receipt_photo.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         $data = [

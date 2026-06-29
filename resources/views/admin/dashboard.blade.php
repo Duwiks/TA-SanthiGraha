@@ -6,7 +6,7 @@
 @section('content')
     <!-- Welcome Banner Section -->
     <div
-        class="bg-gradient-to-r from-brand-600 to-indigo-500 rounded-3xl p-8 text-white shadow-lg shadow-brand-500/20 relative overflow-hidden mb-8">
+        class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-3xl p-8 text-white shadow-lg shadow-brand-500/20 relative overflow-hidden mb-8">
         <!-- Abstract Shapes -->
         <div class="absolute -right-10 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div class="absolute right-40 -bottom-20 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>

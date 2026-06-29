@@ -31,7 +31,7 @@ Route::middleware(['auth'])->group(function () {
                 $totalPegawai = \App\Models\User::where('role', 'pegawai')->count();
                 $proyekAktif = \App\Models\Project::count();
                 $menungguApproval = \App\Models\Transaction::where('status', 'pending')->count();
-                $totalTransaksi = \App\Models\Transaction::count();
+                $totalTransaksi = \App\Models\Transaction::where('status', 'approved')->count();
 
                 // Chart Logic (Pemasukan vs Pengeluaran per Bulan)
                 $projectId = request('project_id');
@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
                 $pengeluaranData = array_fill(0, 12, 0);
 
                 foreach ($chartTransactions as $trx) {
-                    $monthIndex = (int)date('n', strtotime($trx->transaction_date)) - 1;
+                    $monthIndex = (int) date('n', strtotime($trx->transaction_date)) - 1;
                     if ($trx->type == 'pemasukan') {
                         $pemasukanData[$monthIndex] += $trx->amount;
                     } elseif ($trx->type == 'pengeluaran') {
@@ -62,8 +62,16 @@ Route::middleware(['auth'])->group(function () {
                 $projects = \App\Models\Project::orderBy('project_name')->get();
 
                 return view('admin.dashboard', compact(
-                    'totalPegawai', 'proyekAktif', 'menungguApproval', 'totalTransaksi',
-                    'months', 'pemasukanData', 'pengeluaranData', 'projects', 'projectId', 'year'
+                    'totalPegawai',
+                    'proyekAktif',
+                    'menungguApproval',
+                    'totalTransaksi',
+                    'months',
+                    'pemasukanData',
+                    'pengeluaranData',
+                    'projects',
+                    'projectId',
+                    'year'
                 ));
             } else {
                 $transaksiDiajukan = \App\Models\Transaction::where('user_id', auth()->id())->count();

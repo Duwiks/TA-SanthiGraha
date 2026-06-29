@@ -113,12 +113,6 @@
                 <span class="text-[15px]">Manajemen Proyek</span>
             </a>
 
-            <a href="{{ route('pegawai.index') }}"
-                class="flex items-center gap-3.5 px-4 py-3 rounded-xl {{ request()->routeIs('pegawai.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
-                <i class="ph ph-identification-badge text-[22px]"></i>
-                <span class="text-[15px]">Data Akun Pegawai</span>
-            </a>
-
             <!-- Dropdown Master Data -->
             <div x-data="{ open: true }" class="pt-1">
                 <button type="button" onclick="toggleDropdown()"
@@ -141,7 +135,13 @@
             <a href="{{ route('rekap.index') }}"
                 class="flex items-center gap-3.5 px-4 py-3 rounded-xl mt-2 {{ request()->routeIs('rekap.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
                 <i class="ph ph-file-text text-[22px]"></i>
-                <span class="text-[15px]">Rekap & Laporan</span>
+                <span class="text-[15px]">Laporan</span>
+            </a>
+
+            <a href="{{ route('pegawai.index') }}"
+                class="flex items-center gap-3.5 px-4 py-3 rounded-xl {{ request()->routeIs('pegawai.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
+                <i class="ph ph-identification-badge text-[22px]"></i>
+                <span class="text-[15px]">Data Akun Pegawai</span>
             </a>
 
             <a href="{{ route('account.index') }}"

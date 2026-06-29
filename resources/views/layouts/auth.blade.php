@@ -61,8 +61,7 @@
             <div class="flex items-center justify-center gap-2 mb-2">
                 <img src="{{ asset('images/santhigraha-logo.png') }}" alt="Logo SanthiGraha"
                     class="w-10 h-10 sm:w-14 sm:h-14 object-contain">
-                <span
-                    class="text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-pink-500 tracking-tight">SanthiGraha</span>
+                <span class="text-2xl sm:text-3xl font-extrabold tracking-tight">SanthiGraha</span>
             </div>
 
             <h1 class="text-base sm:text-lg font-bold text-slate-700 mb-1">
