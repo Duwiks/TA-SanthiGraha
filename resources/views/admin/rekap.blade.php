@@ -94,13 +94,14 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Dari
                             Tanggal</label>
-                        <input type="date" name="date_from" value="{{ request('date_from') }}"
+                        <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}"
                             class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none">
+
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Sampai
                             Tanggal</label>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}"
+                        <input type="date" id="date_to" name="date_to" value="{{ request('date_to') }}"
                             class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none">
                     </div>
                     <div>
@@ -508,4 +509,27 @@
             }
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dateFrom = document.getElementById('date_from');
+            const dateTo = document.getElementById('date_to');
+
+            function updateDateTo() {
+                if (dateFrom.value) {
+                    dateTo.min = dateFrom.value;
+
+                    if (dateTo.value && dateTo.value < dateFrom.value) {
+                        dateTo.value = dateFrom.value;
+                    }
+                } else {
+                    dateTo.removeAttribute('min');
+                }
+            }
+
+            updateDateTo();
+            dateFrom.addEventListener('change', updateDateTo);
+        });
+    </script>
+
 @endsection

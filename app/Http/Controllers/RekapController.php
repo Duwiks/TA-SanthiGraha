@@ -18,6 +18,14 @@ class RekapController extends Controller
             abort(403);
         }
 
+        // Validasi filter tanggal
+        $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ], [
+            'date_to.after_or_equal' => 'Tanggal sampai tidak boleh lebih awal dari tanggal mulai.',
+        ]);
+
         $projects = Project::orderBy('project_name')->get();
         $categories = Category::orderBy('category_name')->get();
 
