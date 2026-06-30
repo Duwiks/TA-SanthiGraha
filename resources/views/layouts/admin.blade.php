@@ -10,6 +10,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <style>
+        .amount-card {
+            font-size: clamp(14px, 1vw, 22px);
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+    </style>
+
     <!-- Phosphor Icons (Matches exactly with the uploaded image) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 

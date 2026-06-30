@@ -6,32 +6,45 @@
 @section('content')
 
     {{-- Summary Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+        <div
+            class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
                 <i class="ph ph-trend-up text-xl"></i>
             </div>
-            <div>
-                <p class="text-xs font-medium text-slate-500 mb-0.5">Total Pemasukan</p>
-                <h3 class="text-lg font-bold text-emerald-600">Rp {{ number_format($totalPemasukan, 2, ',', '.') }}</h3>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Total Pemasukan">Total
+                    Pemasukan</p>
+                <h3 class="text-sm sm:text-base xl:text-lg font-bold text-emerald-600 truncate"
+                    title="Rp {{ number_format($totalPemasukan, 2, ',', '.') }}">Rp
+                    {{ number_format($totalPemasukan, 2, ',', '.') }}
+                </h3>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+        <div
+            class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
             <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 shrink-0">
                 <i class="ph ph-trend-down text-xl"></i>
             </div>
-            <div>
-                <p class="text-xs font-medium text-slate-500 mb-0.5">Total Pengeluaran</p>
-                <h3 class="text-lg font-bold text-red-600">Rp {{ number_format($totalPengeluaran, 2, ',', '.') }}</h3>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Total Pengeluaran">Total
+                    Pengeluaran</p>
+                <h3 class="text-sm sm:text-base xl:text-lg font-bold text-red-600 truncate"
+                    title="Rp {{ number_format($totalPengeluaran, 2, ',', '.') }}">Rp
+                    {{ number_format($totalPengeluaran, 2, ',', '.') }}
+                </h3>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+        <div
+            class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
             <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
                 <i class="ph ph-wallet text-xl"></i>
             </div>
-            <div>
-                <p class="text-xs font-medium text-slate-500 mb-0.5">Saldo Berjalan</p>
-                <h3 class="text-lg font-bold {{ $saldo >= 0 ? 'text-slate-800' : 'text-red-600' }}">
+            <div class="flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Saldo Berjalan">Saldo
+                    Berjalan</p>
+                <h3 class="text-sm sm:text-base xl:text-lg font-bold {{ $saldo >= 0 ? 'text-slate-800' : 'text-red-600' }} truncate"
+                    title="Rp {{ number_format($saldo, 2, ',', '.') }}">
                     Rp {{ number_format($saldo, 2, ',', '.') }}
                 </h3>
             </div>
@@ -95,9 +108,11 @@
                             {{-- Tanggal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">
-                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}</div>
+                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}
+                                </div>
                                 <div class="text-xs text-slate-400 mt-0.5">
-                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WIB</div>
+                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA
+                                </div>
                             </td>
 
                             {{-- Proyek & Kategori --}}
@@ -125,7 +140,7 @@
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
-                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $trx->type }}
                                     </span>
                                     @if($trx->payment_method)
@@ -193,11 +208,13 @@
                             {{-- Aksi --}}
                             <td class="px-5 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" id="delete-form-{{ $trx->id }}" class="inline">
+                                    <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST"
+                                        id="delete-form-{{ $trx->id }}" class="inline">
                                         @csrf @method('DELETE')
                                         <button type="button"
                                             onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Apakah Anda yakin ingin menghapus transaksi ini secara permanen?')"
-                                            class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors" title="Hapus">
+                                            class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                            title="Hapus">
                                             <i class="ph ph-trash text-base"></i>
                                         </button>
                                     </form>

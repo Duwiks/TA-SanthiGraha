@@ -6,50 +6,76 @@
 @section('content')
     <!-- Summary Cards -->
     @php $filterType = request('type'); @endphp
-    <div class="grid grid-cols-1 md:grid-cols-{{ $filterType ? '2' : '4' }} gap-5 mb-6 no-print">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-{{ $filterType ? '2' : '4' }} gap-5 mb-6 no-print">
         @if(!$filterType || $filterType == 'pemasukan')
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0">
+            <div
+                class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
                 <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
                     <i class="ph ph-trend-up text-xl"></i>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500 mb-0.5">Total Pemasukan</p>
-                    <h3 class="text-lg font-bold text-emerald-600 whitespace-nowrap">Rp
-                        {{ number_format($totalPemasukan, 2, ',', '.') }}</h3>
+
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Total Pemasukan">Total
+                        Pemasukan</p>
+
+                    <h3 class="text-sm sm:text-base xl:text-lg font-bold text-emerald-600 truncate"
+                        title="Rp {{ number_format($totalPemasukan, 2, ',', '.') }}">
+                        Rp {{ number_format($totalPemasukan, 2, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         @endif
         @if(!$filterType || $filterType == 'pengeluaran')
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0">
+            <div
+                class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
+
                 <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 shrink-0">
                     <i class="ph ph-trend-down text-xl"></i>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500 mb-0.5">Total Pengeluaran</p>
-                    <h3 class="text-lg font-bold text-red-600 whitespace-nowrap">Rp
-                        {{ number_format($totalPengeluaran, 2, ',', '.') }}</h3>
+
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Total Pengeluaran">Total
+                        Pengeluaran</p>
+
+                    <h3 class="text-sm sm:text-base xl:text-lg font-bold text-red-600 truncate"
+                        title="Rp {{ number_format($totalPengeluaran, 2, ',', '.') }}">
+                        Rp {{ number_format($totalPengeluaran, 2, ',', '.') }}
+                    </h3>
                 </div>
             </div>
         @endif
         @if(!$filterType)
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0">
+            <div
+                class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
+
                 <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
                     <i class="ph ph-wallet text-xl"></i>
                 </div>
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-slate-500 mb-0.5">Saldo</p>
-                    <h3 class="text-lg font-bold {{ $saldo >= 0 ? 'text-indigo-600' : 'text-red-600' }} whitespace-nowrap">Rp
-                        {{ number_format($saldo, 2, ',', '.') }}</h3>
+
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-slate-500 mb-1 truncate" title="Saldo">
+                        Saldo
+                    </p>
+
+                    <h3 class="text-sm sm:text-base xl:text-lg font-bold text-indigo-600 truncate"
+                        title="Rp {{ number_format($saldo, 2, ',', '.') }}">
+                        Rp {{ number_format($saldo, 2, ',', '.') }}
+                    </h3>
                 </div>
+
             </div>
         @endif
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0">
+        <div
+            class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4 min-w-0 hover:shadow-md transition-shadow">
             <div class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
                 <i class="ph ph-receipt text-xl"></i>
             </div>
-            <div class="min-w-0">
-                <p class="text-sm font-medium text-slate-500 mb-0.5">Jumlah Transaksi</p>
-                <h3 class="text-lg font-bold text-slate-800 whitespace-nowrap">{{ $totalTransaksi }}</h3>
+            <div class="flex-1 min-w-0">
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mb-0.5 truncate" title="Jumlah Transaksi">Jumlah
+                    Transaksi</p>
+                <h3 class="text-sm sm:text-base xl:text-lg font-bold text-slate-800 truncate" title="{{ $totalTransaksi }}">
+                    {{ $totalTransaksi }}
+                </h3>
             </div>
         </div>
     </div>
@@ -85,7 +111,8 @@
                             <option value="">Semua Proyek</option>
                             @foreach($projects as $project)
                                 <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>
-                                    {{ $project->project_name }}</option>
+                                    {{ $project->project_name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -231,9 +258,11 @@
                         @forelse($transactions as $index => $trx)
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-6 py-4 text-center">
-                                    {{ $index + 1 + ($transactions->currentPage() - 1) * $transactions->perPage() }}</td>
+                                    {{ $index + 1 + ($transactions->currentPage() - 1) * $transactions->perPage() }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d/m/Y') }}</td>
+                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d/m/Y') }}
+                                </td>
                                 <td class="px-6 py-4 font-medium text-slate-800">{{ $trx->project->project_name ?? '-' }}</td>
                                 <td class="px-6 py-4">{{ $trx->category->category_name ?? '-' }}</td>
                                 <td class="px-6 py-4">{{ $trx->description ?: '-' }}</td>
@@ -272,7 +301,8 @@
                                         class="px-6 py-3 text-right font-bold text-slate-600 text-xs uppercase tracking-wider">Total
                                         Pemasukan</td>
                                     <td class="px-6 py-3 text-right font-bold text-emerald-600 whitespace-nowrap">Rp
-                                        {{ number_format($totalPemasukan, 2, ',', '.') }}</td>
+                                        {{ number_format($totalPemasukan, 2, ',', '.') }}
+                                    </td>
                                 </tr>
                             @endif
                             @if(!$filterType || $filterType == 'pengeluaran')
@@ -281,7 +311,8 @@
                                         class="px-6 py-3 text-right font-bold text-slate-600 text-xs uppercase tracking-wider">Total
                                         Pengeluaran</td>
                                     <td class="px-6 py-3 text-right font-bold text-red-600 whitespace-nowrap">Rp
-                                        {{ number_format($totalPengeluaran, 2, ',', '.') }}</td>
+                                        {{ number_format($totalPengeluaran, 2, ',', '.') }}
+                                    </td>
                                 </tr>
                             @endif
                             @if(!$filterType)
@@ -290,7 +321,8 @@
                                         class="px-6 py-3 text-right font-bold text-slate-800 text-sm uppercase tracking-wider">SALDO
                                     </td>
                                     <td class="px-6 py-3 text-right font-bold text-indigo-700 text-base whitespace-nowrap">Rp
-                                        {{ number_format($saldo, 2, ',', '.') }}</td>
+                                        {{ number_format($saldo, 2, ',', '.') }}
+                                    </td>
                                 </tr>
                             @endif
                         </tfoot>
@@ -334,6 +366,7 @@
         }
 
         @media print {
+
             /* Page settings */
             @page {
                 size: A4 landscape;
@@ -341,7 +374,8 @@
             }
 
             /* Reset HTML and Body for clean printing */
-            html, body {
+            html,
+            body {
                 width: 100% !important;
                 height: auto !important;
                 margin: 0 !important;
@@ -360,8 +394,8 @@
             }
 
             /* Ensure main wrapper and content div allow printing */
-            body > main,
-            body > main > div {
+            body>main,
+            body>main>div {
                 display: block !important;
                 width: 100% !important;
                 height: auto !important;
