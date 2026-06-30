@@ -25,9 +25,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
 
-        <!-- Metric Card 1 -->
+        <!-- Metric Card 1: Total Pegawai -->
         <div
             class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
             <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <!-- Metric Card 2 -->
+        <!-- Metric Card 2: Proyek Aktif -->
         <div
             class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
             <div class="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
@@ -51,7 +51,19 @@
             </div>
         </div>
 
-        <!-- Metric Card 3 -->
+        <!-- Metric Card 3: Proyek Selesai (BARU) -->
+        <div
+            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
+            <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                <i class="ph ph-check-circle text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-slate-500 mb-1">Proyek Selesai</p>
+                <h3 class="text-2xl font-bold text-slate-800">{{ $proyekSelesai }}</h3>
+            </div>
+        </div>
+
+        <!-- Metric Card 4: Menunggu Approval -->
         <div
             class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
             <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
@@ -63,7 +75,7 @@
             </div>
         </div>
 
-        <!-- Metric Card 4 -->
+        <!-- Metric Card 5: Total Transaksi -->
         <div
             class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition-shadow">
             <div class="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">

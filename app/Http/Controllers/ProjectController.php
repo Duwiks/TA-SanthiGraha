@@ -10,11 +10,11 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $query = Project::query();
-        
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('project_name', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
+                ->orWhere('location', 'like', "%{$search}%");
         }
 
         $projects = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
@@ -87,5 +87,18 @@ class ProjectController extends Controller
         $project->delete();
 
         return redirect()->route('projects.index')->with('success', 'Proyek berhasil dihapus!');
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('end_date')
+                ->orWhere('end_date', '>=', now()->toDateString());
+        });
+    }
+
+    public function getIsFinishedAttribute(): bool
+    {
+        return $this->end_date && $this->end_date < now()->toDateString();
     }
 }

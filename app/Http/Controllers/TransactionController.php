@@ -107,7 +107,7 @@ class TransactionController extends Controller
     public function create()
     {
         $categories = Category::all();
-        $projects = Project::all();
+        $projects = Project::active()->get();
         return view('transactions.form', compact('categories', 'projects'));
     }
 

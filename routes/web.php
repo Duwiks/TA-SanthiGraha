@@ -29,7 +29,10 @@ Route::middleware(['auth'])->group(function () {
         function () {
             if (auth()->user()->role === 'admin') {
                 $totalPegawai = \App\Models\User::where('role', 'pegawai')->count();
-                $proyekAktif = \App\Models\Project::count();
+                $proyekAktif = \App\Models\Project::active()->count();
+                $proyekSelesai = \App\Models\Project::whereNotNull('end_date')
+                    ->where('end_date', '<', now()->toDateString())
+                    ->count();
                 $menungguApproval = \App\Models\Transaction::where('status', 'pending')->count();
                 $totalTransaksi = \App\Models\Transaction::where('status', 'approved')->count();
 
@@ -64,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
                 return view('admin.dashboard', compact(
                     'totalPegawai',
                     'proyekAktif',
+                    'proyekSelesai',
                     'menungguApproval',
                     'totalTransaksi',
                     'months',
