@@ -160,11 +160,17 @@
                             <i class="ph ph-file-csv text-base"></i>
                             Export Excel / CSV
                         </a>
-                        <button type="button" onclick="window.print()"
+                        <!-- <button type="button" onclick="window.print()"
+                                            class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
+                                            <i class="ph ph-printer text-base"></i>
+                                            Cetak PDF / Print
+                                        </button> -->
+                        <a href="{{ route('rekap.print', request()->query()) }}" target="_blank"
                             class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
                             <i class="ph ph-printer text-base"></i>
                             Cetak PDF / Print
-                        </button>
+                        </a>
+
                     </div>
                 </div>
             </form>

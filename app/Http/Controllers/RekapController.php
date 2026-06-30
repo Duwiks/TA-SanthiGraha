@@ -190,4 +190,66 @@ class RekapController extends Controller
             ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
             ->header('Content-Disposition', 'attachment; filename=' . $fileName);
     }
+
+    // PRINT
+    public function print(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $projects = Project::orderBy('project_name')->get();
+        $categories = Category::orderBy('category_name')->get();
+
+        $query = Transaction::where('status', 'approved')
+            ->with([
+                'user:id,name',
+                'project:id,project_name',
+                'category:id,category_name'
+            ]);
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('transaction_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('transaction_date', '<=', $request->date_to);
+        }
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $transactions = $query
+            ->orderBy('transaction_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $totalPemasukan = $transactions
+            ->where('type', 'pemasukan')
+            ->sum('amount');
+
+        $totalPengeluaran = $transactions
+            ->where('type', 'pengeluaran')
+            ->sum('amount');
+
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        return view('admin.rekap-print', compact(
+            'transactions',
+            'projects',
+            'categories',
+            'totalPemasukan',
+            'totalPengeluaran',
+            'saldo'
+        ));
+    }
 }
