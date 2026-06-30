@@ -1,4 +1,4 @@
-@extends('layouts.pegawai')
+@extends(auth()->user()->role === 'admin' ? 'layouts.admin' : 'layouts.pegawai')
 
 @section('title', 'Detail Nota Merah #{{ $nota->id }} - SanthiGraha')
 @section('page_title', 'Detail Nota Merah')
@@ -202,20 +202,25 @@
         </div>
 
         {{-- Tombol Upload Realisasi --}}
-        @if($nota->status === 'disetujui')
-            <div
-                class="mt-5 p-5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between flex-wrap gap-4">
+        @if($nota->status === 'disetujui' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
+            <div class="mt-5 p-5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <p class="font-bold text-blue-800 text-sm">Nota merah Anda telah disetujui!</p>
                     <p class="text-sm text-blue-600 mt-0.5">Lakukan pembelian sesuai pengajuan, kemudian upload bukti struk atau
                         kwitansi.</p>
-                </div>
-                <a href="{{ route('nota-merah.realisasi.form', $nota->id) }}"
-                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
-                    <i class="ph ph-upload-simple"></i> Upload Bukti Realisasi
-                </a>
-            </div>
-        @endif
+        </div>
+        <a href="{{ route('nota-merah.realisasi.form', $nota->id) }}"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
+            <i class="ph ph-upload-simple"></i> Upload Bukti Realisasi
+        </a>
+    </div>
+    @elseif($nota->status === 'disetujui' && auth()->user()->role !== 'pegawai')
+    <div class="mt-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+        <i class="ph ph-clock text-slate-400 text-lg"></i>
+        <p class="text-sm text-slate-500">Menunggu pegawai lapangan mengupload bukti realisasi.</p>
+    </div>
+@endif
+        
 
         {{-- Tombol Edit & Kirim Ulang (saat ditolak) --}}
         @if($nota->status === 'ditolak' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
