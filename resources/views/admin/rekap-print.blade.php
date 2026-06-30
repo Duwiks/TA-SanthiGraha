@@ -318,7 +318,7 @@
             <col style="width:17%">
             <col style="width:17%">
             <col style="width:18%">
-            <col style="width:75px">
+            <col style="width:19%">
             <col style="width:90px">
             <col style="width:150px">
         </colgroup>
@@ -381,7 +381,7 @@
                 <col style="width:17%">
                 <col style="width:17%">
                 <col style="width:18%">
-                <col style="width:75px">
+                <col style="width:19%">
                 <col style="width:90px">
                 <col style="width:150px">
             </colgroup>
