@@ -84,17 +84,32 @@ class NotaMerahController extends Controller
             'project_id' => 'required|exists:projects,id',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
-            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:20480',
+            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5000',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek tidak valid.',
+
             'category_id.required' => 'Kategori wajib dipilih.',
+            'category_id.exists' => 'Kategori tidak valid.',
+
+            'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
+            'transaction_date.date' => 'Format tanggal tidak valid.',
+
+            'type.required' => 'Tipe transaksi wajib dipilih.',
+            'type.in' => 'Tipe transaksi tidak valid.',
+
             'amount.required' => 'Nominal wajib diisi.',
-            'payment_method.required' => 'Metode pencairan wajib dipilih.',
-            'nota_photo.required' => 'Foto nota merah / bukti kebutuhan wajib dilampirkan.',
-            'nota_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'nota_photo.max' => 'Ukuran file terlalu besar (maksimal 20MB).',
+            'amount.numeric' => 'Nominal harus berupa angka.',
+            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
+
+            'payment_method.required' => 'Metode pembayaran wajib dipilih.',
+            'payment_method.in' => 'Metode pembayaran tidak valid.',
+
+            'receipt_photo.file' => 'File bukti transaksi tidak valid.',
+            'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
+            'receipt_photo.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         $notaPath = $this->handleUpload($request->file('nota_photo'), 'nota-merah');
