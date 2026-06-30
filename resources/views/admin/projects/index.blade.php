@@ -27,7 +27,7 @@
         </form>
 
         <a href="{{ route('projects.create') }}"
-            class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center gap-2 justify-center shrink-0">
+            class="px-5 py-2.5  bg-emerald-500 hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-500/30 flex items-center gap-2 justify-center shrink-0">
             <i class="ph ph-plus-circle text-lg"></i>
             Tambah Proyek
         </a>

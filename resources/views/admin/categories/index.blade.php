@@ -5,24 +5,30 @@
 
 @section('content')
     <!-- Toolbar: Search, Filters -->
-    <div class="bg-white rounded-t-2xl p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <form action="{{ route('categories.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+    <div
+        class="bg-white rounded-t-2xl p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <form action="{{ route('categories.index') }}" method="GET"
+            class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
             <div class="relative">
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama kategori..." class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none w-full md:w-64">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama kategori..."
+                    class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none w-full md:w-64">
             </div>
-            
-            <button type="submit" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors">
+
+            <button type="submit"
+                class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors">
                 Cari
             </button>
             @if(request()->filled('search'))
-                <a href="{{ route('categories.index') }}" class="px-5 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center">
+                <a href="{{ route('categories.index') }}"
+                    class="px-5 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center">
                     Reset
                 </a>
             @endif
         </form>
 
-        <a href="{{ route('categories.create') }}" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center gap-2 justify-center shrink-0">
+        <a href="{{ route('categories.create') }}"
+            class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center gap-2 justify-center shrink-0">
             <i class="ph ph-plus-circle text-lg"></i>
             Tambah Kategori
         </a>
@@ -42,43 +48,50 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($categories as $index => $cat)
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-center">{{ $index + 1 + ($categories->currentPage() - 1) * $categories->perPage() }}</td>
-                        <td class="px-6 py-4 font-medium text-slate-800">{{ $cat->category_name }}</td>
-                        <td class="px-6 py-4">{{ $cat->description ?: '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('categories.edit', $cat->id) }}" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors border border-blue-200" title="Edit Kategori">
-                                    <i class="ph ph-pencil-simple"></i>
-                                </a>
-                                <form action="{{ route('categories.destroy', $cat->id) }}" method="POST" id="delete-form-{{ $cat->id }}" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="confirmDelete('delete-form-{{ $cat->id }}', 'Apakah Anda yakin ingin menghapus kategori ini?')" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200" title="Hapus Kategori">
-                                        <i class="ph ph-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4 text-center">
+                                {{ $index + 1 + ($categories->currentPage() - 1) * $categories->perPage() }}</td>
+                            <td class="px-6 py-4 font-medium text-slate-800">{{ $cat->category_name }}</td>
+                            <td class="px-6 py-4">{{ $cat->description ?: '-' }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('categories.edit', $cat->id) }}"
+                                        class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors border border-blue-200"
+                                        title="Edit Kategori">
+                                        <i class="ph ph-pencil-simple"></i>
+                                    </a>
+                                    <form action="{{ route('categories.destroy', $cat->id) }}" method="POST"
+                                        id="delete-form-{{ $cat->id }}" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                            onclick="confirmDelete('delete-form-{{ $cat->id }}', 'Apakah Anda yakin ingin menghapus kategori ini?')"
+                                            class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200"
+                                            title="Hapus Kategori">
+                                            <i class="ph ph-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                            <i class="ph ph-folder-open text-5xl mb-4 text-slate-200"></i>
-                            <p class="text-base font-medium text-slate-500">Belum ada kategori</p>
-                            <p class="text-sm">Silakan tambah kategori transaksi baru.</p>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                <i class="ph ph-folder-open text-5xl mb-4 text-slate-200"></i>
+                                <p class="text-base font-medium text-slate-500">Belum ada kategori</p>
+                                <p class="text-sm">Silakan tambah kategori transaksi baru.</p>
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination Links -->
         @if($categories->hasPages())
-        <div class="px-6 py-4 border-t border-slate-100 text-sm">
-            {{ $categories->links() }}
-        </div>
+            <div class="px-6 py-4 border-t border-slate-100 text-sm">
+                {{ $categories->links() }}
+            </div>
         @endif
     </div>
 @endsection
