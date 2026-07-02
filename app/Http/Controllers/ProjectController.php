@@ -45,6 +45,7 @@ class ProjectController extends Controller
             'location' => $request->location,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'status' => 'aktif',
         ]);
 
         return redirect()->route('projects.index')->with('success', 'Proyek berhasil ditambahkan!');
@@ -53,12 +54,27 @@ class ProjectController extends Controller
     public function edit($id)
     {
         $project = Project::findOrFail($id);
+
+        // Proteksi backend: project selesai tidak bisa diedit
+        if ($project->is_finished) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek sudah selesai dan tidak dapat diedit.');
+        }
+
         return view('admin.projects.form', compact('project'));
     }
 
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+
+        // Proteksi backend: project selesai tidak bisa diupdate
+        if ($project->is_finished) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek sudah selesai dan tidak dapat diedit.');
+        }
 
         $request->validate([
             'project_name' => 'required|string|max:150|unique:projects,project_name,' . $id,
@@ -85,6 +101,13 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
+        // Proteksi backend: proyek yang sudah selesai tidak dapat dihapus
+        if ($project->is_finished) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek sudah selesai dan tidak dapat dihapus.');
+        }
+
         // Cek apakah proyek masih digunakan
         if ($project->transactions()->exists()) {
             return redirect()
@@ -99,16 +122,52 @@ class ProjectController extends Controller
             ->with('success', 'Proyek berhasil dihapus!');
     }
 
-    public function scopeActive(Builder $query): Builder
+    /**
+     * Tandai project sebagai selesai (admin action).
+     * Setelah ini, project tidak bisa diperpanjang atau diedit.
+     */
+    public function complete($id)
     {
-        return $query->where(function ($q) {
-            $q->whereNull('end_date')
-                ->orWhere('end_date', '>=', now()->toDateString());
-        });
+        $project = Project::findOrFail($id);
+
+        if ($project->is_finished) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek sudah berstatus selesai.');
+        }
+
+        $project->update(['status' => 'selesai']);
+
+        return redirect()
+            ->route('projects.index')
+            ->with('success', "Proyek \"{$project->project_name}\" telah ditandai selesai.");
     }
 
-    public function getIsFinishedAttribute(): bool
+    /**
+     * Perpanjang deadline project (hanya untuk project yang belum selesai).
+     */
+    public function extend(Request $request, $id)
     {
-        return $this->end_date && $this->end_date < now()->toDateString();
+        $project = Project::findOrFail($id);
+
+        // Proteksi backend: tidak bisa perpanjang project yang sudah selesai
+        if ($project->is_finished) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek sudah selesai dan tidak dapat diperpanjang.');
+        }
+
+        $request->validate([
+            'new_end_date' => 'required|date|after:today',
+        ], [
+            'new_end_date.required' => 'Tanggal deadline baru wajib diisi.',
+            'new_end_date.after'    => 'Tanggal deadline baru harus setelah hari ini.',
+        ]);
+
+        $project->update(['end_date' => $request->new_end_date]);
+
+        return redirect()
+            ->route('projects.index')
+            ->with('success', "Deadline proyek \"{$project->project_name}\" berhasil diperpanjang.");
     }
 }

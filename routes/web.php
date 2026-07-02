@@ -103,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/{id}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
     Route::put('/projects/{id}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::post('/projects/{id}/complete', [ProjectController::class, 'complete'])->name('projects.complete');
+    Route::post('/projects/{id}/extend', [ProjectController::class, 'extend'])->name('projects.extend');
 
     // Dedicated Transaction Web Endpoints
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');

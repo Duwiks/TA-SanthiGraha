@@ -45,7 +45,7 @@
                         <th class="px-6 py-4">TANGGAL MULAI</th>
                         <th class="px-6 py-4">TANGGAL SELESAI</th>
                         <th class="px-6 py-4 text-center">STATUS</th>
-                        <th class="px-6 py-4 text-center w-32">AKSI</th>
+                        <th class="px-6 py-4 text-center w-48">AKSI</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -72,11 +72,19 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @if($project->is_finished)
+                                    {{-- Status: Selesai (ditandai admin) --}}
                                     <span
                                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">
                                         <i class="ph ph-check-circle"></i> Selesai
                                     </span>
+                                @elseif($project->is_overdue)
+                                    {{-- Status: Jatuh Tempo (end_date lewat, belum ditandai selesai) --}}
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-orange-600 border border-orange-200">
+                                        <i class="ph ph-warning-circle"></i> Jatuh Tempo
+                                    </span>
                                 @else
+                                    {{-- Status: Aktif --}}
                                     <span
                                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600">
                                         <i class="ph ph-circle-wavy-check"></i> Aktif
@@ -84,23 +92,46 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('projects.edit', $project->id) }}"
-                                        class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-colors border border-blue-200"
-                                        title="Edit Proyek">
-                                        <i class="ph ph-pencil-simple"></i>
-                                    </a>
-                                    <form action="{{ route('projects.destroy', $project->id) }}" method="POST"
-                                        id="delete-form-{{ $project->id }}" class="inline">
-                                        @csrf
-                                        @method('DELETE')
+                                <div class="flex items-center justify-center gap-1.5">
+
+                                    @if($project->is_finished)
+                                        {{-- Project selesai: hanya label terkunci --}}
+                                        <span class="text-xs text-slate-400 italic">Terkunci</span>
+
+                                    @elseif($project->is_overdue)
+                                        {{-- Project jatuh tempo: Perpanjang + Selesaikan --}}
                                         <button type="button"
-                                            onclick="confirmDelete('delete-form-{{ $project->id }}', 'Apakah Anda yakin ingin menghapus proyek ini?')"
-                                            class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200"
-                                            title="Hapus Proyek">
-                                            <i class="ph ph-trash"></i>
+                                            onclick="openExtendModal({{ $project->id }}, '{{ addslashes($project->project_name) }}')"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white transition-colors border border-orange-200 text-xs font-semibold"
+                                            title="Perpanjang Deadline">
+                                            <i class="ph ph-calendar-plus"></i> Perpanjang
                                         </button>
-                                    </form>
+                                        <form action="{{ route('projects.complete', $project->id) }}" method="POST" class="inline"
+                                            id="complete-form-{{ $project->id }}">
+                                            @csrf
+                                            <button type="button"
+                                                onclick="confirmComplete('complete-form-{{ $project->id }}', '{{ addslashes($project->project_name) }}')"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-200 text-xs font-semibold"
+                                                title="Tandai Selesai">
+                                                <i class="ph ph-check-fat"></i> Selesaikan
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if(!$project->is_finished)
+                                        {{-- Tombol Hapus hanya ada jika belum selesai --}}
+                                        <form action="{{ route('projects.destroy', $project->id) }}" method="POST"
+                                            id="delete-form-{{ $project->id }}" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button"
+                                                onclick="confirmDelete('delete-form-{{ $project->id }}', 'Apakah Anda yakin ingin menghapus proyek ini?')"
+                                                class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-500 hover:text-white transition-colors border border-slate-200"
+                                                title="Hapus Proyek">
+                                                <i class="ph ph-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -124,4 +155,116 @@
             </div>
         @endif
     </div>
+
+    <!-- ====================================================
+                 Modal Perpanjang Deadline
+                 ==================================================== -->
+    <div id="extendModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md mx-4 overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
+                        <i class="ph ph-calendar-plus text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Perpanjang Deadline</h3>
+                        <p id="extendModalProjectName" class="text-xs text-slate-500 mt-0.5"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeExtendModal()"
+                    class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form id="extendForm" method="POST" action="">
+                @csrf
+                <div class="px-6 py-5 space-y-4">
+                    <div class="p-3 rounded-xl bg-orange-50 border border-orange-100 flex items-start gap-2.5">
+                        <i class="ph ph-warning-circle text-orange-500 text-lg mt-0.5 shrink-0"></i>
+                        <p class="text-sm text-orange-700">
+                            Project ini sudah melewati tenggat waktu. Tentukan tanggal deadline baru untuk melanjutkan
+                            project.
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Deadline Baru <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="new_end_date" id="extendDateInput"
+                            min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-400/20 focus:border-orange-400 outline-none transition-all text-slate-700"
+                            required>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                    <button type="button" onclick="closeExtendModal()"
+                        class="px-5 py-2.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-semibold transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/20 transition-all text-white rounded-xl text-sm font-semibold shadow-md flex items-center gap-2">
+                        <i class="ph ph-calendar-check text-base"></i>
+                        Simpan Deadline Baru
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Buka modal perpanjang deadline
+        function openExtendModal(projectId, projectName) {
+            const modal = document.getElementById('extendModal');
+            const form = document.getElementById('extendForm');
+            const nameEl = document.getElementById('extendModalProjectName');
+
+            form.action = `/projects/${projectId}/extend`;
+            nameEl.textContent = projectName;
+            document.getElementById('extendDateInput').value = '';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Tutup modal perpanjang deadline
+        function closeExtendModal() {
+            const modal = document.getElementById('extendModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Tutup modal jika klik backdrop
+        document.getElementById('extendModal').addEventListener('click', function (e) {
+            if (e.target === this) closeExtendModal();
+        });
+
+        // Konfirmasi sebelum selesaikan project
+        function confirmComplete(formId, projectName) {
+            Swal.fire({
+                title: 'Selesaikan Proyek?',
+                html: `Tandai <strong>"${projectName}"</strong> sebagai selesai?<br>
+                               <span class="text-sm text-slate-500">Project tidak bisa diedit atau diperpanjang setelah ini.</span>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Selesaikan!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm mr-2',
+                    cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 @endsection
