@@ -74,11 +74,13 @@ class CategoryController extends Controller
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
-        
-        // Optional logic: Check if category is in use by transactions before deleting
-        // if ($category->transactions()->exists()) {
-        //     return redirect()->route('categories.index')->with('error', 'Kategori tidak dapat dihapus karena sedang digunakan.');
-        // }
+
+        // Cek apakah kategori masih digunakan pada transaksi
+        if ($category->transactions()->exists()) {
+            return redirect()
+                ->route('categories.index')
+                ->with('error', 'Kategori tidak dapat dihapus karena masih digunakan pada transaksi.');
+        }
 
         $category->delete();
 

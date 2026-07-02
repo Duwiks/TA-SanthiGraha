@@ -244,9 +244,9 @@
             }
         }
 
-        // SweetAlert2 Toast for Login Success or any success messages
+        // SweetAlert2 Toast for success messages
         @if(session('success'))
-            const Toast = Swal.mixin({
+            const ToastSuccess = Swal.mixin({
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
@@ -258,9 +258,26 @@
                 }
             });
 
-            Toast.fire({
+            ToastSuccess.fire({
                 icon: 'success',
                 title: '{{ session('success') }}'
+            });
+        @endif
+
+        // SweetAlert2 Popup for error messages (e.g. cannot delete)
+        @if(session('error'))
+            Swal.fire({
+                title: 'Tidak Dapat Dihapus!',
+                text: '{{ session('error') }}',
+                icon: 'error',
+                confirmButtonColor: '#6366f1',
+                confirmButtonText: 'Mengerti',
+                customClass: {
+                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                    title: 'text-slate-800 font-bold text-lg',
+                    htmlContainer: 'text-slate-600 text-sm',
+                    confirmButton: 'px-6 py-2.5 rounded-xl font-semibold text-sm',
+                }
             });
         @endif
 

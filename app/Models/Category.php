@@ -13,4 +13,10 @@ class Category extends Model
         'category_name',
         'description',
     ];
+
+    // Relasi ke Transaksi
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'category_id');
+    }
 }

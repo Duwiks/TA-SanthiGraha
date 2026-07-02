@@ -84,9 +84,19 @@ class ProjectController extends Controller
     public function destroy($id)
     {
         $project = Project::findOrFail($id);
+
+        // Cek apakah proyek masih digunakan
+        if ($project->transactions()->exists()) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek tidak dapat dihapus karena masih digunakan pada transaksi.');
+        }
+
         $project->delete();
 
-        return redirect()->route('projects.index')->with('success', 'Proyek berhasil dihapus!');
+        return redirect()
+            ->route('projects.index')
+            ->with('success', 'Proyek berhasil dihapus!');
     }
 
     public function scopeActive(Builder $query): Builder

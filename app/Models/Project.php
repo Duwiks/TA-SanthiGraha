@@ -23,8 +23,15 @@ class Project extends Model
                 ->orWhere('end_date', '>=', now()->toDateString());
         });
     }
+
     public function getIsFinishedAttribute(): bool
     {
         return $this->end_date && $this->end_date < now()->toDateString();
+    }
+
+    // Relasi ke Transaksi
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'project_id');
     }
 }
