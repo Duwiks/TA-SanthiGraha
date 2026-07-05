@@ -2,7 +2,7 @@
 
 @section('title', 'Registrasi - SanthiGraha')
 @section('header_title', 'Daftar Akun Pegawai')
-@section('header_subtitle', 'Sistem Manajemen Keuangan Konstruksi')
+@section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
 
 @section('content')
     <form method="POST" action="{{ url('/register') }}" class="space-y-4">
@@ -12,6 +12,7 @@
             <label for="name" class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
             <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
                 placeholder="Cth: I Kadek Ari"
+                oninput="filterLettersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('name') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('name')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -21,7 +22,9 @@
         <div>
             <label for="username" class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required
-                placeholder="Min. 4 huruf"
+                placeholder="Min. 4 huruf, hanya huruf"
+                minlength="4"
+                oninput="filterLettersNoSpace(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('username') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('username')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -31,6 +34,8 @@
         <div>
             <label for="phone" class="block text-sm font-semibold text-slate-700 mb-1.5">No. Telepon</label>
             <input id="phone" type="text" name="phone" value="{{ old('phone') }}" placeholder="Cth: 08123456789"
+                inputmode="numeric"
+                oninput="filterNumbersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('phone') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('phone')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -77,6 +82,36 @@
                 passwordInput.type = 'password';
                 eyeIcon.classList.remove('ph-eye-closed');
                 eyeIcon.classList.add('ph-eye');
+            }
+        }
+
+        // Hanya huruf dan spasi (untuk Nama Lengkap)
+        function filterLettersOnly(input) {
+            const pos = input.selectionStart;
+            const cleaned = input.value.replace(/[^a-zA-Z\s]/g, '');
+            if (input.value !== cleaned) {
+                input.value = cleaned;
+                input.setSelectionRange(pos - 1, pos - 1);
+            }
+        }
+
+        // Hanya huruf tanpa spasi (untuk Username), min 4 karakter
+        function filterLettersNoSpace(input) {
+            const pos = input.selectionStart;
+            const cleaned = input.value.replace(/[^a-zA-Z]/g, '');
+            if (input.value !== cleaned) {
+                input.value = cleaned;
+                input.setSelectionRange(pos - 1, pos - 1);
+            }
+        }
+
+        // Hanya angka (untuk No. Telepon)
+        function filterNumbersOnly(input) {
+            const pos = input.selectionStart;
+            const cleaned = input.value.replace(/[^0-9]/g, '');
+            if (input.value !== cleaned) {
+                input.value = cleaned;
+                input.setSelectionRange(pos - 1, pos - 1);
             }
         }
     </script>

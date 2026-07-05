@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 
 @section('title', 'Login - SanthiGraha')
-@section('header_subtitle', 'Sistem Manajemen Keuangan Konstruksi')
+@section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
 
 @section('content')
     <form method="POST" action="{{ url('/login') }}" class="space-y-5">
