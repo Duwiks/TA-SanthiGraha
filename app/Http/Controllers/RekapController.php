@@ -20,10 +20,12 @@ class RekapController extends Controller
 
         // Validasi filter tanggal
         $request->validate([
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'date_from' => 'nullable|date|before_or_equal:today',
+            'date_to' => 'nullable|date|after_or_equal:date_from|before_or_equal:today',
         ], [
             'date_to.after_or_equal' => 'Tanggal sampai tidak boleh lebih awal dari tanggal mulai.',
+            'date_from.before_or_equal' => 'Tanggal dari tidak boleh melebihi tanggal sekarang.',
+            'date_to.before_or_equal' => 'Tanggal sampai tidak boleh melebihi tanggal sekarang.',
         ]);
 
         $projects = Project::orderBy('project_name')->get();
