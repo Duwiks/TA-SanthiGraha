@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Login - SanthiGraha')
+@section('title', 'Login - SIMAKSA')
 @section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
 
 @section('content')

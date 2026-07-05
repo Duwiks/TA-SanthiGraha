@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Registrasi - SanthiGraha')
+@section('title', 'Registrasi - SIMAKSA')
 @section('header_title', 'Daftar Akun Pegawai')
 @section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
 
@@ -11,8 +11,7 @@
         <div>
             <label for="name" class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
             <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
-                placeholder="Cth: I Kadek Ari"
-                oninput="filterLettersOnly(this)"
+                placeholder="Cth: I Kadek Ari" oninput="filterLettersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('name') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('name')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -22,9 +21,7 @@
         <div>
             <label for="username" class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required
-                placeholder="Min. 4 huruf, hanya huruf"
-                minlength="4"
-                oninput="filterLettersNoSpace(this)"
+                placeholder="Min. 4 huruf, hanya huruf" minlength="4" oninput="filterLettersNoSpace(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('username') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('username')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -34,8 +31,7 @@
         <div>
             <label for="phone" class="block text-sm font-semibold text-slate-700 mb-1.5">No. Telepon</label>
             <input id="phone" type="text" name="phone" value="{{ old('phone') }}" placeholder="Cth: 08123456789"
-                inputmode="numeric"
-                oninput="filterNumbersOnly(this)"
+                inputmode="numeric" oninput="filterNumbersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('phone') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('phone')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
