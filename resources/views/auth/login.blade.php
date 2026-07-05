@@ -10,7 +10,7 @@
         <div>
             <label for="username" class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus
-                placeholder="Masukkan username"
+                placeholder="Masukkan username" oninput="filterLettersNoSpace(this)"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('username') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('username')
                 <p class="text-red-500 text-xs font-semibold mt-2">{{ $message }}</p>
@@ -60,6 +60,16 @@
                 // Ubah icon kembali menjadi mata terbuka
                 eyeIcon.classList.remove('ph-eye-closed');
                 eyeIcon.classList.add('ph-eye');
+            }
+        }
+
+        // Hanya huruf tanpa spasi (untuk Username)
+        function filterLettersNoSpace(input) {
+            const pos = input.selectionStart;
+            const cleaned = input.value.replace(/[^a-zA-Z]/g, '');
+            if (input.value !== cleaned) {
+                input.value = cleaned;
+                input.setSelectionRange(pos - 1, pos - 1);
             }
         }
     </script>
