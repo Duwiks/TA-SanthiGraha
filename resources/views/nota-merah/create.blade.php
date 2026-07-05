@@ -23,8 +23,9 @@
             <ol class="list-decimal ml-4 space-y-0.5 text-amber-700">
                 <li>Isi form ini dan upload foto nota merah / RAB / bukti kebutuhan</li>
                 <li>Admin akan menyetujui atau menolak pengajuan Anda</li>
-                <li>Jika disetujui, lakukan pembelian dan upload bukti struk/kwitansi</li>
-                <li>Admin konfirmasi → transaksi tercatat resmi di buku kas</li>
+                <li>Jika pengajuan ditolak, Anda dapat mengedit dan melakukan pengajuan kembali.</li>
+                <li>Jika pengajuan diterima, Admin akan mentransfer dana dan mengupload bukti transfer.</li>
+                <li>Lakukan pembelian, kemudian upload bukti struk/kwitansi sebagai bukti realisasi.</li>
             </ol>
         </div>
     </div>
@@ -79,33 +80,72 @@
                 @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Nominal & Metode --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="amount" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                        Nominal Pengajuan <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-sm">Rp</span>
-                        <input type="text" id="amount" name="amount" inputmode="decimal" data-rupiah
-                            value="{{ old('amount') }}"
-                            placeholder="0"
-                            class="w-full pl-10 pr-4 py-3 rounded-xl border @error('amount') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
-                    </div>
-                    @error('amount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            {{-- Nominal --}}
+            <div>
+                <label for="amount" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Nominal Pengajuan <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-sm">Rp</span>
+                    <input type="text" id="amount" name="amount" inputmode="decimal" data-rupiah
+                        value="{{ old('amount') }}"
+                        placeholder="0"
+                        class="w-full pl-10 pr-4 py-3 rounded-xl border @error('amount') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                 </div>
+                @error('amount') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Info Rekening Tujuan --}}
+            <div class="border border-slate-200 rounded-xl p-5 space-y-4 bg-slate-50">
+                <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <i class="ph ph-bank text-emerald-500"></i>
+                    Rekening Tujuan Transfer
+                </p>
+
+                {{-- Bank Tujuan (searchable) --}}
                 <div>
-                    <label for="payment_method" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                        Metode Pencairan <span class="text-red-500">*</span>
+                    <label for="bank_tujuan_search" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Bank Tujuan <span class="text-red-500">*</span>
                     </label>
-                    <select id="payment_method" name="payment_method"
-                        class="w-full px-4 py-3 rounded-xl border @error('payment_method') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
-                        <option value="">-- Pilih Metode --</option>
-                        @foreach(['Cash', 'Bank BPD', 'BRI', 'BCA'] as $method)
-                            <option value="{{ $method }}" @selected(old('payment_method') === $method)>{{ $method }}</option>
-                        @endforeach
-                    </select>
-                    @error('payment_method') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <div class="relative" id="bank-dropdown-wrapper">
+                        <input type="text" id="bank_tujuan_search"
+                            placeholder="Cari nama bank..."
+                            autocomplete="off"
+                            value="{{ old('bank_tujuan') }}"
+                            class="w-full px-4 py-3 rounded-xl border @error('bank_tujuan') border-red-400 bg-red-50 @else border-slate-200 bg-white @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
+                        <input type="hidden" id="bank_tujuan" name="bank_tujuan" value="{{ old('bank_tujuan') }}">
+                        <ul id="bank-suggestions"
+                            class="absolute z-50 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-52 overflow-y-auto hidden">
+                        </ul>
+                    </div>
+                    @error('bank_tujuan') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- No. Rekening & Nama Pemilik --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="no_rekening" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            No. Rekening <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="no_rekening" name="no_rekening"
+                            value="{{ old('no_rekening') }}"
+                            placeholder="Contoh: 1234567890"
+                            inputmode="numeric"
+                            maxlength="50"
+                            class="w-full px-4 py-3 rounded-xl border @error('no_rekening') border-red-400 bg-red-50 @else border-slate-200 bg-white @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
+                        @error('no_rekening') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="nama_pemilik_rekening" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Nama Pemilik Rekening <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="nama_pemilik_rekening" name="nama_pemilik_rekening"
+                            value="{{ old('nama_pemilik_rekening') }}"
+                            placeholder="Contoh: Budi Santoso"
+                            maxlength="150"
+                            class="w-full px-4 py-3 rounded-xl border @error('nama_pemilik_rekening') border-red-400 bg-red-50 @else border-slate-200 bg-white @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
+                        @error('nama_pemilik_rekening') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </div>
 
@@ -148,6 +188,130 @@
 </div>
 
 <script>
+    // ---------------------------------------------------------------
+    // Daftar Bank Indonesia
+    // ---------------------------------------------------------------
+    const bankList = [
+        'Bank BCA (Bank Central Asia)',
+        'Bank BRI (Bank Rakyat Indonesia)',
+        'Bank BNI (Bank Negara Indonesia)',
+        'Bank Mandiri',
+        'Bank BPD Bali',
+        'Bank CIMB Niaga',
+        'Bank Danamon',
+        'Bank Permata',
+        'Bank BTN (Bank Tabungan Negara)',
+        'Bank BTPN',
+        'Bank Mega',
+        'Bank Panin',
+        'Bank OCBC NISP',
+        'Bank Maybank Indonesia',
+        'Bank Sinarmas',
+        'Bank Bukopin',
+        'Bank Muamalat',
+        'Bank Syariah Indonesia (BSI)',
+        'Bank BCA Syariah',
+        'Bank BRI Syariah',
+        'Bank BNI Syariah',
+        'Bank Mandiri Syariah',
+        'Bank Jago',
+        'Bank Allo Bank',
+        'Bank Seabank',
+        'Bank Neo Commerce',
+        'Bank Jenius (BTPN)',
+        'Bank Superbank',
+        'Bank Raya Indonesia',
+        'BPD Aceh',
+        'BPD Banten',
+        'BPD DKI Jakarta',
+        'BPD Jawa Barat (Bank BJB)',
+        'BPD Jawa Tengah',
+        'BPD Jawa Timur (Bank Jatim)',
+        'BPD DIY (Bank BPD DIY)',
+        'BPD Kalimantan Barat',
+        'BPD Kalimantan Selatan',
+        'BPD Kalimantan Tengah',
+        'BPD Kalimantan Timur',
+        'BPD Lampung',
+        'BPD Maluku & Maluku Utara',
+        'BPD NTB (Nusa Tenggara Barat)',
+        'BPD NTT (Nusa Tenggara Timur)',
+        'BPD Papua',
+        'BPD Riau Kepri',
+        'BPD Sulawesi Selatan & Sulawesi Barat',
+        'BPD Sulawesi Tengah',
+        'BPD Sulawesi Tenggara',
+        'BPD Sulawesi Utara Gorontalo',
+        'BPD Sumatera Barat',
+        'BPD Sumatera Selatan & Bangka Belitung',
+        'BPD Sumatera Utara',
+        'BPD Yogyakarta',
+    ];
+
+    const searchInput = document.getElementById('bank_tujuan_search');
+    const hiddenInput = document.getElementById('bank_tujuan');
+    const suggestionList = document.getElementById('bank-suggestions');
+
+    searchInput.addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+        hiddenInput.value = this.value;
+        suggestionList.innerHTML = '';
+
+        if (!query) {
+            suggestionList.classList.add('hidden');
+            return;
+        }
+
+        const filtered = bankList.filter(b => b.toLowerCase().includes(query));
+        if (filtered.length === 0) {
+            suggestionList.classList.add('hidden');
+            return;
+        }
+
+        filtered.slice(0, 8).forEach(bank => {
+            const li = document.createElement('li');
+            li.textContent = bank;
+            li.className = 'px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors';
+            li.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                searchInput.value = bank;
+                hiddenInput.value = bank;
+                suggestionList.classList.add('hidden');
+            });
+            suggestionList.appendChild(li);
+        });
+        suggestionList.classList.remove('hidden');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!document.getElementById('bank-dropdown-wrapper').contains(e.target)) {
+            suggestionList.classList.add('hidden');
+        }
+    });
+
+    // ---------------------------------------------------------------
+    // No. Rekening — hanya angka
+    // ---------------------------------------------------------------
+    document.getElementById('no_rekening').addEventListener('keypress', function (e) {
+        if (!/[0-9]/.test(e.key)) e.preventDefault();
+    });
+    document.getElementById('no_rekening').addEventListener('input', function () {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // ---------------------------------------------------------------
+    // Nama Pemilik — hanya huruf & spasi
+    // ---------------------------------------------------------------
+    document.getElementById('nama_pemilik_rekening').addEventListener('keypress', function (e) {
+        if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+    });
+    document.getElementById('nama_pemilik_rekening').addEventListener('input', function () {
+        this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+    });
+
+    // ---------------------------------------------------------------
+    // Preview file upload
+    // ---------------------------------------------------------------
     function previewFile(input, previewId) {
         const file = input.files[0];
         if (!file) return;

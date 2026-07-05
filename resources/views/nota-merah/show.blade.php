@@ -20,9 +20,9 @@
                 <span
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold {{ $nota->status_color }}">
                     @if($nota->status === 'menunggu_persetujuan') <i class="ph ph-clock text-base"></i>
-                    @elseif($nota->status === 'disetujui') <i class="ph ph-check-circle text-base"></i>
                     @elseif($nota->status === 'ditolak') <i class="ph ph-x-circle text-base"></i>
-                    @elseif($nota->status === 'menunggu_konfirmasi') <i class="ph ph-hourglass text-base"></i>
+                    @elseif($nota->status === 'menunggu_konfirmasi') <i class="ph ph-bank text-base"></i>
+                    @elseif($nota->status === 'menunggu_verifikasi') <i class="ph ph-hourglass text-base"></i>
                     @elseif($nota->status === 'selesai') <i class="ph ph-check-square text-base"></i>
                     @endif
                     {{ $nota->status_label }}
@@ -36,20 +36,26 @@
             <div class="flex items-center gap-1 flex-wrap">
                 @php
                     $stages = [
-                        ['key' => 'menunggu_persetujuan', 'label' => 'Diajukan', 'icon' => 'ph-paper-plane-tilt'],
-                        ['key' => 'disetujui', 'label' => 'Disetujui', 'icon' => 'ph-check-circle'],
-                        ['key' => 'menunggu_konfirmasi', 'label' => 'Realisasi', 'icon' => 'ph-upload-simple'],
-                        ['key' => 'selesai', 'label' => 'Kas Dicatat', 'icon' => 'ph-check-square'],
+                        ['key' => 'menunggu_persetujuan', 'label' => 'Diajukan',     'icon' => 'ph-paper-plane-tilt'],
+                        ['key' => 'menunggu_konfirmasi',  'label' => 'Ditransfer',   'icon' => 'ph-bank'],
+                        ['key' => 'menunggu_verifikasi',  'label' => 'Realisasi',    'icon' => 'ph-upload-simple'],
+                        ['key' => 'selesai',              'label' => 'Kas Dicatat',  'icon' => 'ph-check-square'],
                     ];
-                    $order = ['menunggu_persetujuan' => 0, 'disetujui' => 1, 'ditolak' => 1, 'menunggu_konfirmasi' => 2, 'selesai' => 3];
+                    $order = [
+                        'menunggu_persetujuan' => 0,
+                        'ditolak'              => 0,
+                        'menunggu_konfirmasi'  => 1,
+                        'menunggu_verifikasi'  => 2,
+                        'selesai'              => 3,
+                    ];
                     $currentOrder = $order[$nota->status] ?? 0;
                 @endphp
                 @foreach($stages as $i => $stage)
                     @php
                         $stageOrder = $i;
-                        $isDone = $currentOrder > $stageOrder;
-                        $isActive = ($nota->status !== 'ditolak' && $currentOrder === $stageOrder) ||
-                            ($nota->status === 'ditolak' && $stageOrder === 0);
+                        $isDone     = $currentOrder > $stageOrder;
+                        $isActive   = ($nota->status !== 'ditolak' && $currentOrder === $stageOrder) ||
+                                      ($nota->status === 'ditolak' && $stageOrder === 0);
                     @endphp
                     <div class="flex items-center gap-1">
                         <div class="flex flex-col items-center">
@@ -102,10 +108,34 @@
                         <dt class="text-slate-500">Nominal</dt>
                         <dd class="font-bold text-red-600 text-base">Rp {{ number_format($nota->amount, 2, ',', '.') }}</dd>
                     </div>
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Metode Pencairan</dt>
-                        <dd class="font-semibold text-slate-800">{{ $nota->payment_method }}</dd>
-                    </div>
+
+                    {{-- Rekening Tujuan --}}
+                    @if($nota->bank_tujuan || $nota->no_rekening || $nota->nama_pemilik_rekening)
+                        <div class="pt-2 border-t border-slate-100">
+                            <dt class="text-slate-500 mb-2 font-medium flex items-center gap-1">
+                                <i class="ph ph-bank text-emerald-400 text-sm"></i> Rekening Tujuan
+                            </dt>
+                            @if($nota->bank_tujuan)
+                            <dd class="text-slate-700 text-xs mb-1">
+                                <span class="text-slate-400">Bank:</span>
+                                <span class="font-semibold ml-1">{{ $nota->bank_tujuan }}</span>
+                            </dd>
+                            @endif
+                            @if($nota->no_rekening)
+                            <dd class="text-slate-700 text-xs mb-1">
+                                <span class="text-slate-400">No. Rek:</span>
+                                <span class="font-semibold ml-1 font-mono tracking-wider">{{ $nota->no_rekening }}</span>
+                            </dd>
+                            @endif
+                            @if($nota->nama_pemilik_rekening)
+                            <dd class="text-slate-700 text-xs">
+                                <span class="text-slate-400">A.n.:</span>
+                                <span class="font-semibold ml-1">{{ $nota->nama_pemilik_rekening }}</span>
+                            </dd>
+                            @endif
+                        </div>
+                    @endif
+
                     @if($nota->description)
                         <div class="pt-2 border-t border-slate-100">
                             <dt class="text-slate-500 mb-1">Keterangan</dt>
@@ -134,6 +164,34 @@
                                 <img src="{{ asset('storage/' . $nota->nota_photo) }}" alt="Nota Merah"
                                     class="w-full h-40 object-cover rounded-xl border border-slate-200 hover:opacity-80 transition-opacity">
                             </a>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- Foto Bukti Transfer (dari Admin) --}}
+                @if($nota->transfer_proof)
+                    <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-5">
+                        <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                            <i class="ph ph-money-wavy text-emerald-500"></i> Foto Bukti Transfer
+                            <span class="ml-auto text-[10px] font-normal text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                Dari Admin
+                            </span>
+                        </h3>
+                        @if(str_ends_with(strtolower($nota->transfer_proof), '.pdf'))
+                            <a href="{{ asset('storage/' . $nota->transfer_proof) }}" target="_blank"
+                                class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium text-sm hover:bg-red-100 transition-colors border border-red-100">
+                                <i class="ph ph-file-pdf text-xl"></i> Lihat Dokumen PDF
+                            </a>
+                        @else
+                            <a href="{{ asset('storage/' . $nota->transfer_proof) }}" target="_blank">
+                                <img src="{{ asset('storage/' . $nota->transfer_proof) }}" alt="Bukti Transfer"
+                                    class="w-full h-40 object-cover rounded-xl border border-emerald-200 hover:opacity-80 transition-opacity">
+                            </a>
+                        @endif
+                        @if($nota->approver)
+                            <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                                <i class="ph ph-user-circle"></i> Diupload oleh {{ $nota->approver->name }}
+                            </p>
                         @endif
                     </div>
                 @endif
@@ -201,28 +259,57 @@
             </div>
         </div>
 
-        {{-- Tombol Upload Realisasi --}}
-        @if($nota->status === 'disetujui' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
-            <div class="mt-5 p-5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between flex-wrap gap-4">
+        {{-- Banner: Menunggu Konfirmasi — Pegawai Upload Realisasi --}}
+        @if($nota->status === 'menunggu_konfirmasi' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
+            <div class="mt-5 p-5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start justify-between flex-wrap gap-4">
                 <div>
-                    <p class="font-bold text-blue-800 text-sm">Nota merah Anda telah disetujui!</p>
-                    <p class="text-sm text-blue-600 mt-0.5">Lakukan pembelian sesuai pengajuan, kemudian upload bukti struk atau
-                        kwitansi.</p>
-        </div>
-        <a href="{{ route('nota-merah.realisasi.form', $nota->id) }}"
-            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
-            <i class="ph ph-upload-simple"></i> Upload Bukti Realisasi
-        </a>
-    </div>
-    @elseif($nota->status === 'disetujui' && auth()->user()->role !== 'pegawai')
-    <div class="mt-5 p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
-        <i class="ph ph-clock text-slate-400 text-lg"></i>
-        <p class="text-sm text-slate-500">Menunggu pegawai lapangan mengupload bukti realisasi.</p>
-    </div>
-@endif
-        
+                    <p class="font-bold text-emerald-800 text-sm">Dana telah ditransfer oleh Admin!</p>
+                    <p class="text-sm text-emerald-700 mt-0.5">Lakukan pembelian sesuai pengajuan, kemudian upload bukti struk atau kwitansi sebagai bukti realisasi.</p>
+                </div>
+                <a href="{{ route('nota-merah.realisasi.form', $nota->id) }}"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors whitespace-nowrap">
+                    <i class="ph ph-upload-simple"></i> Upload Bukti Realisasi
+                </a>
+            </div>
+        @endif
 
-        {{-- Tombol Edit & Kirim Ulang (saat ditolak) --}}
+        {{-- Banner: Menunggu Verifikasi — Pegawai sudah upload, menunggu admin konfirmasi --}}
+        @if($nota->status === 'menunggu_verifikasi' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
+            <div class="mt-5 p-5 bg-purple-50 border border-purple-200 rounded-2xl flex items-center gap-3">
+                <i class="ph ph-hourglass text-purple-500 text-lg flex-shrink-0"></i>
+                <div>
+                    <p class="font-bold text-purple-800 text-sm">Bukti realisasi sudah diupload!</p>
+                    <p class="text-sm text-purple-700 mt-0.5">Admin sedang memverifikasi foto realisasi Anda sebelum transaksi dicatat di buku kas.</p>
+                </div>
+            </div>
+        @endif
+
+        {{-- Banner: Admin melihat nota menunggu konfirmasi (tunggu realisasi pegawai) --}}
+        @if($nota->status === 'menunggu_konfirmasi' && auth()->user()->role === 'admin')
+            <div class="mt-5 p-5 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-3">
+                <i class="ph ph-clock text-blue-400 text-lg"></i>
+                <p class="text-sm text-blue-700">Bukti transfer sudah diupload. Menunggu pegawai mengupload bukti realisasi pembelian.</p>
+            </div>
+        @endif
+
+        {{-- Banner: Admin melihat nota menunggu verifikasi — ada tombol konfirmasi --}}
+        @if($nota->status === 'menunggu_verifikasi' && auth()->user()->role === 'admin')
+            <div class="mt-5 p-5 bg-purple-50 border border-purple-200 rounded-2xl flex items-start justify-between flex-wrap gap-4">
+                <div>
+                    <p class="font-bold text-purple-800 text-sm">Pegawai telah mengupload bukti realisasi!</p>
+                    <p class="text-sm text-purple-700 mt-0.5">Periksa foto bukti realisasi di atas. Jika valid, konfirmasi untuk mencatat transaksi di buku kas.</p>
+                </div>
+                <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
+                        <i class="ph ph-check-square"></i> Konfirmasi & Catat Kas
+                    </button>
+                </form>
+            </div>
+        @endif
+
+        {{-- Banner Edit & Kirim Ulang (saat ditolak) --}}
         @if($nota->status === 'ditolak' && auth()->user()->role === 'pegawai' && $nota->user_id === auth()->id())
             <div class="mt-5 p-5 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-between flex-wrap gap-4">
                 <div>

@@ -22,7 +22,7 @@
             @if($countMenungguKonfirmasi > 0)
                 <div
                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-sm font-semibold">
-                    <i class="ph ph-hourglass text-base"></i> {{ $countMenungguKonfirmasi }} Menunggu Konfirmasi
+                    <i class="ph ph-hourglass text-base"></i> {{ $countMenungguKonfirmasi }} Menunggu Verifikasi Realisasi
                 </div>
             @endif
             @if($countMenungguPersetujuan === 0 && $countMenungguKonfirmasi === 0)
@@ -46,12 +46,10 @@
         <select name="status"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="">Semua Status</option>
-            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan
-            </option>
-            <option value="disetujui" @selected(request('status') === 'disetujui')>Disetujui</option>
+            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan</option>
             <option value="ditolak" @selected(request('status') === 'ditolak')>Ditolak</option>
-            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi
-            </option>
+            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi</option>
+            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi</option>
             <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
         </select>
         <button type="submit"
@@ -107,8 +105,11 @@
                             {{-- Nominal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold text-red-600">Rp {{ number_format($nota->amount, 2, ',', '.') }}</span>
-                                <div class="text-[11px] text-slate-400 mt-0.5 uppercase font-medium tracking-wide">
-                                    {{ $nota->payment_method }}</div>
+                                @if($nota->bank_tujuan)
+                                    <div class="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1">
+                                        <i class="ph ph-bank"></i> {{ $nota->bank_tujuan }}
+                                    </div>
+                                @endif
                             </td>
 
                             {{-- Bukti Foto --}}
@@ -131,6 +132,23 @@
                                             @endif
                                         </div>
                                     @endif
+                                    {{-- Bukti Transfer (dari Admin) --}}
+                                    @if($nota->transfer_proof)
+                                        <div>
+                                            <div class="text-[10px] text-emerald-500 font-semibold uppercase mb-1">Transfer</div>
+                                            @if(str_ends_with(strtolower($nota->transfer_proof), '.pdf'))
+                                                <a href="{{ asset('storage/' . $nota->transfer_proof) }}" target="_blank"
+                                                    class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg hover:bg-emerald-100 border border-emerald-100">
+                                                    <i class="ph ph-file-pdf"></i> PDF
+                                                </a>
+                                            @else
+                                                <a href="{{ asset('storage/' . $nota->transfer_proof) }}" target="_blank">
+                                                    <img src="{{ asset('storage/' . $nota->transfer_proof) }}" alt="Bukti Transfer"
+                                                        class="h-12 w-16 object-cover rounded-lg border border-emerald-200 hover:opacity-80 transition-opacity">
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @endif
                                     {{-- Realisasi Photo --}}
                                     @if($nota->realisasi_photo)
                                         <div>
@@ -148,7 +166,7 @@
                                             @endif
                                         </div>
                                     @endif
-                                    @if(!$nota->nota_photo && !$nota->realisasi_photo)
+                                    @if(!$nota->nota_photo && !$nota->transfer_proof && !$nota->realisasi_photo)
                                         <span class="text-xs text-slate-400 italic">—</span>
                                     @endif
                                 </div>
@@ -196,22 +214,28 @@
                                         <i class="ph ph-eye text-sm"></i> Detail
                                     </a>
 
-                                    {{-- Tahap 1: Menunggu Persetujuan --}}
+                                    {{-- Tahap 1: Menunggu Persetujuan → ke form upload bukti transfer --}}
                                     @if($nota->status === 'menunggu_persetujuan')
-                                        <form action="{{ route('nota-merah.approve', $nota->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
-                                                <i class="ph ph-check-circle text-sm"></i> Setujui
-                                            </button>
-                                        </form>
+                                        <a href="{{ route('nota-merah.approve.form', $nota->id) }}"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
+                                            <i class="ph ph-check-circle text-sm"></i> Setujui
+                                        </a>
                                         <button onclick="rejectNota({{ $nota->id }})"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500">
                                             <i class="ph ph-x-circle text-sm"></i> Tolak
                                         </button>
 
-                                        {{-- Tahap 2: Menunggu Konfirmasi --}}
+                                        {{-- Tahap 2: Menunggu Konfirmasi — admin sudah transfer, tunggu pegawai upload realisasi --}}
                                     @elseif($nota->status === 'menunggu_konfirmasi')
+                                        <span class="text-xs text-blue-600 font-semibold flex items-center gap-1">
+                                            <i class="ph ph-clock"></i> Menunggu Realisasi
+                                        </span>
+                                        <span class="text-[10px] text-slate-400 flex items-center gap-1">
+                                            <i class="ph ph-check"></i> Transfer sudah diupload
+                                        </span>
+
+                                        {{-- Tahap 3: Menunggu Verifikasi — pegawai sudah upload realisasi, admin perlu konfirmasi --}}
+                                    @elseif($nota->status === 'menunggu_verifikasi')
                                         <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
                                             @csrf
                                             <button type="submit"
@@ -219,12 +243,6 @@
                                                 <i class="ph ph-check-square text-sm"></i> Konfirmasi & Catat Kas
                                             </button>
                                         </form>
-
-                                        {{-- Disetujui — menunggu realisasi dari pegawai --}}
-                                    @elseif($nota->status === 'disetujui')
-                                        <span class="text-xs text-blue-600 font-semibold flex items-center gap-1">
-                                            <i class="ph ph-clock"></i> Menunggu Realisasi
-                                        </span>
 
                                         {{-- Selesai --}}
                                     @elseif($nota->status === 'selesai')

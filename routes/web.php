@@ -144,12 +144,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/nota-merah/{id}', [NotaMerahController::class, 'update'])->name('nota-merah.update');
     Route::delete('/nota-merah/{id}', [NotaMerahController::class, 'destroy'])->name('nota-merah.destroy');
 
-    // Aksi Admin
-    Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'approve'])->name('nota-merah.approve');
+    // Aksi Admin — Approve (GET: form upload bukti transfer, POST: proses upload + setujui)
+    Route::get('/nota-merah/{id}/approve', [NotaMerahController::class, 'approveForm'])->name('nota-merah.approve.form');
+    Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'storeApprove'])->name('nota-merah.approve.store');
     Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
     Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
 
-    // Upload Realisasi (Pegawai setelah nota disetujui)
+    // Upload Realisasi (Pegawai setelah admin transfer & status menunggu_konfirmasi)
     Route::get('/nota-merah/{id}/realisasi', [NotaMerahController::class, 'realisasiForm'])->name('nota-merah.realisasi.form');
     Route::post('/nota-merah/{id}/realisasi', [NotaMerahController::class, 'storeRealisasi'])->name('nota-merah.realisasi.store');
 });

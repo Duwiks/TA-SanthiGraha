@@ -27,12 +27,10 @@
         <select name="status"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="">Semua Status</option>
-            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan
-            </option>
-            <option value="disetujui" @selected(request('status') === 'disetujui')>Disetujui</option>
+            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan</option>
             <option value="ditolak" @selected(request('status') === 'ditolak')>Ditolak</option>
-            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi
-            </option>
+            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi</option>
+            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi</option>
             <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
         </select>
         <button type="submit"
@@ -73,19 +71,22 @@
                             </td>
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold text-red-600">Rp {{ number_format($nota->amount, 2, ',', '.') }}</span>
-                                <div class="text-[11px] text-slate-400 mt-0.5 uppercase font-medium tracking-wide">
-                                    {{ $nota->payment_method }}</div>
+                                @if($nota->bank_tujuan)
+                                    <div class="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1">
+                                        <i class="ph ph-bank"></i> {{ $nota->bank_tujuan }}
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-5 py-4 text-center whitespace-nowrap">
                                 <span
                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold {{ $nota->status_color }}">
                                     @if($nota->status === 'menunggu_persetujuan')
                                         <i class="ph ph-clock"></i>
-                                    @elseif($nota->status === 'disetujui')
-                                        <i class="ph ph-check-circle"></i>
                                     @elseif($nota->status === 'ditolak')
                                         <i class="ph ph-x-circle"></i>
                                     @elseif($nota->status === 'menunggu_konfirmasi')
+                                        <i class="ph ph-bank"></i>
+                                    @elseif($nota->status === 'menunggu_verifikasi')
                                         <i class="ph ph-hourglass"></i>
                                     @elseif($nota->status === 'selesai')
                                         <i class="ph ph-check-square"></i>
@@ -93,11 +94,11 @@
                                     {{ $nota->status_label }}
                                 </span>
 
-                                {{-- Tombol Upload Realisasi jika sudah disetujui --}}
-                                @if($nota->status === 'disetujui')
+                                {{-- Tombol Upload Realisasi jika admin sudah transfer --}}
+                                @if($nota->status === 'menunggu_konfirmasi')
                                     <div class="mt-2">
                                         <a href="{{ route('nota-merah.realisasi.form', $nota->id) }}"
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-500 text-white text-xs font-semibold hover:bg-purple-600 transition-colors">
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 transition-colors">
                                             <i class="ph ph-upload-simple"></i> Upload Realisasi
                                         </a>
                                     </div>
@@ -117,13 +118,14 @@
                                         title="Lihat Detail">
                                         <i class="ph ph-eye text-base"></i>
                                     </a>
-                                    @if($nota->status === 'ditolak')
+                                     @if($nota->status === 'ditolak')
                                         <a href="{{ route('nota-merah.edit', $nota->id) }}"
                                             class="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors"
                                             title="Edit & Kirim Ulang">
                                             <i class="ph ph-pencil-simple text-base"></i>
                                         </a>
                                     @endif
+
                                     @if(in_array($nota->status, ['menunggu_persetujuan', 'ditolak']))
                                         <form action="{{ route('nota-merah.destroy', $nota->id) }}" method="POST"
                                             id="delete-form-{{ $nota->id }}" class="inline">
@@ -135,12 +137,12 @@
                                                 <i class="ph ph-trash text-base"></i>
                                             </button>
                                         </form>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-400 text-xs font-semibold border border-slate-100 cursor-not-allowed"
-                                            title="Terkunci (Nota merah sudah valid/diproses)">
-                                            <i class="ph ph-lock text-sm"></i> Terkunci
-                                        </span>
+                                    @elseif($nota->status === 'selesai')
+                                        <a href="{{ route('transactions.index') }}"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold hover:bg-emerald-500 hover:text-white transition-colors border border-emerald-100"
+                                            title="Lihat di Buku Kas">
+                                            <i class="ph ph-book-open text-sm"></i> Kas
+                                        </a>
                                     @endif
                                 </div>
                             </td>
@@ -174,13 +176,16 @@
         <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
             Ajukan</span>
         <i class="ph ph-arrow-right text-slate-300"></i>
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> Disetujui
-            Admin</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>
+            Admin Transfer & Bukti</span>
         <i class="ph ph-arrow-right text-slate-300"></i>
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span> Upload
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Upload
             Realisasi</span>
         <i class="ph ph-arrow-right text-slate-300"></i>
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-            Dikonfirmasi → Kas</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>
+            Verifikasi Admin</span>
+        <i class="ph ph-arrow-right text-slate-300"></i>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
+            Selesai → Kas</span>
     </div>
 @endsection
