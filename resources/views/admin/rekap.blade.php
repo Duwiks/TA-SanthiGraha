@@ -97,7 +97,6 @@
                         <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}"
                             max="{{ date('Y-m-d') }}"
                             class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none">
-
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Sampai
@@ -163,10 +162,10 @@
                             Export Excel / CSV
                         </a>
                         <!-- <button type="button" onclick="window.print()"
-                                                class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
-                                                <i class="ph ph-printer text-base"></i>
-                                                Cetak PDF / Print
-                                            </button> -->
+                                                    class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
+                                                    <i class="ph ph-printer text-base"></i>
+                                                    Cetak PDF / Print
+                                                </button> -->
                         <a href="{{ route('rekap.print', request()->query()) }}" target="_blank"
                             class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2">
                             <i class="ph ph-printer text-base"></i>
