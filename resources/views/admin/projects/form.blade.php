@@ -40,14 +40,14 @@
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Proyek</label>
                             <input type="text" name="location" value="{{ old('location', $project->location ?? '') }}"
                                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
-                                placeholder="Contoh: Jl. Sudirman No 1">
+                                placeholder="Contoh: Jl. Sudirman No 1" required>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Tanggal Mulai -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tanggal Mulai</label>
-                                <input type="date" name="start_date"
+                                <input type="date" name="start_date" required
                                     value="{{ old('start_date', isset($project->start_date) ? \Carbon\Carbon::parse($project->start_date)->format('Y-m-d') : '') }}"
                                     class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-700">
                             </div>
@@ -55,7 +55,7 @@
                             <!-- Tanggal Selesai -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tanggal Selesai</label>
-                                <input type="date" name="end_date"
+                                <input type="date" name="end_date" required
                                     value="{{ old('end_date', isset($project->end_date) ? \Carbon\Carbon::parse($project->end_date)->format('Y-m-d') : '') }}"
                                     class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-slate-700">
                             </div>

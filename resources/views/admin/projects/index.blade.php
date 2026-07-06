@@ -116,6 +116,14 @@
                                                 <i class="ph ph-check-fat"></i> Selesaikan
                                             </button>
                                         </form>
+
+                                    @else
+                                        {{-- Project aktif: Edit --}}
+                                        <a href="{{ route('projects.edit', $project->id) }}"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-colors border border-blue-200 text-xs font-semibold"
+                                            title="Edit Proyek">
+                                            <i class="ph ph-pencil"></i> Edit
+                                        </a>
                                     @endif
 
                                     @if(!$project->is_finished)
@@ -157,8 +165,8 @@
     </div>
 
     <!-- ====================================================
-                 Modal Perpanjang Deadline
-                 ==================================================== -->
+                             Modal Perpanjang Deadline
+                             ==================================================== -->
     <div id="extendModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md mx-4 overflow-hidden">
             <!-- Header -->
@@ -248,7 +256,7 @@
             Swal.fire({
                 title: 'Selesaikan Proyek?',
                 html: `Tandai <strong>"${projectName}"</strong> sebagai selesai?<br>
-                               <span class="text-sm text-slate-500">Project tidak bisa diedit atau diperpanjang setelah ini.</span>`,
+                                           <span class="text-sm text-slate-500">Project tidak bisa diedit atau diperpanjang setelah ini.</span>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
