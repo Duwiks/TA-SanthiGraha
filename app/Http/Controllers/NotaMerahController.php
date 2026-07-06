@@ -49,7 +49,7 @@ class NotaMerahController extends Controller
         if (auth()->user()->role === 'admin') {
             // Hitung antrean yang butuh aksi admin
             $countMenungguPersetujuan = NotaMerah::where('status', 'menunggu_persetujuan')->count();
-            $countMenungguKonfirmasi  = NotaMerah::whereIn('status', ['menunggu_verifikasi'])->count();
+            $countMenungguKonfirmasi = NotaMerah::whereIn('status', ['menunggu_verifikasi'])->count();
             return view('admin.nota-merah', compact('notaMerahs', 'countMenungguPersetujuan', 'countMenungguKonfirmasi'));
         }
 
@@ -81,46 +81,47 @@ class NotaMerahController extends Controller
         }
 
         $request->validate([
-            'project_id'             => 'required|exists:projects,id',
-            'category_id'            => 'required|exists:categories,id',
-            'description'            => 'nullable|string',
-            'amount'                 => 'required|numeric|gt:0',
-            'bank_tujuan'            => 'required|string|max:100',
-            'no_rekening'            => 'required|regex:/^[0-9]+$/|max:50',
-            'nama_pemilik_rekening'  => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo'             => 'required|file|mimes:jpeg,png,jpg,pdf|max:20480',
+            'project_id' => 'required|exists:projects,id',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'amount' => 'required|numeric|gt:0',
+            'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
+            'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
+            'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
+            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5000',
         ], [
-            'project_id.required'            => 'Proyek wajib dipilih.',
-            'project_id.exists'              => 'Proyek tidak valid.',
-            'category_id.required'           => 'Kategori wajib dipilih.',
-            'category_id.exists'             => 'Kategori tidak valid.',
-            'amount.required'                => 'Nominal wajib diisi.',
-            'amount.numeric'                 => 'Nominal harus berupa angka.',
-            'amount.gt'                      => 'Nominal harus lebih besar dari Rp 0.',
-            'bank_tujuan.required'           => 'Bank tujuan wajib diisi.',
-            'no_rekening.required'           => 'No. rekening wajib diisi.',
-            'no_rekening.regex'              => 'No. rekening hanya boleh berisi angka.',
+            'project_id.required' => 'Proyek wajib dipilih.',
+            'project_id.exists' => 'Proyek tidak valid.',
+            'category_id.required' => 'Kategori wajib dipilih.',
+            'category_id.exists' => 'Kategori tidak valid.',
+            'amount.required' => 'Nominal wajib diisi.',
+            'amount.numeric' => 'Nominal harus berupa angka.',
+            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
+            'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
+            'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
+            'no_rekening.required' => 'No. rekening wajib diisi.',
+            'no_rekening.regex' => 'No. rekening hanya boleh berisi angka.',
             'nama_pemilik_rekening.required' => 'Nama pemilik rekening wajib diisi.',
-            'nama_pemilik_rekening.regex'    => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
-            'nota_photo.required'            => 'Foto nota merah wajib dilampirkan.',
-            'nota_photo.file'                => 'File tidak valid.',
-            'nota_photo.mimes'               => 'Foto harus berupa JPG, PNG, atau PDF.',
-            'nota_photo.max'                 => 'Ukuran file maksimal 20 MB.',
+            'nama_pemilik_rekening.regex' => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
+            'nota_photo.required' => 'Foto nota merah wajib dilampirkan.',
+            'nota_photo.file' => 'File tidak valid.',
+            'nota_photo.mimes' => 'Foto harus berupa JPG, PNG, atau PDF.',
+            'nota_photo.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         $notaPath = $this->handleUpload($request->file('nota_photo'), 'nota-merah');
 
         NotaMerah::create([
-            'user_id'                => auth()->id(),
-            'project_id'             => $request->project_id,
-            'category_id'            => $request->category_id,
-            'description'            => $request->description,
-            'amount'                 => $request->amount,
-            'bank_tujuan'            => $request->bank_tujuan,
-            'no_rekening'            => $request->no_rekening,
-            'nama_pemilik_rekening'  => $request->nama_pemilik_rekening,
-            'nota_photo'             => $notaPath,
-            'status'                 => 'menunggu_persetujuan',
+            'user_id' => auth()->id(),
+            'project_id' => $request->project_id,
+            'category_id' => $request->category_id,
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'bank_tujuan' => $request->bank_tujuan,
+            'no_rekening' => $request->no_rekening,
+            'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
+            'nota_photo' => $notaPath,
+            'status' => 'menunggu_persetujuan',
         ]);
 
         return redirect()->route('nota-merah.index')
@@ -187,16 +188,16 @@ class NotaMerahController extends Controller
             'transfer_proof' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5120',
         ], [
             'transfer_proof.required' => 'Bukti transfer wajib dilampirkan.',
-            'transfer_proof.mimes'    => 'File harus berupa JPG, PNG, atau PDF.',
-            'transfer_proof.max'      => 'Ukuran file maksimal 5 MB.',
+            'transfer_proof.mimes' => 'File harus berupa JPG, PNG, atau PDF.',
+            'transfer_proof.max' => 'Ukuran file maksimal 5 MB.',
         ]);
 
         $transferPath = $this->handleUpload($request->file('transfer_proof'), 'nota-merah/transfer');
 
         $nota->update([
             'transfer_proof' => $transferPath,
-            'status'         => 'menunggu_konfirmasi',
-            'approved_by'    => auth()->id(),
+            'status' => 'menunggu_konfirmasi',
+            'approved_by' => auth()->id(),
         ]);
 
         return redirect()->route('nota-merah.show', $id)
@@ -225,9 +226,9 @@ class NotaMerahController extends Controller
         ]);
 
         $nota->update([
-            'status'           => 'ditolak',
+            'status' => 'ditolak',
             'rejection_reason' => $request->reason,
-            'approved_by'      => auth()->id(),
+            'approved_by' => auth()->id(),
         ]);
 
         return back()->with('success', 'Nota merah ditolak dan pegawai sudah diberitahu.');
@@ -277,13 +278,13 @@ class NotaMerahController extends Controller
         }
 
         $request->validate([
-            'realisasi_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:20480',
-            'realisasi_date'  => 'required|date',
+            'realisasi_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'realisasi_date' => 'required|date',
         ], [
             'realisasi_photo.required' => 'Bukti realisasi (foto struk / kwitansi) wajib dilampirkan.',
-            'realisasi_photo.mimes'    => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'realisasi_photo.max'      => 'Ukuran file terlalu besar (maksimal 20MB).',
-            'realisasi_date.required'  => 'Tanggal realisasi belanja wajib diisi.',
+            'realisasi_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
+            'realisasi_photo.max' => 'Ukuran file terlalu besar (maksimal 5MB).',
+            'realisasi_date.required' => 'Tanggal realisasi belanja wajib diisi.',
         ]);
 
         $realisasiPath = $this->handleUpload($request->file('realisasi_photo'), 'nota-merah/realisasi');
@@ -291,8 +292,8 @@ class NotaMerahController extends Controller
         // Simpan foto realisasi, status → menunggu_verifikasi (admin perlu verifikasi dulu)
         $nota->update([
             'realisasi_photo' => $realisasiPath,
-            'realisasi_date'  => $request->realisasi_date,
-            'status'          => 'menunggu_verifikasi',
+            'realisasi_date' => $request->realisasi_date,
+            'status' => 'menunggu_verifikasi',
         ]);
 
         return redirect()->route('nota-merah.index')
@@ -316,25 +317,25 @@ class NotaMerahController extends Controller
 
         // Buat transaksi resmi di tabel transactions
         Transaction::create([
-            'user_id'          => $nota->user_id,
-            'project_id'       => $nota->project_id,
-            'category_id'      => $nota->category_id,
+            'user_id' => $nota->user_id,
+            'project_id' => $nota->project_id,
+            'category_id' => $nota->category_id,
             'transaction_date' => $nota->realisasi_date,
-            'type'             => 'pengeluaran',
-            'description'      => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
-            'amount'           => $nota->amount,
-            'payment_method'   => $nota->bank_tujuan ?? 'Transfer',
-            'receipt_photo'    => $nota->realisasi_photo,
-            'status'           => 'approved',
-            'approved_by'      => auth()->id(),
-            'nota_merah_id'    => $nota->id,
+            'type' => 'pengeluaran',
+            'description' => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
+            'amount' => $nota->amount,
+            'payment_method' => $nota->bank_tujuan ?? 'Transfer',
+            'receipt_photo' => $nota->realisasi_photo,
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+            'nota_merah_id' => $nota->id,
         ]);
 
         // Update nota merah → selesai
         $nota->update([
-            'status'       => 'selesai',
+            'status' => 'selesai',
             'confirmed_at' => now(),
-            'approved_by'  => auth()->id(),
+            'approved_by' => auth()->id(),
         ]);
 
         return back()->with('success', 'Realisasi dikonfirmasi! Transaksi telah tercatat resmi di buku kas.');
@@ -355,9 +356,9 @@ class NotaMerahController extends Controller
             abort(403);
         }
 
-        if ($nota->status !== 'ditolak') {
+        if (!in_array($nota->status, ['menunggu_persetujuan', 'ditolak'])) {
             return redirect()->route('nota-merah.show', $id)
-                ->with('error', 'Hanya nota merah yang ditolak yang dapat diedit ulang.');
+                ->with('error', 'Nota merah ini tidak dapat diedit karena sudah diproses oleh admin.');
         }
 
         $categories = Category::all();
@@ -381,44 +382,45 @@ class NotaMerahController extends Controller
             abort(403);
         }
 
-        if ($nota->status !== 'ditolak') {
+        if (!in_array($nota->status, ['menunggu_persetujuan', 'ditolak'])) {
             return redirect()->route('nota-merah.show', $id)
-                ->with('error', 'Hanya nota merah yang ditolak yang dapat diedit ulang.');
+                ->with('error', 'Nota merah ini tidak dapat diedit karena sudah diproses oleh admin.');
         }
 
         $request->validate([
-            'project_id'             => 'required|exists:projects,id',
-            'category_id'            => 'required|exists:categories,id',
-            'description'            => 'nullable|string',
-            'amount'                 => 'required|numeric|min:0',
-            'bank_tujuan'            => 'required|string|max:100',
-            'no_rekening'            => 'required|regex:/^[0-9]+$/|max:50',
-            'nama_pemilik_rekening'  => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo'             => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:20480',
+            'project_id' => 'required|exists:projects,id',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'amount' => 'required|numeric|min:0',
+            'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
+            'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
+            'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
+            'nota_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
         ], [
-            'project_id.required'            => 'Proyek wajib dipilih.',
-            'category_id.required'           => 'Kategori wajib dipilih.',
-            'amount.required'                => 'Nominal wajib diisi.',
-            'bank_tujuan.required'           => 'Bank tujuan wajib diisi.',
-            'no_rekening.required'           => 'No. rekening wajib diisi.',
-            'no_rekening.regex'              => 'No. rekening hanya boleh berisi angka.',
+            'project_id.required' => 'Proyek wajib dipilih.',
+            'category_id.required' => 'Kategori wajib dipilih.',
+            'amount.required' => 'Nominal wajib diisi.',
+            'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
+            'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
+            'no_rekening.required' => 'No. rekening wajib diisi.',
+            'no_rekening.regex' => 'No. rekening hanya boleh berisi angka.',
             'nama_pemilik_rekening.required' => 'Nama pemilik rekening wajib diisi.',
-            'nama_pemilik_rekening.regex'    => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
-            'nota_photo.mimes'               => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'nota_photo.max'                 => 'Ukuran file terlalu besar (maksimal 20MB).',
+            'nama_pemilik_rekening.regex' => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
+            'nota_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
+            'nota_photo.max' => 'Ukuran file terlalu besar (maksimal 5MB).',
         ]);
 
         $data = [
-            'project_id'             => $request->project_id,
-            'category_id'            => $request->category_id,
-            'description'            => $request->description,
-            'amount'                 => $request->amount,
-            'bank_tujuan'            => $request->bank_tujuan,
-            'no_rekening'            => $request->no_rekening,
-            'nama_pemilik_rekening'  => $request->nama_pemilik_rekening,
-            'status'                 => 'menunggu_persetujuan',
-            'rejection_reason'       => null,
-            'approved_by'            => null,
+            'project_id' => $request->project_id,
+            'category_id' => $request->category_id,
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'bank_tujuan' => $request->bank_tujuan,
+            'no_rekening' => $request->no_rekening,
+            'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
+            'status' => 'menunggu_persetujuan',
+            'rejection_reason' => null,
+            'approved_by' => null,
         ];
 
         if ($request->hasFile('nota_photo')) {

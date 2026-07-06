@@ -69,7 +69,7 @@
                     <div id="upload_placeholder">
                         <i class="ph ph-receipt text-4xl text-slate-300 mb-2"></i>
                         <p class="text-sm text-slate-500 font-medium">Klik atau drag & drop file di sini</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 20MB</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 5MB</p>
                     </div>
                     <div id="preview_area" class="hidden mt-2">
                         <img id="preview_img" src="" alt="Preview" class="h-40 mx-auto rounded-lg object-cover border border-slate-200">

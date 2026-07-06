@@ -41,7 +41,7 @@ class NotaMerah extends Model
         return match ($this->status) {
             'menunggu_persetujuan' => 'Menunggu Persetujuan',
             'ditolak'              => 'Ditolak',
-            'menunggu_konfirmasi'  => 'Menunggu Konfirmasi',
+            'menunggu_konfirmasi'  => 'Menunggu Realisasi',
             'menunggu_verifikasi'  => 'Menunggu Verifikasi',
             'selesai'              => 'Selesai',
             default                => ucfirst($this->status),

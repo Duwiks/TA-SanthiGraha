@@ -27,10 +27,13 @@
         <select name="status"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="">Semua Status</option>
-            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan</option>
+            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan
+            </option>
             <option value="ditolak" @selected(request('status') === 'ditolak')>Ditolak</option>
-            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi</option>
-            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi</option>
+            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Admin Menunggu Realisasi
+            </option>
+            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi
+            </option>
             <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
         </select>
         <button type="submit"
@@ -91,7 +94,7 @@
                                     @elseif($nota->status === 'selesai')
                                         <i class="ph ph-check-square"></i>
                                     @endif
-                                    {{ $nota->status_label }}
+                                    {{ $nota->status === 'menunggu_konfirmasi' ? 'Admin Menunggu Realisasi' : $nota->status_label }}
                                 </span>
 
                                 {{-- Tombol Upload Realisasi jika admin sudah transfer --}}
@@ -118,10 +121,10 @@
                                         title="Lihat Detail">
                                         <i class="ph ph-eye text-base"></i>
                                     </a>
-                                     @if($nota->status === 'ditolak')
+                                    @if(in_array($nota->status, ['menunggu_persetujuan', 'ditolak']))
                                         <a href="{{ route('nota-merah.edit', $nota->id) }}"
                                             class="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors"
-                                            title="Edit & Kirim Ulang">
+                                            title="{{ $nota->status === 'ditolak' ? 'Edit & Kirim Ulang' : 'Edit Pengajuan' }}">
                                             <i class="ph ph-pencil-simple text-base"></i>
                                         </a>
                                     @endif

@@ -161,7 +161,7 @@
                     <div id="upload_nota_placeholder">
                         <i class="ph ph-file-arrow-up text-4xl text-slate-300 mb-2"></i>
                         <p class="text-sm text-slate-500 font-medium">Klik atau drag & drop file di sini</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 20MB</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 5MB</p>
                     </div>
                     <div id="preview_nota" class="hidden mt-2">
                         <img id="preview_nota_img" src="" alt="Preview" class="h-32 mx-auto rounded-lg object-cover border border-slate-200">
@@ -192,15 +192,15 @@
     // Daftar Bank Indonesia
     // ---------------------------------------------------------------
     const bankList = [
-        'Bank BCA (Bank Central Asia)',
-        'Bank BRI (Bank Rakyat Indonesia)',
-        'Bank BNI (Bank Negara Indonesia)',
+        'Bank BCA',
+        'Bank BRI',
+        'Bank BNI',
         'Bank Mandiri',
         'Bank BPD Bali',
         'Bank CIMB Niaga',
         'Bank Danamon',
         'Bank Permata',
-        'Bank BTN (Bank Tabungan Negara)',
+        'Bank BTN',
         'Bank BTPN',
         'Bank Mega',
         'Bank Panin',
@@ -209,7 +209,7 @@
         'Bank Sinarmas',
         'Bank Bukopin',
         'Bank Muamalat',
-        'Bank Syariah Indonesia (BSI)',
+        'Bank Syariah Indonesia',
         'Bank BCA Syariah',
         'Bank BRI Syariah',
         'Bank BNI Syariah',
@@ -218,27 +218,26 @@
         'Bank Allo Bank',
         'Bank Seabank',
         'Bank Neo Commerce',
-        'Bank Jenius (BTPN)',
+        'Bank Jenius',
         'Bank Superbank',
         'Bank Raya Indonesia',
         'BPD Aceh',
         'BPD Banten',
         'BPD DKI Jakarta',
-        'BPD Jawa Barat (Bank BJB)',
+        'BPD Jawa Barat',
         'BPD Jawa Tengah',
-        'BPD Jawa Timur (Bank Jatim)',
-        'BPD DIY (Bank BPD DIY)',
+        'BPD Jawa Timur',
+        'BPD DIY',
         'BPD Kalimantan Barat',
         'BPD Kalimantan Selatan',
         'BPD Kalimantan Tengah',
         'BPD Kalimantan Timur',
         'BPD Lampung',
         'BPD Maluku & Maluku Utara',
-        'BPD NTB (Nusa Tenggara Barat)',
-        'BPD NTT (Nusa Tenggara Timur)',
+        'BPD NTB',
+        'BPD NTT',
         'BPD Papua',
         'BPD Riau Kepri',
-        'BPD Sulawesi Selatan & Sulawesi Barat',
         'BPD Sulawesi Tengah',
         'BPD Sulawesi Tenggara',
         'BPD Sulawesi Utara Gorontalo',
@@ -252,7 +251,12 @@
     const hiddenInput = document.getElementById('bank_tujuan');
     const suggestionList = document.getElementById('bank-suggestions');
 
+    searchInput.addEventListener('keypress', function (e) {
+        if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+    });
+
     searchInput.addEventListener('input', function () {
+        this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
         const query = this.value.toLowerCase().trim();
         hiddenInput.value = this.value;
         suggestionList.innerHTML = '';

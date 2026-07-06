@@ -51,7 +51,8 @@
                     <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
                         <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Terdaftar Sejak</p>
                         <p class="text-sm font-semibold text-slate-800">
-                            {{ $user->created_at ? $user->created_at->format('d M Y, H:i') : '-' }}</p>
+                            {{ $user->created_at ? $user->created_at->format('d M Y, H:i') : '-' }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -93,16 +94,16 @@
             Swal.fire({
                 title: '<i class="ph ph-lock-key" style="color:#f59e0b;font-size:28px;"></i><br>Ganti Password',
                 html: `
-                        <div style="text-align:left; margin-top:8px;">
-                            <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Password Lama</label>
-                            <input type="password" id="swal_current_password" class="swal2-input" placeholder="Masukkan password lama" style="width:100%;margin:0 0 16px 0;box-sizing:border-box;font-size:14px;">
-                            <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Password Baru</label>
-                            <input type="password" id="swal_new_password" class="swal2-input" placeholder="Minimal 6 karakter" style="width:100%;margin:0 0 16px 0;box-sizing:border-box;font-size:14px;">
-                            <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Konfirmasi Password Baru</label>
-                            <input type="password" id="swal_new_password_confirmation" class="swal2-input" placeholder="Ulangi password baru" style="width:100%;margin:0;box-sizing:border-box;font-size:14px;">
-                            <p style="font-size:12px;color:#94a3b8;margin-top:12px;"><i class="ph ph-info" style="margin-right:4px;"></i>Lupa password lama? Silakan hubungi developer untuk reset password.</p>
-                        </div>
-                    `,
+                            <div style="text-align:left; margin-top:8px;">
+                                <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Password Lama</label>
+                                <input type="password" id="swal_current_password" class="swal2-input" placeholder="Masukkan password lama" style="width:100%;margin:0 0 16px 0;box-sizing:border-box;font-size:14px;">
+                                <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Password Baru</label>
+                                <input type="password" id="swal_new_password" class="swal2-input" placeholder="Minimal 6 karakter" style="width:100%;margin:0 0 16px 0;box-sizing:border-box;font-size:14px;">
+                                <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Konfirmasi Password Baru</label>
+                                <input type="password" id="swal_new_password_confirmation" class="swal2-input" placeholder="Ulangi password baru" style="width:100%;margin:0;box-sizing:border-box;font-size:14px;">
+                                <p style="font-size:12px;color:#94a3b8;margin-top:12px;"><i class="ph ph-info" style="margin-right:4px;"></i>Lupa password lama? Silakan hubungi Admin untuk reset password.</p>
+                            </div>
+                        `,
                 showCancelButton: true,
                 confirmButtonText: '<i class="ph ph-floppy-disk"></i> Simpan',
                 cancelButtonText: 'Batal',

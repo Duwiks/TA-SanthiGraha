@@ -11,36 +11,56 @@
         <a href="{{ route('nota-merah.show', $nota->id) }}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-emerald-600 transition-colors mb-4">
             <i class="ph ph-arrow-left"></i> Kembali ke Detail
         </a>
-        <h2 class="text-lg font-bold text-slate-800">Edit Pengajuan Nota Merah #{{ $nota->id }}</h2>
-        <p class="text-sm text-slate-500 mt-1">Perbarui data pengajuan Anda dan kirim ulang untuk ditinjau Admin.</p>
+        <h2 class="text-lg font-bold text-slate-800">
+            {{ $nota->status === 'ditolak' ? 'Edit & Kirim Ulang Nota Merah #' . $nota->id : 'Edit Pengajuan Nota Merah #' . $nota->id }}
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">
+            {{ $nota->status === 'ditolak' ? 'Perbarui data sesuai catatan penolakan dan kirim ulang untuk ditinjau Admin.' : 'Perbarui data pengajuan Anda sebelum diproses Admin.' }}
+        </p>
     </div>
 
-    {{-- Alasan Penolakan --}}
-    @if($nota->rejection_reason)
-    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex gap-3">
-        <i class="ph ph-x-circle text-red-500 text-xl flex-shrink-0 mt-0.5"></i>
-        <div class="text-sm text-red-800">
-            <p class="font-semibold mb-1">Alasan Penolakan dari Admin:</p>
-            <p class="text-red-700 leading-relaxed">{{ $nota->rejection_reason }}</p>
-            @if($nota->approver)
-                <p class="text-xs text-red-400 mt-2">— oleh {{ $nota->approver->name }}</p>
-            @endif
+    {{-- Banner Kontekstual berdasarkan Status --}}
+    @if($nota->status === 'ditolak')
+        {{-- Alasan Penolakan --}}
+        @if($nota->rejection_reason)
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex gap-3">
+            <i class="ph ph-x-circle text-red-500 text-xl flex-shrink-0 mt-0.5"></i>
+            <div class="text-sm text-red-800">
+                <p class="font-semibold mb-1">Alasan Penolakan dari Admin:</p>
+                <p class="text-red-700 leading-relaxed">{{ $nota->rejection_reason }}</p>
+                @if($nota->approver)
+                    <p class="text-xs text-red-400 mt-2">— oleh {{ $nota->approver->name }}</p>
+                @endif
+            </div>
         </div>
-    </div>
+        @endif
+
+        {{-- Info Kirim Ulang --}}
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
+            <i class="ph ph-info text-amber-500 text-xl flex-shrink-0 mt-0.5"></i>
+            <div class="text-sm text-amber-800">
+                <p class="font-semibold mb-1">Perbaiki dan Kirim Ulang:</p>
+                <ul class="list-disc ml-4 space-y-0.5 text-amber-700">
+                    <li>Perbarui data sesuai catatan penolakan dari Admin</li>
+                    <li>Anda boleh mengganti foto nota jika diperlukan (opsional)</li>
+                    <li>Setelah dikirim, nota merah akan kembali ke antrean persetujuan Admin</li>
+                </ul>
+            </div>
+        </div>
+    @else
+        {{-- Info Edit sebelum diproses --}}
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex gap-3">
+            <i class="ph ph-pencil-line text-blue-500 text-xl flex-shrink-0 mt-0.5"></i>
+            <div class="text-sm text-blue-800">
+                <p class="font-semibold mb-1">Edit Pengajuan:</p>
+                <ul class="list-disc ml-4 space-y-0.5 text-blue-700">
+                    <li>Pengajuan ini belum diproses Admin, Anda masih bisa mengubah data</li>
+                    <li>Anda boleh mengganti foto nota jika diperlukan (opsional)</li>
+                    <li>Setelah disimpan, nota merah tetap dalam antrean persetujuan Admin</li>
+                </ul>
+            </div>
+        </div>
     @endif
-
-    {{-- Info Banner --}}
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
-        <i class="ph ph-info text-amber-500 text-xl flex-shrink-0 mt-0.5"></i>
-        <div class="text-sm text-amber-800">
-            <p class="font-semibold mb-1">Perbaiki dan Kirim Ulang:</p>
-            <ul class="list-disc ml-4 space-y-0.5 text-amber-700">
-                <li>Perbarui data sesuai catatan penolakan dari Admin</li>
-                <li>Anda boleh mengganti foto nota jika diperlukan (opsional)</li>
-                <li>Setelah dikirim, nota merah akan kembali ke antrean persetujuan Admin</li>
-            </ul>
-        </div>
-    </div>
 
     {{-- Form --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
@@ -194,7 +214,7 @@
                     <div id="upload_nota_placeholder">
                         <i class="ph ph-file-arrow-up text-4xl text-slate-300 mb-2"></i>
                         <p class="text-sm text-slate-500 font-medium">Klik atau drag & drop file baru di sini</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 20MB (kosongkan jika tidak ingin mengganti)</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 5MB (kosongkan jika tidak ingin mengganti)</p>
                     </div>
                     <div id="preview_nota" class="hidden mt-2">
                         <img id="preview_nota_img" src="" alt="Preview" class="h-32 mx-auto rounded-lg object-cover border border-slate-200">
@@ -225,15 +245,15 @@
     // Daftar Bank Indonesia
     // ---------------------------------------------------------------
     const bankList = [
-        'Bank BCA (Bank Central Asia)',
-        'Bank BRI (Bank Rakyat Indonesia)',
-        'Bank BNI (Bank Negara Indonesia)',
+        'Bank BCA',
+        'Bank BRI',
+        'Bank BNI',
         'Bank Mandiri',
         'Bank BPD Bali',
         'Bank CIMB Niaga',
         'Bank Danamon',
         'Bank Permata',
-        'Bank BTN (Bank Tabungan Negara)',
+        'Bank BTN',
         'Bank BTPN',
         'Bank Mega',
         'Bank Panin',
@@ -242,7 +262,7 @@
         'Bank Sinarmas',
         'Bank Bukopin',
         'Bank Muamalat',
-        'Bank Syariah Indonesia (BSI)',
+        'Bank Syariah Indonesia',
         'Bank BCA Syariah',
         'Bank BRI Syariah',
         'Bank BNI Syariah',
@@ -251,27 +271,26 @@
         'Bank Allo Bank',
         'Bank Seabank',
         'Bank Neo Commerce',
-        'Bank Jenius (BTPN)',
+        'Bank Jenius',
         'Bank Superbank',
         'Bank Raya Indonesia',
         'BPD Aceh',
         'BPD Banten',
         'BPD DKI Jakarta',
-        'BPD Jawa Barat (Bank BJB)',
+        'BPD Jawa Barat',
         'BPD Jawa Tengah',
-        'BPD Jawa Timur (Bank Jatim)',
-        'BPD DIY (Bank BPD DIY)',
+        'BPD Jawa Timur',
+        'BPD DIY',
         'BPD Kalimantan Barat',
         'BPD Kalimantan Selatan',
         'BPD Kalimantan Tengah',
         'BPD Kalimantan Timur',
         'BPD Lampung',
         'BPD Maluku & Maluku Utara',
-        'BPD NTB (Nusa Tenggara Barat)',
-        'BPD NTT (Nusa Tenggara Timur)',
+        'BPD NTB',
+        'BPD NTT',
         'BPD Papua',
         'BPD Riau Kepri',
-        'BPD Sulawesi Selatan & Sulawesi Barat',
         'BPD Sulawesi Tengah',
         'BPD Sulawesi Tenggara',
         'BPD Sulawesi Utara Gorontalo',
@@ -285,7 +304,12 @@
     const hiddenInput = document.getElementById('bank_tujuan');
     const suggestionList = document.getElementById('bank-suggestions');
 
+    searchInput.addEventListener('keypress', function (e) {
+        if (!/[a-zA-Z\s]/.test(e.key)) e.preventDefault();
+    });
+
     searchInput.addEventListener('input', function () {
+        this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
         const query = this.value.toLowerCase().trim();
         hiddenInput.value = this.value;
         suggestionList.innerHTML = '';

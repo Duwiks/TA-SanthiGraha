@@ -25,7 +25,7 @@
                     @elseif($nota->status === 'menunggu_verifikasi') <i class="ph ph-hourglass text-base"></i>
                     @elseif($nota->status === 'selesai') <i class="ph ph-check-square text-base"></i>
                     @endif
-                    {{ $nota->status_label }}
+                    {{ auth()->user()->role === 'pegawai' && $nota->status === 'menunggu_konfirmasi' ? 'Admin Menunggu Realisasi' : $nota->status_label }}
                 </span>
             </div>
         </div>

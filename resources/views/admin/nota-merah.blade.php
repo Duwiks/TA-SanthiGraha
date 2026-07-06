@@ -46,10 +46,13 @@
         <select name="status"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="">Semua Status</option>
-            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan</option>
+            <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan
+            </option>
             <option value="ditolak" @selected(request('status') === 'ditolak')>Ditolak</option>
-            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Menunggu Konfirmasi</option>
-            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi</option>
+            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Admin Menunggu Realisasi
+            </option>
+            <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi
+            </option>
             <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
         </select>
         <button type="submit"
@@ -225,7 +228,8 @@
                                             <i class="ph ph-x-circle text-sm"></i> Tolak
                                         </button>
 
-                                        {{-- Tahap 2: Menunggu Konfirmasi — admin sudah transfer, tunggu pegawai upload realisasi --}}
+                                        {{-- Tahap 2: Menunggu Konfirmasi — admin sudah transfer, tunggu pegawai upload realisasi
+                                        --}}
                                     @elseif($nota->status === 'menunggu_konfirmasi')
                                         <span class="text-xs text-blue-600 font-semibold flex items-center gap-1">
                                             <i class="ph ph-clock"></i> Menunggu Realisasi
@@ -234,7 +238,8 @@
                                             <i class="ph ph-check"></i> Transfer sudah diupload
                                         </span>
 
-                                        {{-- Tahap 3: Menunggu Verifikasi — pegawai sudah upload realisasi, admin perlu konfirmasi --}}
+                                        {{-- Tahap 3: Menunggu Verifikasi — pegawai sudah upload realisasi, admin perlu konfirmasi
+                                        --}}
                                     @elseif($nota->status === 'menunggu_verifikasi')
                                         <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
                                             @csrf

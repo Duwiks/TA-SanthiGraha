@@ -108,7 +108,7 @@
                 <i class="ph ph-warning text-amber-500 text-lg flex-shrink-0 mt-0.5"></i>
                 <div class="text-xs text-amber-700 leading-relaxed">
                     <p class="font-semibold mb-0.5">Perhatian:</p>
-                    <p>Setelah Anda klik <strong>"Setujui & Upload Bukti Transfer"</strong>, status nota merah akan berubah menjadi <strong>Menunggu Konfirmasi</strong> dan pegawai akan dapat mengupload bukti realisasi pembelian. Tindakan ini tidak dapat dibatalkan.</p>
+                    <p>Setelah Anda klik <strong>"Setujui & Upload Bukti Transfer"</strong>, status nota merah akan berubah menjadi <strong>Menunggu Realisasi</strong> dan pegawai akan dapat mengupload bukti realisasi pembelian. Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
             </div>
 
