@@ -24,7 +24,6 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
             'phone' => 'nullable|string|max:20',
         ], [
-            // Custom pesan validasi
             'name.required' => 'Nama wajib diisi',
             'username.required' => 'Username wajib diisi',
             'username.min' => 'Username harus terdiri dari minimal 4 karakter',
