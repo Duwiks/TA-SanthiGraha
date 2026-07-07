@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Master Data Kategori - SanthiGraha')
-@section('page_title', 'Master Data Kategori')
+@section('title', 'Data Kategori - SanthiGraha')
+@section('page_title', 'Data Kategori')
 
 @section('content')
     <!-- Toolbar: Search, Filters -->

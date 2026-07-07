@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Master Data Proyek - SanthiGraha')
-@section('page_title', 'Master Data Proyek')
+@section('title', 'Manajemen Proyek - SanthiGraha')
+@section('page_title', 'Manajemen Proyek')
 
 @section('content')
     <!-- Toolbar: Search, Filters -->
@@ -165,8 +165,8 @@
     </div>
 
     <!-- ====================================================
-                             Modal Perpanjang Deadline
-                             ==================================================== -->
+                                     Modal Perpanjang Deadline
+                                     ==================================================== -->
     <div id="extendModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md mx-4 overflow-hidden">
             <!-- Header -->
@@ -256,7 +256,7 @@
             Swal.fire({
                 title: 'Selesaikan Proyek?',
                 html: `Tandai <strong>"${projectName}"</strong> sebagai selesai?<br>
-                                           <span class="text-sm text-slate-500">Project tidak bisa diedit atau diperpanjang setelah ini.</span>`,
+                                                   <span class="text-sm text-slate-500">Project tidak bisa diedit atau diperpanjang setelah ini.</span>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
