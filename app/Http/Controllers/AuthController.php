@@ -15,20 +15,29 @@ class AuthController extends Controller
     }
 
     // Proses Register (Hanya Pegawai)
+    // Proses Register (Hanya Pegawai)
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:users',
-            'password' => 'required|string|min:6', // Tambahkan 'confirmed' jika form pakai re-type password
+            'username' => 'required|string|min:4|max:50|unique:users',
+            'password' => 'required|string|min:6',
             'phone' => 'nullable|string|max:20',
+        ], [
+            // Custom pesan validasi
+            'name.required' => 'Nama wajib diisi',
+            'username.required' => 'Username wajib diisi',
+            'username.min' => 'Username harus terdiri dari minimal 4 karakter',
+            'username.unique' => 'Username sudah digunakan',
+            'password.required' => 'Kata sandi wajib diisi',
+            'password.min' => 'Kata sandi harus terdiri dari minimal 6 karakter',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
-            'password' => bcrypt($request->password), // Eloquent di Laravel 11 sudah auto-cast 'hashed', tapi gapapa dipastikan
-            'role' => 'pegawai', // Force role menjadi pegawai saat register biasa
+            'password' => bcrypt($request->password),
+            'role' => 'pegawai',
             'phone' => $request->phone,
         ]);
 
@@ -51,13 +60,13 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            
+
             return redirect()->intended('/')->with('success', 'Login berhasil!');
         }
 
         return back()->withErrors([
             'username' => 'Username atau password salah',
-        ])->onlyInput('username'); 
+        ])->onlyInput('username');
     }
 
     // Proses logout
