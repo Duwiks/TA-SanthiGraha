@@ -108,9 +108,10 @@
                                 @endif
 
                                 {{-- Info penolakan --}}
-                                @if($nota->status === 'ditolak' && $nota->rejection_reason)
+                                @if(($nota->status === 'ditolak' || $nota->status === 'menunggu_konfirmasi') && $nota->rejection_reason)
                                     <div class="mt-1.5 text-[11px] text-red-500 italic text-left px-1">
-                                        <i class="ph ph-warning"></i> {{ Str::limit($nota->rejection_reason, 60) }}
+                                        <i class="ph ph-warning"></i> 
+                                        <strong>{{ $nota->status === 'menunggu_konfirmasi' ? 'Realisasi Ditolak: ' : '' }}</strong>{{ Str::limit($nota->rejection_reason, 60) }}
                                     </div>
                                 @endif
                             </td>

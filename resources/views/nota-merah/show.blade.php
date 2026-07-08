@@ -221,12 +221,14 @@
                 @endif
 
                 {{-- Info Penolakan --}}
-                @if($nota->status === 'ditolak' && $nota->rejection_reason)
+                @if(($nota->status === 'ditolak' || $nota->status === 'menunggu_konfirmasi') && $nota->rejection_reason)
                     <div class="bg-red-50 border border-red-200 rounded-xl p-4">
                         <div class="flex items-start gap-3">
                             <i class="ph ph-warning text-red-500 text-lg flex-shrink-0 mt-0.5"></i>
                             <div>
-                                <p class="text-sm font-bold text-red-700 mb-1">Alasan Penolakan</p>
+                                <p class="text-sm font-bold text-red-700 mb-1">
+                                    {{ $nota->status === 'menunggu_konfirmasi' ? 'Bukti Realisasi Ditolak' : 'Alasan Penolakan' }}
+                                </p>
                                 <p class="text-sm text-red-600 leading-relaxed">{{ $nota->rejection_reason }}</p>
                                 @if($nota->approver)
                                     <p class="text-xs text-red-400 mt-2">— oleh {{ $nota->approver->name }}</p>
@@ -299,13 +301,19 @@
                     <p class="font-bold text-purple-800 text-sm">Pegawai telah mengupload bukti realisasi!</p>
                     <p class="text-sm text-purple-700 mt-0.5">Periksa foto bukti realisasi di atas. Jika valid, konfirmasi untuk mencatat transaksi di buku kas.</p>
                 </div>
-                <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
-                    @csrf
-                    <button type="submit"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
-                        <i class="ph ph-check-square"></i> Konfirmasi & Catat Kas
+                <div class="flex items-center gap-2">
+                    <button onclick="rejectRealisasi({{ $nota->id }})"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-500 hover:text-white transition-colors whitespace-nowrap border border-red-100 hover:border-red-500">
+                        <i class="ph ph-x-circle"></i> Tolak Realisasi
                     </button>
-                </form>
+                    <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500 text-white font-semibold text-sm hover:bg-purple-600 transition-colors whitespace-nowrap">
+                            <i class="ph ph-check-square"></i> Konfirmasi & Catat Kas
+                        </button>
+                    </form>
+                </div>
             </div>
         @endif
 
@@ -325,4 +333,40 @@
         @endif
 
     </div>
+
+    @if(auth()->user()->role === 'admin')
+        {{-- Hidden reject form --}}
+        <form id="rejectNotaForm" method="POST" action="" class="hidden">
+            @csrf
+            <input type="hidden" name="reason" id="rejectNotaReason">
+        </form>
+
+        <script>
+            function rejectRealisasi(id) {
+                Swal.fire({
+                    title: 'Tolak Bukti Realisasi',
+                    text: 'Berikan alasan penolakan bukti realisasi agar pegawai dapat memperbaikinya.',
+                    input: 'textarea',
+                    inputPlaceholder: 'Ketik alasan penolakan di sini...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Tolak Realisasi',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonText: 'Batal',
+                    inputAttributes: { style: 'min-height: 80px' },
+                    inputValidator: (value) => {
+                        if (!value || value.trim().length < 5) {
+                            return 'Alasan penolakan minimal 5 karakter!'
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('rejectNotaForm');
+                        form.action = `/nota-merah/${id}/reject-realisasi`;
+                        document.getElementById('rejectNotaReason').value = result.value;
+                        form.submit();
+                    }
+                });
+            }
+        </script>
+    @endif
 @endsection

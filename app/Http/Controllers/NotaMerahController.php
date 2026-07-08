@@ -294,10 +294,48 @@ class NotaMerahController extends Controller
             'realisasi_photo' => $realisasiPath,
             'realisasi_date' => $request->realisasi_date,
             'status' => 'menunggu_verifikasi',
+            'rejection_reason' => null,
         ]);
 
         return redirect()->route('nota-merah.index')
             ->with('success', 'Bukti realisasi berhasil diupload! Menunggu verifikasi Admin sebelum dicatat di kas.');
+    }
+
+    // ---------------------------------------------------------------
+    // REJECT REALISASI – Admin Menolak Bukti Realisasi Nota Merah
+    // ---------------------------------------------------------------
+    public function rejectRealisasi(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $nota = NotaMerah::findOrFail($id);
+
+        if ($nota->status !== 'menunggu_verifikasi') {
+            return back()->with('error', 'Nota merah ini tidak dalam status menunggu verifikasi realisasi.');
+        }
+
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ], [
+            'reason.required' => 'Alasan penolakan bukti realisasi wajib diisi.',
+        ]);
+
+        // Hapus foto realisasi lama agar pegawai bisa upload ulang
+        if ($nota->realisasi_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($nota->realisasi_photo)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($nota->realisasi_photo);
+        }
+
+        $nota->update([
+            'status' => 'menunggu_konfirmasi',
+            'realisasi_photo' => null,
+            'realisasi_date' => null,
+            'rejection_reason' => $request->reason,
+            'approved_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Bukti realisasi ditolak. Pegawai diminta mengupload ulang bukti realisasi.');
     }
 
     // ---------------------------------------------------------------

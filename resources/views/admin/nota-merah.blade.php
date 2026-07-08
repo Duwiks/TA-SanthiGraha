@@ -188,10 +188,10 @@
                                     {{ $nota->status_label }}
                                 </span>
 
-                                @if($nota->status === 'ditolak' && $nota->rejection_reason)
+                                @if(($nota->status === 'ditolak' || $nota->status === 'menunggu_konfirmasi') && $nota->rejection_reason)
                                     <div
                                         class="text-[10px] text-red-400 italic mt-1.5 max-w-[130px] mx-auto leading-relaxed text-left">
-                                        {{ Str::limit($nota->rejection_reason, 50) }}
+                                        <strong>{{ $nota->status === 'menunggu_konfirmasi' ? 'Realisasi Ditolak: ' : '' }}</strong>{{ Str::limit($nota->rejection_reason, 50) }}
                                     </div>
                                 @endif
                                 @if($nota->status === 'menunggu_konfirmasi' && $nota->realisasi_date)
@@ -241,13 +241,17 @@
                                         {{-- Tahap 3: Menunggu Verifikasi — pegawai sudah upload realisasi, admin perlu konfirmasi
                                         --}}
                                     @elseif($nota->status === 'menunggu_verifikasi')
-                                        <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST">
+                                        <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST" class="w-full">
                                             @csrf
                                             <button type="submit"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500 text-white font-semibold text-xs hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-500/20 transition-all">
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500 text-white font-semibold text-xs hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-500/20 transition-all w-full justify-center">
                                                 <i class="ph ph-check-square text-sm"></i> Konfirmasi & Catat Kas
                                             </button>
                                         </form>
+                                        <button onclick="rejectRealisasi({{ $nota->id }})"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500 w-full justify-center">
+                                            <i class="ph ph-x-circle text-sm"></i> Tolak Realisasi
+                                        </button>
 
                                         {{-- Selesai --}}
                                     @elseif($nota->status === 'selesai')
@@ -292,6 +296,32 @@
     </form>
 
     <script>
+        function rejectRealisasi(id) {
+            Swal.fire({
+                title: 'Tolak Bukti Realisasi',
+                text: 'Berikan alasan penolakan bukti realisasi agar pegawai dapat memperbaikinya.',
+                input: 'textarea',
+                inputPlaceholder: 'Ketik alasan penolakan di sini...',
+                showCancelButton: true,
+                confirmButtonText: 'Tolak Realisasi',
+                confirmButtonColor: '#ef4444',
+                cancelButtonText: 'Batal',
+                inputAttributes: { style: 'min-height: 80px' },
+                inputValidator: (value) => {
+                    if (!value || value.trim().length < 5) {
+                        return 'Alasan penolakan minimal 5 karakter!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('rejectNotaForm');
+                    form.action = `/nota-merah/${id}/reject-realisasi`;
+                    document.getElementById('rejectNotaReason').value = result.value;
+                    form.submit();
+                }
+            });
+        }
+
         function rejectNota(id) {
             Swal.fire({
                 title: 'Tolak Nota Merah',

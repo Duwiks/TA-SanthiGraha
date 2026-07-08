@@ -148,6 +148,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/nota-merah/{id}/approve', [NotaMerahController::class, 'approveForm'])->name('nota-merah.approve.form');
     Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'storeApprove'])->name('nota-merah.approve.store');
     Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
+    Route::post('/nota-merah/{id}/reject-realisasi', [NotaMerahController::class, 'rejectRealisasi'])->name('nota-merah.reject-realisasi');
     Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
 
     // Upload Realisasi (Pegawai setelah admin transfer & status menunggu_konfirmasi)
