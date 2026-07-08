@@ -211,12 +211,21 @@
                                     <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST"
                                         id="delete-form-{{ $trx->id }}" class="inline">
                                         @csrf @method('DELETE')
-                                        <button type="button"
-                                            onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Apakah Anda yakin ingin menghapus transaksi ini secara permanen?')"
-                                            class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                                            title="Hapus">
-                                            <i class="ph ph-trash text-base"></i>
-                                        </button>
+                                        @if($trx->nota_merah_id)
+                                            <button type="button"
+                                                onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Transaksi ini berasal dari Nota Merah. Menghapusnya akan mengembalikan status Nota Merah terkait menjadi Menunggu Verifikasi. Apakah Anda yakin?')"
+                                                class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                title="Hapus">
+                                                <i class="ph ph-trash text-base"></i>
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                onclick="confirmDelete('delete-form-{{ $trx->id }}', 'Apakah Anda yakin ingin menghapus transaksi ini secara permanen?')"
+                                                class="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                title="Hapus">
+                                                <i class="ph ph-trash text-base"></i>
+                                            </button>
+                                        @endif
                                     </form>
                                 </div>
                             </td>
