@@ -37,7 +37,7 @@
 
                         <!-- Lokasi -->
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Proyek</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Lokasi Proyek <span class="text-red-500">*</span></label>
                             <input type="text" name="location" value="{{ old('location', $project->location ?? '') }}"
                                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                                 placeholder="Contoh: Jl. Sudirman No 1" required>

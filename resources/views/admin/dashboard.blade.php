@@ -101,21 +101,37 @@
                 <p class="text-sm text-slate-500 mt-1">Pergerakan arus kas tahun {{ $year }}</p>
             </div>
 
-            <!-- Filter Proyek -->
+            <!-- Filter Tahun & Proyek -->
             <form action="{{ route('dashboard') }}" method="GET" class="shrink-0">
-                <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                    <div class="pl-3 py-1 flex items-center justify-center text-slate-400">
-                        <i class="ph ph-funnel text-lg"></i>
+                <div class="flex items-center gap-2 flex-wrap">
+                    {{-- Filter Tahun --}}
+                    <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                        <div class="pl-2 py-1 flex items-center justify-center text-slate-400">
+                            <i class="ph ph-calendar-blank text-lg"></i>
+                        </div>
+                        <select name="year" onchange="this.form.submit()"
+                            class="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pr-3 pl-1 focus:ring-0 cursor-pointer outline-none">
+                            @foreach($yearList as $y)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <select name="project_id" onchange="this.form.submit()"
-                        class="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pr-4 pl-1 focus:ring-0 cursor-pointer outline-none w-48">
-                        <option value="">Semua Proyek (Global)</option>
-                        @foreach($projects as $project)
-                            <option value="{{ $project->id }}" {{ $projectId == $project->id ? 'selected' : '' }}>
-                                {{ $project->project_name }}
-                            </option>
-                        @endforeach
-                    </select>
+
+                    {{-- Filter Proyek --}}
+                    <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                        <div class="pl-3 py-1 flex items-center justify-center text-slate-400">
+                            <i class="ph ph-funnel text-lg"></i>
+                        </div>
+                        <select name="project_id" onchange="this.form.submit()"
+                            class="bg-transparent border-none text-sm font-semibold text-slate-700 py-1.5 pr-4 pl-1 focus:ring-0 cursor-pointer outline-none w-48">
+                            <option value="">Semua Proyek (Global)</option>
+                            @foreach($projects as $project)
+                                <option value="{{ $project->id }}" {{ $projectId == $project->id ? 'selected' : '' }}>
+                                    {{ $project->project_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </form>
         </div>

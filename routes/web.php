@@ -38,7 +38,14 @@ Route::middleware(['auth'])->group(function () {
 
                 // Chart Logic (Pemasukan vs Pengeluaran per Bulan)
                 $projectId = request('project_id');
-                $year = date('Y');
+                $year = (int) request('year', date('Y'));
+
+                // Build year list: from current year down to the earliest transaction year
+                $earliestDate = \App\Models\Transaction::min('transaction_date');
+                $earliestYear = $earliestDate
+                    ? \Carbon\Carbon::parse($earliestDate)->year
+                    : (int) date('Y');
+                $yearList = range((int) date('Y'), $earliestYear);
 
                 $chartQuery = \App\Models\Transaction::where('status', 'approved')
                     ->whereYear('transaction_date', $year);
@@ -75,7 +82,8 @@ Route::middleware(['auth'])->group(function () {
                     'pengeluaranData',
                     'projects',
                     'projectId',
-                    'year'
+                    'year',
+                    'yearList'
                 ));
             } else {
                 $transaksiDiajukan = \App\Models\Transaction::where('user_id', auth()->id())->count();
