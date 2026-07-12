@@ -199,9 +199,15 @@
                             <p style="font-size:15px;font-weight:700;color:#1e293b;margin:4px 0 0 0;">${userName}</p>
                         </div>
                         <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Password Baru</label>
-                        <input type="password" id="swal_reset_password" class="swal2-input" placeholder="Minimal 6 karakter" style="width:100%;margin:0 0 16px 0;box-sizing:border-box;font-size:14px;">
+                        <div style="position: relative; margin: 0 0 16px 0; width: 100%;">
+                            <input type="password" id="swal_reset_password" class="swal2-input" placeholder="Minimal 6 karakter" style="width:100%;margin:0;box-sizing:border-box;font-size:14px;padding-right:40px;">
+                            <i class="ph ph-eye-slash" id="toggle_reset_password" onclick="togglePasswordVisibility('swal_reset_password', 'toggle_reset_password')" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;color:#94a3b8;font-size:20px;z-index:10;"></i>
+                        </div>
                         <label style="display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px;">Konfirmasi Password Baru</label>
-                        <input type="password" id="swal_reset_password_confirm" class="swal2-input" placeholder="Ulangi password baru" style="width:100%;margin:0;box-sizing:border-box;font-size:14px;">
+                        <div style="position: relative; margin: 0 0 16px 0; width: 100%;">
+                            <input type="password" id="swal_reset_password_confirm" class="swal2-input" placeholder="Ulangi password baru" style="width:100%;margin:0;box-sizing:border-box;font-size:14px;padding-right:40px;">
+                            <i class="ph ph-eye-slash" id="toggle_reset_password_confirm" onclick="togglePasswordVisibility('swal_reset_password_confirm', 'toggle_reset_password_confirm')" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);cursor:pointer;color:#94a3b8;font-size:20px;z-index:10;"></i>
+                        </div>
                     </div>
                 `,
                 showCancelButton: true,
@@ -233,6 +239,20 @@
                     form.submit();
                 }
             });
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('ph-eye-slash');
+                icon.classList.add('ph-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('ph-eye');
+                icon.classList.add('ph-eye-slash');
+            }
         }
     </script>
 
