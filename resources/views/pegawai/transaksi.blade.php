@@ -29,7 +29,6 @@
         <select name="type"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="">Semua Tipe</option>
-            <option value="pemasukan" @selected(request('type') === 'pemasukan')>Pemasukan</option>
             <option value="pengeluaran" @selected(request('type') === 'pengeluaran')>Pengeluaran</option>
         </select>
         <select name="status"

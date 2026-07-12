@@ -140,7 +140,7 @@
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
-                                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                                                                {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $trx->type }}
                                     </span>
                                     @if($trx->payment_method)

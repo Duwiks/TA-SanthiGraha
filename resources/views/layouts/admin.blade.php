@@ -86,7 +86,7 @@
             </a>
 
             <a href="{{ route('transactions.index') }}"
-                class="flex items-center gap-3.5 px-4 py-3 rounded-xl {{ request()->routeIs('transactions.index') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
+                class="flex items-center gap-3.5 px-4 py-3 rounded-xl {{ request()->routeIs('transactions.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
                 <i class="ph ph-currency-dollar text-[22px]"></i>
                 <span class="text-[15px]">Transaksi</span>
             </a>
@@ -131,12 +131,14 @@
                         <i class="ph ph-database text-[22px]"></i>
                         <span class="text-[15px]">Master Data</span>
                     </div>
-                    <i class="ph ph-caret-down text-sm transition-transform duration-200" id="masterDataIcon"></i>
+                    <i class="ph ph-caret-down text-sm transition-transform duration-200" id="masterDataIcon"
+                        style="transform: {{ request()->routeIs('categories.*') ? 'rotate(0deg)' : 'rotate(-90deg)' }}"></i>
                 </button>
 
-                <div id="masterDataMenu" class="pl-12 pr-4 py-2 space-y-1 block">
+                <div id="masterDataMenu"
+                    class="pl-12 pr-4 py-2 space-y-1 {{ request()->routeIs('categories.*') ? 'block' : 'hidden' }}">
                     <a href="{{ route('categories.index') }}"
-                        class="block px-4 py-2.5 rounded-lg text-[14.5px] {{ request()->routeIs('categories.*') ? 'text-emerald-600 font-medium' : 'text-slate-600 hover:text-brand-600 hover:bg-slate-50 transition-colors' }}">
+                        class="block px-4 py-2.5 rounded-lg text-[14.5px] {{ request()->routeIs('categories.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:text-brand-600 hover:bg-slate-50 transition-colors' }}">
                         Kategori Transaksi
                     </a>
                 </div>

@@ -35,12 +35,17 @@
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
         <i class="ph ph-info text-amber-500 text-xl flex-shrink-0 mt-0.5"></i>
         <div class="text-sm text-amber-800">
+            @if(auth()->user()->role === 'admin')
+            <p class="font-semibold mb-1">Informasi:</p>
+            <p class="text-amber-700">Isi form ini dan upload bukti pembayaran / struk. Transaksi akan langsung tercatat resmi di buku kas.</p>
+            @else
             <p class="font-semibold mb-1">Cara Pengajuan Transaksi:</p>
             <ol class="list-decimal ml-4 space-y-0.5 text-amber-700">
                 <li>Isi form ini dan upload bukti pembayaran / struk</li>
                 <li>Admin akan menyetujui atau menolak pengajuan Anda</li>
                 <li>Jika disetujui, transaksi akan tercatat resmi di buku kas</li>
             </ol>
+            @endif
         </div>
     </div>
     @endif
@@ -63,6 +68,7 @@
                     <i class="ph ph-calendar-blank absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"></i>
                     <input type="date" id="transaction_date" name="transaction_date"
                         value="{{ old('transaction_date', isset($transaction) ? \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') : date('Y-m-d')) }}"
+                        max="{{ date('Y-m-d') }}"
                         class="w-full pl-10 pr-4 py-3 rounded-xl border @error('transaction_date') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                 </div>
                 @error('transaction_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -76,7 +82,9 @@
                 <select id="type" name="type"
                     class="w-full px-4 py-3 rounded-xl border @error('type') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                     <option value="">-- Pilih Tipe Transaksi --</option>
+                    @if(auth()->user()->role === 'admin')
                     <option value="pemasukan"   @selected(old('type', $transaction->type ?? '') === 'pemasukan')>Pemasukan (Uang Masuk)</option>
+                    @endif
                     <option value="pengeluaran" @selected(old('type', $transaction->type ?? '') === 'pengeluaran')>Pengeluaran (Uang Keluar)</option>
                 </select>
                 @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror

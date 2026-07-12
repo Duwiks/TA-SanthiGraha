@@ -116,8 +116,8 @@ class TransactionController extends Controller
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'category_id' => 'required|exists:categories,id',
-            'transaction_date' => 'required|date',
-            'type' => 'required|in:pemasukan,pengeluaran',
+            'transaction_date' => 'required|date|before_or_equal:today',
+            'type' => auth()->user()->role === 'admin' ? 'required|in:pemasukan,pengeluaran' : 'required|in:pengeluaran',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
@@ -131,6 +131,7 @@ class TransactionController extends Controller
 
             'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
             'transaction_date.date' => 'Format tanggal tidak valid.',
+            'transaction_date.before_or_equal' => 'Tanggal transaksi tidak boleh melebihi hari ini.',
 
             'type.required' => 'Tipe transaksi wajib dipilih.',
             'type.in' => 'Tipe transaksi tidak valid.',
@@ -222,8 +223,8 @@ class TransactionController extends Controller
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'category_id' => 'required|exists:categories,id',
-            'transaction_date' => 'required|date',
-            'type' => 'required|in:pemasukan,pengeluaran',
+            'transaction_date' => 'required|date|before_or_equal:today',
+            'type' => auth()->user()->role === 'admin' ? 'required|in:pemasukan,pengeluaran' : 'required|in:pengeluaran',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
@@ -237,6 +238,7 @@ class TransactionController extends Controller
 
             'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
             'transaction_date.date' => 'Format tanggal tidak valid.',
+            'transaction_date.before_or_equal' => 'Tanggal transaksi tidak boleh melebihi hari ini.',
 
             'type.required' => 'Tipe transaksi wajib dipilih.',
             'type.in' => 'Tipe transaksi tidak valid.',
