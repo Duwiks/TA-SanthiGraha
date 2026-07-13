@@ -13,12 +13,25 @@
             <h2 class="text-lg font-bold text-slate-800">Antrean Menunggu Persetujuan</h2>
             <p class="text-sm text-slate-500 mt-1">Transaksi yang diajukan pegawai dan butuh tindakan Anda.</p>
         </div>
-        @if($transactions->total() > 0)
-            <div
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold">
-                <i class="ph ph-clock text-base"></i> {{ $transactions->total() }} menunggu
-            </div>
-        @endif
+        <div class="flex items-center gap-2 flex-wrap">
+            @if($transactions->total() > 0)
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-bold">
+                    <i class="ph ph-clock text-base"></i> {{ $transactions->total() }} menunggu
+                </div>
+            @endif
+            {{-- Sort Antrean --}}
+            <a href="{{ route('approvals.index', array_merge(request()->query(), ['sort' => 'latest'])) }}"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
+                      {{ request('sort', 'latest') === 'latest' ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                <i class="ph ph-sort-descending"></i> Terbaru
+            </a>
+            <a href="{{ route('approvals.index', array_merge(request()->query(), ['sort' => 'oldest'])) }}"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
+                      {{ request('sort') === 'oldest' ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                <i class="ph ph-sort-ascending"></i> Terlama
+            </a>
+        </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-10">
@@ -27,6 +40,7 @@
                 <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
                     <tr>
                         <th class="px-5 py-4">TANGGAL PENGAJUAN</th>
+                        <th class="px-5 py-4">TANGGAL NOTA</th>
                         <th class="px-5 py-4">PROYEK & KATEGORI</th>
                         <th class="px-5 py-4">NOMINAL</th>
                         <th class="px-5 py-4">PENGAJU</th>
@@ -37,12 +51,19 @@
                     @forelse($transactions as $trx)
                         <tr class="hover:bg-slate-50 transition-colors">
 
-                            {{-- Tanggal --}}
+                            {{-- Tanggal Pengajuan --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">
                                     {{ \Carbon\Carbon::parse($trx->created_at)->format('d M Y') }}</div>
                                 <div class="text-xs text-slate-400 mt-0.5">
                                     {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA</div>
+                            </td>
+
+                            {{-- Tanggal Nota --}}
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                <div class="font-medium text-slate-700">
+                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}
+                                </div>
                             </td>
 
                             {{-- Proyek & Kategori --}}
@@ -149,9 +170,21 @@
             <p class="text-sm text-slate-500 mt-1">Log semua transaksi yang sudah diproses.</p>
         </div>
 
-        {{-- Filter Tab --}}
         <div class="flex items-center gap-2 flex-wrap">
-            <a href="{{ route('approvals.index') }}"
+            {{-- Sort Riwayat --}}
+            <a href="{{ route('approvals.index', array_merge(request()->query(), ['sort' => 'latest'])) }}"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
+                      {{ request('sort', 'latest') === 'latest' ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                <i class="ph ph-sort-descending"></i> Terbaru
+            </a>
+            <a href="{{ route('approvals.index', array_merge(request()->query(), ['sort' => 'oldest'])) }}"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
+                      {{ request('sort') === 'oldest' ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
+                <i class="ph ph-sort-ascending"></i> Terlama
+            </a>
+
+            {{-- Filter Tab --}}
+            <a href="{{ route('approvals.index', ['sort' => request('sort', 'latest')]) }}"
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all
                       {{ !request('filter_status') ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
                 <i class="ph ph-list-bullets"></i> Semua
@@ -160,7 +193,7 @@
                     {{ $historyApprovedCount + $historyRejectedCount }}
                 </span>
             </a>
-            <a href="{{ route('approvals.index', ['filter_status' => 'approved']) }}"
+            <a href="{{ route('approvals.index', ['filter_status' => 'approved', 'sort' => request('sort', 'latest')]) }}"
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all
                       {{ request('filter_status') === 'approved' ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
                 <i class="ph ph-check-circle"></i> Disetujui
@@ -169,7 +202,7 @@
                     {{ $historyApprovedCount }}
                 </span>
             </a>
-            <a href="{{ route('approvals.index', ['filter_status' => 'rejected']) }}"
+            <a href="{{ route('approvals.index', ['filter_status' => 'rejected', 'sort' => request('sort', 'latest')]) }}"
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all
                       {{ request('filter_status') === 'rejected' ? 'bg-red-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50' }}">
                 <i class="ph ph-x-circle"></i> Ditolak

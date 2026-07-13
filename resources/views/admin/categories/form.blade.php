@@ -33,7 +33,11 @@
                             <input type="text" name="category_name"
                                 value="{{ old('category_name', $category->category_name ?? '') }}"
                                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
-                                placeholder="Contoh: Pembelian Material" required>
+                                placeholder="Contoh: Pembelian Material"
+                                pattern="[a-zA-Z0-9\s]+"
+                                oninput="this.value = this.value.replace(/[^a-zA-Z0-9\s]/g, '')"
+                                title="Hanya huruf, angka, dan spasi yang diizinkan"
+                                required>
                         </div>
 
                         <!-- Deskripsi -->

@@ -55,7 +55,8 @@ class TransactionController extends Controller
             $query->where('status', $request->status);
         }
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $sortDir = $request->get('sort') === 'oldest' ? 'asc' : 'desc';
+        $transactions = $query->orderBy('transaction_date', $sortDir)->orderBy('id', $sortDir)->paginate(10)->withQueryString();
 
         if (auth()->user()->role === 'admin') {
             return view('admin.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo'));
@@ -71,12 +72,13 @@ class TransactionController extends Controller
         }
 
         // Antrean pending (menunggu aksi admin)
+        $sort = $request->get('sort') === 'oldest' ? 'asc' : 'desc';
         $transactions = Transaction::query()
             ->where('status', 'pending')
             ->with(['user:id,name', 'project:id,project_name', 'category:id,category_name'])
-            ->orderBy('created_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->orderBy('created_at', $sort)
+            ->orderBy('id', $sort)
+            ->paginate(10)->withQueryString();
 
         // Riwayat: transaksi yang sudah diproses, dengan filter opsional
         $historyQuery = Transaction::query()
@@ -88,8 +90,8 @@ class TransactionController extends Controller
             $historyQuery->whereIn('status', ['approved', 'rejected']);
         }
 
-        $history = $historyQuery->orderBy('updated_at', 'desc')
-            ->orderBy('id', 'desc')
+        $history = $historyQuery->orderBy('updated_at', $sort)
+            ->orderBy('id', $sort)
             ->paginate(12, ['*'], 'history_page')
             ->withQueryString();
 

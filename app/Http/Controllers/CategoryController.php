@@ -30,10 +30,11 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_name' => 'required|string|max:100|unique:categories',
+            'category_name' => 'required|regex:/^[a-zA-Z0-9\s]+$/|max:100|unique:categories',
             'description' => 'nullable|string',
         ], [
             'category_name.required' => 'Nama Kategori wajib diisi.',
+            'category_name.regex' => 'Nama Kategori hanya boleh berisi huruf, angka, dan spasi.',
             'category_name.unique' => 'Nama Kategori sudah ada.',
         ]);
 
@@ -56,10 +57,11 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $request->validate([
-            'category_name' => 'required|string|max:100|unique:categories,category_name,' . $id,
+            'category_name' => 'required|regex:/^[a-zA-Z0-9\s]+$/|max:100|unique:categories,category_name,' . $id,
             'description' => 'nullable|string',
         ], [
             'category_name.required' => 'Nama Kategori wajib diisi.',
+            'category_name.regex' => 'Nama Kategori hanya boleh berisi huruf, angka, dan spasi.',
             'category_name.unique' => 'Nama Kategori sudah ada.',
         ]);
 

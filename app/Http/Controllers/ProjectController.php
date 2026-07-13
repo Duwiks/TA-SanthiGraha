@@ -30,12 +30,13 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'project_name' => 'required|string|max:150|unique:projects',
+            'project_name' => 'required|regex:/^[a-zA-Z0-9\s]+$/|max:150|unique:projects',
             'location' => 'nullable|string|max:150',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ], [
             'project_name.required' => 'Nama Proyek wajib diisi.',
+            'project_name.regex' => 'Nama Proyek hanya boleh berisi huruf, angka, dan spasi.',
             'project_name.unique' => 'Nama Proyek sudah ada.',
             'end_date.after_or_equal' => 'Tanggal selesai tidak valid.',
         ]);
@@ -77,12 +78,13 @@ class ProjectController extends Controller
         }
 
         $request->validate([
-            'project_name' => 'required|string|max:150|unique:projects,project_name,' . $id,
+            'project_name' => 'required|regex:/^[a-zA-Z0-9\s]+$/|max:150|unique:projects,project_name,' . $id,
             'location' => 'nullable|string|max:150',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ], [
             'project_name.required' => 'Nama Proyek wajib diisi.',
+            'project_name.regex' => 'Nama Proyek hanya boleh berisi huruf, angka, dan spasi.',
             'project_name.unique' => 'Nama Proyek sudah ada.',
             'end_date.after_or_equal' => 'Tanggal selesai tidak valid.',
         ]);
