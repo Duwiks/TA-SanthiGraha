@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 
-@section('title', 'Login - SIMAKSA')
-@section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
+@section('title', 'Login - SANTRA')
+@section('header_subtitle', 'Sistem Informasi Pencatatan dan Rekap Transaksi Keuangan CV Santhi Graha')
 
 @section('content')
     <form method="POST" action="{{ url('/login') }}" class="space-y-5">

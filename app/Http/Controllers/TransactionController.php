@@ -121,7 +121,7 @@ class TransactionController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
-            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
             'project_id.exists' => 'Proyek tidak valid.',
@@ -145,36 +145,12 @@ class TransactionController extends Controller
 
             'receipt_photo.file' => 'File bukti transaksi tidak valid.',
             'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
-            'receipt_photo.max' => 'Ukuran file maksimal 5 MB.',
+            'receipt_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
         $receiptPath = null;
         if ($request->hasFile('receipt_photo')) {
-            $file = $request->file('receipt_photo');
-
-            // Server-Side Compression untuk Gambar di atas 1MB
-            if (in_array(strtolower($file->extension()), ['jpg', 'jpeg', 'png']) && $file->getSize() > 1024 * 1024) {
-                $sourceImage = null;
-                if (strtolower($file->extension()) == 'png') {
-                    $sourceImage = @imagecreatefrompng($file->getRealPath());
-                } else {
-                    $sourceImage = @imagecreatefromjpeg($file->getRealPath());
-                }
-
-                if ($sourceImage !== false) {
-                    $path = storage_path('app/public/receipts/' . uniqid() . '_compressed.jpg');
-                    if (!file_exists(dirname($path))) {
-                        mkdir(dirname($path), 0755, true);
-                    }
-                    imagejpeg($sourceImage, $path, 60); // Pengecilan ekstrem kualitas 60% agar hemat memori (dibawah 5MB)
-                    imagedestroy($sourceImage);
-                    $receiptPath = 'receipts/' . basename($path);
-                } else {
-                    $receiptPath = $file->store('receipts', 'public');
-                }
-            } else {
-                $receiptPath = $file->store('receipts', 'public');
-            }
+            $receiptPath = $this->compressAndSave($request->file('receipt_photo'), 'receipts');
         }
 
         Transaction::create([
@@ -228,7 +204,7 @@ class TransactionController extends Controller
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
             'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
-            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
             'project_id.exists' => 'Proyek tidak valid.',
@@ -252,7 +228,7 @@ class TransactionController extends Controller
 
             'receipt_photo.file' => 'File bukti transaksi tidak valid.',
             'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
-            'receipt_photo.max' => 'Ukuran file maksimal 5 MB.',
+            'receipt_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
         $data = [
@@ -271,32 +247,7 @@ class TransactionController extends Controller
             if ($transaction->receipt_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($transaction->receipt_photo)) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($transaction->receipt_photo);
             }
-
-            $file = $request->file('receipt_photo');
-
-            // Server-Side Compression untuk Gambar di atas 1MB
-            if (in_array(strtolower($file->extension()), ['jpg', 'jpeg', 'png']) && $file->getSize() > 1024 * 1024) {
-                $sourceImage = null;
-                if (strtolower($file->extension()) == 'png') {
-                    $sourceImage = @imagecreatefrompng($file->getRealPath());
-                } else {
-                    $sourceImage = @imagecreatefromjpeg($file->getRealPath());
-                }
-
-                if ($sourceImage !== false) {
-                    $path = storage_path('app/public/receipts/' . uniqid() . '_compressed.jpg');
-                    if (!file_exists(dirname($path))) {
-                        mkdir(dirname($path), 0755, true);
-                    }
-                    imagejpeg($sourceImage, $path, 60);
-                    imagedestroy($sourceImage);
-                    $data['receipt_photo'] = 'receipts/' . basename($path);
-                } else {
-                    $data['receipt_photo'] = $file->store('receipts', 'public');
-                }
-            } else {
-                $data['receipt_photo'] = $file->store('receipts', 'public');
-            }
+            $data['receipt_photo'] = $this->compressAndSave($request->file('receipt_photo'), 'receipts');
         }
 
         $transaction->update($data);
@@ -373,5 +324,91 @@ class TransactionController extends Controller
         ]);
 
         return back()->with('success', 'Transaksi ditolak dan dicatat');
+    }
+
+    // ---------------------------------------------------------------
+    // HELPER – Kompres dan simpan file gambar/PDF
+    // Gambar: adaptive quality loop (GD). PDF: Imagick (fallback store langsung).
+    // Menjamin output gambar < 5 MB.
+    // ---------------------------------------------------------------
+    private function compressAndSave($file, string $folder): string
+    {
+        $ext = strtolower($file->extension());
+        $dir = storage_path("app/public/{$folder}");
+
+        if (!file_exists($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        // ── PDF ──────────────────────────────────────────────────────
+        if ($ext === 'pdf') {
+            if (extension_loaded('imagick') && $file->getSize() > 5 * 1024 * 1024) {
+                try {
+                    $imagick = new \Imagick();
+                    $imagick->setResolution(100, 100);
+                    $imagick->readImage($file->getRealPath());
+                    $imagick->setImageFormat('pdf');
+                    $imagick->setCompressionQuality(60);
+                    $outPath = $dir . '/' . uniqid() . '_compressed.pdf';
+                    $imagick->writeImages($outPath, true);
+                    $imagick->clear();
+                    $imagick->destroy();
+                    // Jika hasil kompresi lebih besar dari aslinya, pakai file asli
+                    if (file_exists($outPath) && filesize($outPath) < $file->getSize()) {
+                        return "{$folder}/" . basename($outPath);
+                    }
+                    if (file_exists($outPath)) {
+                        @unlink($outPath);
+                    }
+                } catch (\Exception $e) {
+                    // fallback ke store langsung
+                }
+            }
+            return $file->store($folder, 'public');
+        }
+
+        // ── GAMBAR (JPG / PNG) ────────────────────────────────────────
+        if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+            return $file->store($folder, 'public');
+        }
+
+        // Jika gambar kecil (<= 1MB), simpan langsung tanpa kompresi
+        if ($file->getSize() <= 1024 * 1024) {
+            return $file->store($folder, 'public');
+        }
+
+        $sourceImage = $ext === 'png'
+            ? @imagecreatefrompng($file->getRealPath())
+            : @imagecreatefromjpeg($file->getRealPath());
+
+        if ($sourceImage === false) {
+            return $file->store($folder, 'public');
+        }
+
+        $maxBytes   = 5 * 1024 * 1024; // 5 MB
+        $outPath    = $dir . '/' . uniqid() . '_compressed.jpg';
+        $compressed = false;
+
+        // Adaptive quality loop: mulai 85, turun 15 per langkah
+        foreach ([85, 70, 55, 40, 25, 10] as $quality) {
+            imagejpeg($sourceImage, $outPath, $quality);
+            if (filesize($outPath) <= $maxBytes) {
+                $compressed = true;
+                break;
+            }
+        }
+
+        // Jika masih > 5MB setelah loop → resize 50% lalu kompres ulang
+        if (!$compressed || filesize($outPath) > $maxBytes) {
+            $w = imagesx($sourceImage);
+            $h = imagesy($sourceImage);
+            $resized = imagecreatetruecolor((int)($w / 2), (int)($h / 2));
+            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int)($w / 2), (int)($h / 2), $w, $h);
+            imagejpeg($resized, $outPath, 60);
+            imagedestroy($resized);
+        }
+
+        imagedestroy($sourceImage);
+        return "{$folder}/" . basename($outPath);
     }
 }

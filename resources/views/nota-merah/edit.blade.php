@@ -214,7 +214,7 @@
                     <div id="upload_nota_placeholder">
                         <i class="ph ph-file-arrow-up text-4xl text-slate-300 mb-2"></i>
                         <p class="text-sm text-slate-500 font-medium">Klik atau drag & drop file baru di sini</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 5MB (kosongkan jika tidak ingin mengganti)</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Otomatis dikompres jika >5MB (kosongkan jika tidak ingin mengganti)</p>
                     </div>
                     <div id="preview_nota" class="hidden mt-2">
                         <img id="preview_nota_img" src="" alt="Preview" class="h-32 mx-auto rounded-lg object-cover border border-slate-200">

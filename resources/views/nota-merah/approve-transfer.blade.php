@@ -89,7 +89,7 @@
                     <div id="upload-placeholder">
                         <i class="ph ph-file-arrow-up text-5xl text-slate-300 mb-3"></i>
                         <p class="text-sm text-slate-600 font-semibold">Klik atau drag & drop file di sini</p>
-                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Maks. 5MB</p>
+                        <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF — Otomatis dikompres jika >5MB</p>
                     </div>
                     <div id="upload-preview" class="hidden">
                         <img id="preview-img" src="" alt="Preview" class="h-40 mx-auto rounded-xl object-cover border border-slate-200 shadow-sm">

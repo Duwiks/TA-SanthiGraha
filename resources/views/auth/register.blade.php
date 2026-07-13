@@ -1,8 +1,8 @@
 @extends('layouts.auth')
 
-@section('title', 'Registrasi - SIMAKSA')
+@section('title', 'Registrasi - SANTRA')
 @section('header_title', 'Daftar Akun Pegawai')
-@section('header_subtitle', 'Sistem Manajemen Kontruksi CV Santhi Graha')
+@section('header_subtitle', 'Sistem Informasi Pencatatan dan Rekap Transaksi Keuangan CV Santhi Graha')
 
 @section('content')
     <form method="POST" action="{{ url('/register') }}" class="space-y-4">

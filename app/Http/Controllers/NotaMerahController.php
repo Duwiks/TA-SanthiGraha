@@ -88,7 +88,7 @@ class NotaMerahController extends Controller
             'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
             'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
             'project_id.exists' => 'Proyek tidak valid.',
@@ -106,7 +106,7 @@ class NotaMerahController extends Controller
             'nota_photo.required' => 'Foto nota merah wajib dilampirkan.',
             'nota_photo.file' => 'File tidak valid.',
             'nota_photo.mimes' => 'Foto harus berupa JPG, PNG, atau PDF.',
-            'nota_photo.max' => 'Ukuran file maksimal 5 MB.',
+            'nota_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
         $notaPath = $this->handleUpload($request->file('nota_photo'), 'nota-merah');
@@ -185,11 +185,11 @@ class NotaMerahController extends Controller
         }
 
         $request->validate([
-            'transfer_proof' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5120',
+            'transfer_proof' => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'transfer_proof.required' => 'Bukti transfer wajib dilampirkan.',
             'transfer_proof.mimes' => 'File harus berupa JPG, PNG, atau PDF.',
-            'transfer_proof.max' => 'Ukuran file maksimal 5 MB.',
+            'transfer_proof.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
         $transferPath = $this->handleUpload($request->file('transfer_proof'), 'nota-merah/transfer');
@@ -278,12 +278,12 @@ class NotaMerahController extends Controller
         }
 
         $request->validate([
-            'realisasi_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'realisasi_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
             'realisasi_date' => 'required|date',
         ], [
             'realisasi_photo.required' => 'Bukti realisasi (foto struk / kwitansi) wajib dilampirkan.',
             'realisasi_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'realisasi_photo.max' => 'Ukuran file terlalu besar (maksimal 5MB).',
+            'realisasi_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
             'realisasi_date.required' => 'Tanggal realisasi belanja wajib diisi.',
         ]);
 
@@ -433,7 +433,7 @@ class NotaMerahController extends Controller
             'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
             'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:5000',
+            'nota_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
             'category_id.required' => 'Kategori wajib dipilih.',
@@ -445,7 +445,7 @@ class NotaMerahController extends Controller
             'nama_pemilik_rekening.required' => 'Nama pemilik rekening wajib diisi.',
             'nama_pemilik_rekening.regex' => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
             'nota_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'nota_photo.max' => 'Ukuran file terlalu besar (maksimal 5MB).',
+            'nota_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
         $data = [
@@ -506,29 +506,87 @@ class NotaMerahController extends Controller
 
     // ---------------------------------------------------------------
     // HELPER – Upload file dengan server-side compression
+    // Gambar: adaptive quality loop (GD). PDF: Imagick (fallback store langsung).
+    // Menjamin output gambar < 5 MB.
     // ---------------------------------------------------------------
     private function handleUpload($file, string $folder): string
     {
-        if (
-            in_array(strtolower($file->extension()), ['jpg', 'jpeg', 'png'])
-            && $file->getSize() > 1024 * 1024
-        ) {
-            $sourceImage = strtolower($file->extension()) === 'png'
-                ? @imagecreatefrompng($file->getRealPath())
-                : @imagecreatefromjpeg($file->getRealPath());
+        $ext = strtolower($file->extension());
+        $dir = storage_path("app/public/{$folder}");
 
-            if ($sourceImage !== false) {
-                $dir = storage_path("app/public/{$folder}");
-                if (!file_exists($dir)) {
-                    mkdir($dir, 0755, true);
+        if (!file_exists($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        // ── PDF ──────────────────────────────────────────────────────
+        if ($ext === 'pdf') {
+            if (extension_loaded('imagick') && $file->getSize() > 5 * 1024 * 1024) {
+                try {
+                    $imagick = new \Imagick();
+                    $imagick->setResolution(100, 100);
+                    $imagick->readImage($file->getRealPath());
+                    $imagick->setImageFormat('pdf');
+                    $imagick->setCompressionQuality(60);
+                    $outPath = $dir . '/' . uniqid() . '_compressed.pdf';
+                    $imagick->writeImages($outPath, true);
+                    $imagick->clear();
+                    $imagick->destroy();
+                    // Pakai hasil kompres hanya jika lebih kecil dari aslinya
+                    if (file_exists($outPath) && filesize($outPath) < $file->getSize()) {
+                        return "{$folder}/" . basename($outPath);
+                    }
+                    if (file_exists($outPath)) {
+                        @unlink($outPath);
+                    }
+                } catch (\Exception $e) {
+                    // fallback ke store langsung
                 }
-                $path = $dir . '/' . uniqid() . '_compressed.jpg';
-                imagejpeg($sourceImage, $path, 60);
-                imagedestroy($sourceImage);
-                return "{$folder}/" . basename($path);
+            }
+            return $file->store($folder, 'public');
+        }
+
+        // ── GAMBAR (JPG / PNG) ────────────────────────────────────────
+        if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+            return $file->store($folder, 'public');
+        }
+
+        // Jika gambar kecil (<= 1MB), simpan langsung tanpa kompresi
+        if ($file->getSize() <= 1024 * 1024) {
+            return $file->store($folder, 'public');
+        }
+
+        $sourceImage = $ext === 'png'
+            ? @imagecreatefrompng($file->getRealPath())
+            : @imagecreatefromjpeg($file->getRealPath());
+
+        if ($sourceImage === false) {
+            return $file->store($folder, 'public');
+        }
+
+        $maxBytes   = 5 * 1024 * 1024; // 5 MB
+        $outPath    = $dir . '/' . uniqid() . '_compressed.jpg';
+        $compressed = false;
+
+        // Adaptive quality loop: mulai 85, turun 15 per langkah
+        foreach ([85, 70, 55, 40, 25, 10] as $quality) {
+            imagejpeg($sourceImage, $outPath, $quality);
+            if (filesize($outPath) <= $maxBytes) {
+                $compressed = true;
+                break;
             }
         }
 
-        return $file->store($folder, 'public');
+        // Jika masih > 5MB setelah loop → resize 50% lalu kompres ulang
+        if (!$compressed || filesize($outPath) > $maxBytes) {
+            $w = imagesx($sourceImage);
+            $h = imagesy($sourceImage);
+            $resized = imagecreatetruecolor((int)($w / 2), (int)($h / 2));
+            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int)($w / 2), (int)($h / 2), $w, $h);
+            imagejpeg($resized, $outPath, 60);
+            imagedestroy($resized);
+        }
+
+        imagedestroy($sourceImage);
+        return "{$folder}/" . basename($outPath);
     }
 }
