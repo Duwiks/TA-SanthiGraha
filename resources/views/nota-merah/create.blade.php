@@ -69,6 +69,19 @@
                 @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Tanggal Nota --}}
+            <div>
+                <label for="nota_date" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Tanggal Nota <span class="text-red-500">*</span>
+                </label>
+                <input type="date" id="nota_date" name="nota_date"
+                    value="{{ old('nota_date', date('Y-m-d')) }}"
+                    max="{{ date('Y-m-d') }}"
+                    class="w-full px-4 py-3 rounded-xl border @error('nota_date') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none"
+                    required>
+                @error('nota_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             {{-- Deskripsi --}}
             <div>
                 <label for="description" class="block text-sm font-semibold text-slate-700 mb-1.5">

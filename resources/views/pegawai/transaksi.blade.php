@@ -40,8 +40,9 @@
         </select>
         <select name="sort"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
-            <option value="latest" @selected(request('sort', 'latest') === 'latest')>Terbaru</option>
-            <option value="oldest" @selected(request('sort') === 'oldest')>Terlama</option>
+            <option value="latest" @selected(request('sort', 'latest') === 'latest')>Tanggal Terbaru (Nota)</option>
+            <option value="oldest" @selected(request('sort') === 'oldest')>Tanggal Terlama (Nota)</option>
+            <option value="newest_input" @selected(request('sort') === 'newest_input')>Data Baru Masuk</option>
         </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>

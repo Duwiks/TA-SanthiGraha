@@ -105,6 +105,10 @@
                         <dd class="font-semibold text-slate-800">{{ $nota->category->category_name ?? '-' }}</dd>
                     </div>
                     <div class="flex justify-between">
+                        <dt class="text-slate-500">Tanggal Nota</dt>
+                        <dd class="font-semibold text-slate-800">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</dd>
+                    </div>
+                    <div class="flex justify-between">
                         <dt class="text-slate-500">Nominal</dt>
                         <dd class="font-bold text-red-600 text-base">Rp {{ number_format($nota->amount, 2, ',', '.') }}</dd>
                     </div>

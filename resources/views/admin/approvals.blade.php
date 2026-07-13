@@ -230,6 +230,7 @@
                     <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
                         <tr>
                             <th class="px-5 py-4">TANGGAL PROSES</th>
+                            <th class="px-5 py-4">TANGGAL NOTA</th>
                             <th class="px-5 py-4">PROYEK & KATEGORI</th>
                             <th class="px-5 py-4">NOMINAL</th>
                             <th class="px-5 py-4">PENGAJU</th>
@@ -249,6 +250,13 @@
                                         {{ \Carbon\Carbon::parse($trx->updated_at)->format('d M Y') }}</div>
                                     <div class="text-xs text-slate-400 mt-0.5">
                                         {{ \Carbon\Carbon::parse($trx->updated_at)->format('H:i') }} WITA</div>
+                                </td>
+
+                                {{-- Tanggal Nota --}}
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-slate-700">
+                                        {{ $trx->transaction_date ? \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') : '-' }}
+                                    </div>
                                 </td>
 
                                 {{-- Proyek & Kategori --}}

@@ -17,6 +17,7 @@ class NotaMerah extends Model
         'category_id',
         'description',
         'amount',
+        'nota_date',
         'bank_tujuan',
         'no_rekening',
         'nama_pemilik_rekening',
@@ -33,6 +34,7 @@ class NotaMerah extends Model
     protected $casts = [
         'confirmed_at' => 'datetime',
         'realisasi_date' => 'date',
+        'nota_date' => 'date',
     ];
 
     // Label status yang ramah baca

@@ -11,7 +11,9 @@ use App\Http\Controllers\RekapController;
 use App\Http\Controllers\NotaMerahController;
 
 Route::get('/', function () {
-    return redirect('/dashboard');
+    return redirect('/dashboard')
+        ->with('success', session('success'))
+        ->with('error', session('error'));
 });
 
 // Auth Routes (Public)

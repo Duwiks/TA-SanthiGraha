@@ -59,10 +59,10 @@
                 @method('PUT')
             @endif
 
-            {{-- Tanggal Transaksi --}}
+            {{-- Tanggal Nota --}}
             <div>
                 <label for="transaction_date" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Tanggal Transaksi <span class="text-red-500">*</span>
+                    Tanggal Nota <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
                     <i class="ph ph-calendar-blank absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"></i>

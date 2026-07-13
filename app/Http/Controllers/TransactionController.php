@@ -22,12 +22,6 @@ class TransactionController extends Controller
             $query->where('user_id', auth()->id());
         }
 
-        // Calculate overall totals before applying filters or search
-        $summaryQuery = clone $query;
-        $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
-        $totalPengeluaran = (clone $summaryQuery)->where('type', 'pengeluaran')->where('status', 'approved')->sum('amount');
-        $saldo = $totalPemasukan - $totalPengeluaran;
-
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($search) {
@@ -47,16 +41,29 @@ class TransactionController extends Controller
             });
         }
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
         if ($request->filled('status') && auth()->user()->role === 'pegawai') {
             $query->where('status', $request->status);
         }
 
-        $sortDir = $request->get('sort') === 'oldest' ? 'asc' : 'desc';
-        $transactions = $query->orderBy('transaction_date', $sortDir)->orderBy('id', $sortDir)->paginate(10)->withQueryString();
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Calculate overall totals after applying all filters (search, status, type)
+        $summaryQuery = clone $query;
+        $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
+        $totalPengeluaran = (clone $summaryQuery)->where('type', 'pengeluaran')->where('status', 'approved')->sum('amount');
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        $sort = $request->get('sort', 'latest');
+        if ($sort === 'oldest') {
+            $query->orderBy('transaction_date', 'asc')->orderBy('id', 'asc');
+        } elseif ($sort === 'newest_input') {
+            $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
+        } else {
+            $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc');
+        }
+        $transactions = $query->paginate(10)->withQueryString();
 
         if (auth()->user()->role === 'admin') {
             return view('admin.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo'));
@@ -131,9 +138,9 @@ class TransactionController extends Controller
             'category_id.required' => 'Kategori wajib dipilih.',
             'category_id.exists' => 'Kategori tidak valid.',
 
-            'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
+            'transaction_date.required' => 'Tanggal nota wajib diisi.',
             'transaction_date.date' => 'Format tanggal tidak valid.',
-            'transaction_date.before_or_equal' => 'Tanggal transaksi tidak boleh melebihi hari ini.',
+            'transaction_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi hari ini.',
 
             'type.required' => 'Tipe transaksi wajib dipilih.',
             'type.in' => 'Tipe transaksi tidak valid.',
@@ -214,9 +221,9 @@ class TransactionController extends Controller
             'category_id.required' => 'Kategori wajib dipilih.',
             'category_id.exists' => 'Kategori tidak valid.',
 
-            'transaction_date.required' => 'Tanggal transaksi wajib diisi.',
+            'transaction_date.required' => 'Tanggal nota wajib diisi.',
             'transaction_date.date' => 'Format tanggal tidak valid.',
-            'transaction_date.before_or_equal' => 'Tanggal transaksi tidak boleh melebihi hari ini.',
+            'transaction_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi hari ini.',
 
             'type.required' => 'Tipe transaksi wajib dipilih.',
             'type.in' => 'Tipe transaksi tidak valid.',
@@ -387,8 +394,8 @@ class TransactionController extends Controller
             return $file->store($folder, 'public');
         }
 
-        $maxBytes   = 5 * 1024 * 1024; // 5 MB
-        $outPath    = $dir . '/' . uniqid() . '_compressed.jpg';
+        $maxBytes = 5 * 1024 * 1024; // 5 MB
+        $outPath = $dir . '/' . uniqid() . '_compressed.jpg';
         $compressed = false;
 
         // Adaptive quality loop: mulai 85, turun 15 per langkah
@@ -404,8 +411,8 @@ class TransactionController extends Controller
         if (!$compressed || filesize($outPath) > $maxBytes) {
             $w = imagesx($sourceImage);
             $h = imagesy($sourceImage);
-            $resized = imagecreatetruecolor((int)($w / 2), (int)($h / 2));
-            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int)($w / 2), (int)($h / 2), $w, $h);
+            $resized = imagecreatetruecolor((int) ($w / 2), (int) ($h / 2));
+            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int) ($w / 2), (int) ($h / 2), $w, $h);
             imagejpeg($resized, $outPath, 60);
             imagedestroy($resized);
         }

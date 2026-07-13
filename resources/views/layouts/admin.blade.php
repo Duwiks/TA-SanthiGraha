@@ -248,41 +248,43 @@
         }
 
         // SweetAlert2 Toast for success messages
-        @if(session('success'))
-            const ToastSuccess = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 4000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
+        document.addEventListener('DOMContentLoaded', function () {
+            @if(session('success'))
+                const ToastSuccess = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
 
-            ToastSuccess.fire({
-                icon: 'success',
-                title: '{{ session('success') }}'
-            });
-        @endif
+                ToastSuccess.fire({
+                    icon: 'success',
+                    title: '{{ session('success') }}'
+                });
+            @endif
 
-        // SweetAlert2 Popup for error messages (e.g. cannot delete)
-        @if(session('error'))
-            Swal.fire({
-                title: 'Tidak Dapat Dihapus!',
-                text: '{{ session('error') }}',
-                icon: 'error',
-                confirmButtonColor: '#6366f1',
-                confirmButtonText: 'Mengerti',
-                customClass: {
-                    popup: 'rounded-2xl shadow-xl border border-slate-100',
-                    title: 'text-slate-800 font-bold text-lg',
-                    htmlContainer: 'text-slate-600 text-sm',
-                    confirmButton: 'px-6 py-2.5 rounded-xl font-semibold text-sm',
-                }
-            });
-        @endif
+            // SweetAlert2 Popup for error messages (e.g. cannot delete)
+            @if(session('error'))
+                Swal.fire({
+                    title: 'Tidak Dapat Dihapus!',
+                    text: '{{ session('error') }}',
+                    icon: 'error',
+                    confirmButtonColor: '#6366f1',
+                    confirmButtonText: 'Mengerti',
+                    customClass: {
+                        popup: 'rounded-2xl shadow-xl border border-slate-100',
+                        title: 'text-slate-800 font-bold text-lg',
+                        htmlContainer: 'text-slate-600 text-sm',
+                        confirmButton: 'px-6 py-2.5 rounded-xl font-semibold text-sm',
+                    }
+                });
+            @endif
+        });
 
         function confirmDelete(formId, message = 'Apakah Anda yakin ingin menghapus data ini?') {
             Swal.fire({

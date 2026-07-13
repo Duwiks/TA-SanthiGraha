@@ -36,9 +36,14 @@
             </option>
             <option value="selesai" @selected(request('status') === 'selesai')>Selesai</option>
         </select>
+        <select name="sort"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+            <option value="latest" @selected(request('sort', 'latest') === 'latest')>Terbaru (Pengajuan)</option>
+            <option value="oldest" @selected(request('sort') === 'oldest')>Terlama (Pengajuan)</option>
+        </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>
-        @if(request()->anyFilled(['search', 'status']))
+        @if(request()->anyFilled(['search', 'status', 'sort']))
             <a href="{{ route('nota-merah.index') }}"
                 class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200 transition-colors">Reset</a>
         @endif
@@ -51,6 +56,7 @@
                 <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
                     <tr>
                         <th class="px-5 py-4">TANGGAL PENGAJUAN</th>
+                        <th class="px-5 py-4">TANGGAL NOTA</th>
                         <th class="px-5 py-4">PROYEK & KATEGORI</th>
                         <th class="px-5 py-4">NOMINAL</th>
                         <th class="px-5 py-4 text-center">STATUS</th>
@@ -63,6 +69,9 @@
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">{{ $nota->created_at->format('d M Y') }}</div>
                                 <div class="text-xs text-slate-400 mt-0.5">{{ $nota->created_at->format('H:i') }} WITA</div>
+                            </td>
+                            <td class="px-5 py-4 whitespace-nowrap">
+                                <div class="font-medium text-slate-700">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</div>
                             </td>
                             <td class="px-5 py-4">
                                 <div class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</div>

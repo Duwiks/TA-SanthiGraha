@@ -44,7 +44,9 @@ class NotaMerahController extends Controller
             });
         }
 
-        $notaMerahs = $query->orderBy('created_at', 'desc')->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $sort = $request->get('sort', 'latest');
+        $sortDir = $sort === 'oldest' ? 'asc' : 'desc';
+        $notaMerahs = $query->orderBy('created_at', $sortDir)->orderBy('id', $sortDir)->paginate(10)->withQueryString();
 
         if (auth()->user()->role === 'admin') {
             // Hitung antrean yang butuh aksi admin
@@ -85,6 +87,7 @@ class NotaMerahController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
+            'nota_date' => 'required|date|before_or_equal:today',
             'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
             'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
@@ -97,6 +100,9 @@ class NotaMerahController extends Controller
             'amount.required' => 'Nominal wajib diisi.',
             'amount.numeric' => 'Nominal harus berupa angka.',
             'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
+            'nota_date.required' => 'Tanggal nota wajib diisi.',
+            'nota_date.date' => 'Tanggal nota harus berformat tanggal yang valid.',
+            'nota_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
             'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
             'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
             'no_rekening.required' => 'No. rekening wajib diisi.',
@@ -117,6 +123,7 @@ class NotaMerahController extends Controller
             'category_id' => $request->category_id,
             'description' => $request->description,
             'amount' => $request->amount,
+            'nota_date' => $request->nota_date,
             'bank_tujuan' => $request->bank_tujuan,
             'no_rekening' => $request->no_rekening,
             'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
@@ -430,6 +437,7 @@ class NotaMerahController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
+            'nota_date' => 'required|date|before_or_equal:today',
             'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
             'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
@@ -438,6 +446,9 @@ class NotaMerahController extends Controller
             'project_id.required' => 'Proyek wajib dipilih.',
             'category_id.required' => 'Kategori wajib dipilih.',
             'amount.required' => 'Nominal wajib diisi.',
+            'nota_date.required' => 'Tanggal nota wajib diisi.',
+            'nota_date.date' => 'Tanggal nota harus berformat tanggal yang valid.',
+            'nota_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
             'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
             'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
             'no_rekening.required' => 'No. rekening wajib diisi.',
@@ -453,6 +464,7 @@ class NotaMerahController extends Controller
             'category_id' => $request->category_id,
             'description' => $request->description,
             'amount' => $request->amount,
+            'nota_date' => $request->nota_date,
             'bank_tujuan' => $request->bank_tujuan,
             'no_rekening' => $request->no_rekening,
             'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
