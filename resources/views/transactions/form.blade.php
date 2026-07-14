@@ -146,7 +146,14 @@
                     <select id="payment_method" name="payment_method"
                         class="w-full px-4 py-3 rounded-xl border @error('payment_method') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                         <option value="">-- Pilih Metode --</option>
-                        @foreach(['Cash', 'Bank BPD', 'BRI', 'BCA'] as $method)
+                        @php
+                            $defaultMethods = ['Cash', 'Bank BPD', 'BRI', 'BCA'];
+                            $currentMethod = old('payment_method', $transaction->payment_method ?? '');
+                            if ($currentMethod && !in_array($currentMethod, $defaultMethods)) {
+                                $defaultMethods[] = $currentMethod;
+                            }
+                        @endphp
+                        @foreach($defaultMethods as $method)
                             <option value="{{ $method }}" @selected(old('payment_method', $transaction->payment_method ?? '') === $method)>{{ $method }}</option>
                         @endforeach
                     </select>

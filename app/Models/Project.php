@@ -67,4 +67,10 @@ class Project extends Model
     {
         return $this->hasMany(Transaction::class, 'project_id');
     }
+
+    // Relasi ke Nota Merah
+    public function notaMerahs()
+    {
+        return $this->hasMany(NotaMerah::class, 'project_id');
+    }
 }

@@ -15,7 +15,7 @@ class AdminSeeder extends Seeder
         \App\Models\User::create([
             'name' => 'CV Santhi Graha',
             'username' => 'santhigraha',
-            'password' => bcrypt('santhigraha2026'),
+            'password' => 'santhigraha2026',
             'role' => 'admin',
             'phone' => '080000000000',
         ]);

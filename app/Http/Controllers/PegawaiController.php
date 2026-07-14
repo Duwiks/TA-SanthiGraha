@@ -57,7 +57,7 @@ class PegawaiController extends Controller
         ]);
 
         $user = User::where('role', 'pegawai')->findOrFail($id);
-        $user->password = bcrypt($request->new_password);
+        $user->password = $request->new_password;
         $user->save();
 
         return back()->with('success', "Password pegawai {$user->name} berhasil direset!");

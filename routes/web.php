@@ -18,10 +18,10 @@ Route::get('/', function () {
 
 // Auth Routes (Public)
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Protected Core Routes
 Route::middleware(['auth'])->group(function () {
@@ -98,46 +98,55 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Categories Web CRUD Endpoints
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
-    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
-    Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
-    Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    // Admin-Only Routes
+    Route::middleware(['admin'])->group(function () {
+        // Categories Web CRUD Endpoints
+        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+        Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-    // Projects Web CRUD Endpoints
-    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
-    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{id}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
-    Route::put('/projects/{id}', [ProjectController::class, 'update'])->name('projects.update');
-    Route::delete('/projects/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
-    Route::post('/projects/{id}/complete', [ProjectController::class, 'complete'])->name('projects.complete');
-    Route::post('/projects/{id}/extend', [ProjectController::class, 'extend'])->name('projects.extend');
+        // Projects Web CRUD Endpoints
+        Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+        Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+        Route::get('/projects/{id}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
+        Route::put('/projects/{id}', [ProjectController::class, 'update'])->name('projects.update');
+        Route::delete('/projects/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+        Route::post('/projects/{id}/complete', [ProjectController::class, 'complete'])->name('projects.complete');
+        Route::post('/projects/{id}/extend', [ProjectController::class, 'extend'])->name('projects.extend');
+
+        // Dedicated Transaction Approval Endpoints
+        Route::get('/approvals', [TransactionController::class, 'approvals'])->name('approvals.index');
+        Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
+        Route::post('/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
+
+        // Rekap & Laporan Route
+        Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
+        Route::get('/rekap/export', [RekapController::class, 'export'])->name('rekap.export');
+        Route::get('/rekap/print', [RekapController::class, 'print'])->name('rekap.print');
+
+        // Data Akun Pegawai
+        Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
+        Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword'])->name('pegawai.resetPassword');
+
+        // Aksi Admin — Approve (GET: form upload bukti transfer, POST: proses upload + setujui)
+        Route::get('/nota-merah/{id}/approve', [NotaMerahController::class, 'approveForm'])->name('nota-merah.approve.form');
+        Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'storeApprove'])->name('nota-merah.approve.store');
+        Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
+        Route::post('/nota-merah/{id}/reject-realisasi', [NotaMerahController::class, 'rejectRealisasi'])->name('nota-merah.reject-realisasi');
+        Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
+    });
 
     // Dedicated Transaction Web Endpoints
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
-    Route::get('/approvals', [TransactionController::class, 'approvals'])->name('approvals.index');
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::get('/transactions/{id}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
     Route::put('/transactions/{id}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
-
-    // Approval / Rejection Logic
-    Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
-    Route::post('/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
-
-    // Rekap & Laporan Route
-    Route::get('/rekap', [RekapController::class, 'index'])->name('rekap.index');
-    Route::get('/rekap/export', [RekapController::class, 'export'])->name('rekap.export');
-    Route::get('/rekap/print', [RekapController::class, 'print'])
-        ->name('rekap.print');
-
-    // Data Akun Pegawai
-    Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
-    Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword'])->name('pegawai.resetPassword');
 
     // Pengaturan Akun
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
@@ -153,13 +162,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/nota-merah/{id}/edit', [NotaMerahController::class, 'edit'])->name('nota-merah.edit');
     Route::put('/nota-merah/{id}', [NotaMerahController::class, 'update'])->name('nota-merah.update');
     Route::delete('/nota-merah/{id}', [NotaMerahController::class, 'destroy'])->name('nota-merah.destroy');
-
-    // Aksi Admin — Approve (GET: form upload bukti transfer, POST: proses upload + setujui)
-    Route::get('/nota-merah/{id}/approve', [NotaMerahController::class, 'approveForm'])->name('nota-merah.approve.form');
-    Route::post('/nota-merah/{id}/approve', [NotaMerahController::class, 'storeApprove'])->name('nota-merah.approve.store');
-    Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
-    Route::post('/nota-merah/{id}/reject-realisasi', [NotaMerahController::class, 'rejectRealisasi'])->name('nota-merah.reject-realisasi');
-    Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
 
     // Upload Realisasi (Pegawai setelah admin transfer & status menunggu_konfirmasi)
     Route::get('/nota-merah/{id}/realisasi', [NotaMerahController::class, 'realisasiForm'])->name('nota-merah.realisasi.form');

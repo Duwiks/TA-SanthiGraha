@@ -129,7 +129,7 @@ class TransactionController extends Controller
             'type' => auth()->user()->role === 'admin' ? 'required|in:pemasukan,pengeluaran' : 'required|in:pengeluaran',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
-            'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
+            'payment_method' => 'required|string|max:100',
             'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
@@ -150,7 +150,7 @@ class TransactionController extends Controller
             'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
 
             'payment_method.required' => 'Metode pembayaran wajib dipilih.',
-            'payment_method.in' => 'Metode pembayaran tidak valid.',
+            'payment_method.max' => 'Metode pembayaran maksimal 100 karakter.',
 
             'receipt_photo.file' => 'File bukti transaksi tidak valid.',
             'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
@@ -191,6 +191,10 @@ class TransactionController extends Controller
             abort(403);
         }
 
+        if (auth()->user()->role === 'pegawai' && !in_array($transaction->status, ['pending', 'rejected'])) {
+            return redirect()->route('transactions.index')->with('error', 'Transaksi yang sudah disetujui tidak dapat diedit.');
+        }
+
         $transaction->load('rejections');
         $categories = Category::all();
         $projects = Project::all();
@@ -205,6 +209,10 @@ class TransactionController extends Controller
             abort(403);
         }
 
+        if (auth()->user()->role === 'pegawai' && !in_array($transaction->status, ['pending', 'rejected'])) {
+            return redirect()->route('transactions.index')->with('error', 'Transaksi yang sudah disetujui tidak dapat diedit.');
+        }
+
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'category_id' => 'required|exists:categories,id',
@@ -212,7 +220,7 @@ class TransactionController extends Controller
             'type' => auth()->user()->role === 'admin' ? 'required|in:pemasukan,pengeluaran' : 'required|in:pengeluaran',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|gt:0',
-            'payment_method' => 'required|in:Cash,Bank BPD,BRI,BCA',
+            'payment_method' => 'required|string|max:100',
             'receipt_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
             'project_id.required' => 'Proyek wajib dipilih.',
@@ -233,7 +241,7 @@ class TransactionController extends Controller
             'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
 
             'payment_method.required' => 'Metode pembayaran wajib dipilih.',
-            'payment_method.in' => 'Metode pembayaran tidak valid.',
+            'payment_method.max' => 'Metode pembayaran maksimal 100 karakter.',
 
             'receipt_photo.file' => 'File bukti transaksi tidak valid.',
             'receipt_photo.mimes' => 'Bukti transaksi harus berupa JPG, PNG, atau PDF.',
@@ -276,6 +284,10 @@ class TransactionController extends Controller
             abort(403);
         }
 
+        if ($transaction->status === 'approved' && auth()->user()->role !== 'admin') {
+            return redirect()->route('transactions.index')->with('error', 'Transaksi yang sudah disetujui tidak dapat dihapus.');
+        }
+
         // Sinkronisasi status Nota Merah jika transaksi ini berasal dari Nota Merah
         if ($transaction->nota_merah_id) {
             $nota = \App\Models\NotaMerah::find($transaction->nota_merah_id);
@@ -303,6 +315,10 @@ class TransactionController extends Controller
 
         $transaction = Transaction::findOrFail($id);
 
+        if ($transaction->status !== 'pending') {
+            return back()->with('error', 'Transaksi ini sudah diproses.');
+        }
+
         $transaction->update([
             'status' => 'approved',
             'approved_by' => auth()->id()
@@ -317,6 +333,10 @@ class TransactionController extends Controller
             abort(403);
 
         $transaction = Transaction::findOrFail($id);
+
+        if ($transaction->status !== 'pending') {
+            return back()->with('error', 'Transaksi ini sudah diproses.');
+        }
 
         $request->validate([
             'reason' => 'required|string|max:255'

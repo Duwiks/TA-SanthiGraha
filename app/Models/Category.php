@@ -19,4 +19,10 @@ class Category extends Model
     {
         return $this->hasMany(Transaction::class, 'category_id');
     }
+
+    // Relasi ke Nota Merah
+    public function notaMerahs()
+    {
+        return $this->hasMany(NotaMerah::class, 'category_id');
+    }
 }

@@ -354,36 +354,48 @@ class NotaMerahController extends Controller
             abort(403);
         }
 
-        $nota = NotaMerah::findOrFail($id);
+        try {
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+                $nota = NotaMerah::lockForUpdate()->findOrFail($id);
 
-        if ($nota->status !== 'menunggu_verifikasi') {
-            return back()->with('error', 'Nota merah ini tidak dalam status menunggu verifikasi realisasi.');
+                if ($nota->status !== 'menunggu_verifikasi') {
+                    return ['status' => 'error', 'message' => 'Nota merah ini tidak dalam status menunggu verifikasi realisasi.'];
+                }
+
+                // Buat transaksi resmi di tabel transactions
+                Transaction::create([
+                    'user_id' => $nota->user_id,
+                    'project_id' => $nota->project_id,
+                    'category_id' => $nota->category_id,
+                    'transaction_date' => $nota->realisasi_date,
+                    'type' => 'pengeluaran',
+                    'description' => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
+                    'amount' => $nota->amount,
+                    'payment_method' => $nota->bank_tujuan ?? 'Transfer',
+                    'receipt_photo' => $nota->realisasi_photo,
+                    'status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'nota_merah_id' => $nota->id,
+                ]);
+
+                // Update nota merah → selesai
+                $nota->update([
+                    'status' => 'selesai',
+                    'confirmed_at' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
+
+                return ['status' => 'success', 'message' => 'Realisasi dikonfirmasi! Transaksi telah tercatat resmi di buku kas.'];
+            });
+
+            if ($result['status'] === 'error') {
+                return back()->with('error', $result['message']);
+            }
+
+            return back()->with('success', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat memproses data: ' . $e->getMessage());
         }
-
-        // Buat transaksi resmi di tabel transactions
-        Transaction::create([
-            'user_id' => $nota->user_id,
-            'project_id' => $nota->project_id,
-            'category_id' => $nota->category_id,
-            'transaction_date' => $nota->realisasi_date,
-            'type' => 'pengeluaran',
-            'description' => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
-            'amount' => $nota->amount,
-            'payment_method' => $nota->bank_tujuan ?? 'Transfer',
-            'receipt_photo' => $nota->realisasi_photo,
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-            'nota_merah_id' => $nota->id,
-        ]);
-
-        // Update nota merah → selesai
-        $nota->update([
-            'status' => 'selesai',
-            'confirmed_at' => now(),
-            'approved_by' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Realisasi dikonfirmasi! Transaksi telah tercatat resmi di buku kas.');
     }
 
     // ---------------------------------------------------------------
@@ -436,7 +448,7 @@ class NotaMerahController extends Controller
             'project_id' => 'required|exists:projects,id',
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|gt:0',
             'nota_date' => 'required|date|before_or_equal:today',
             'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
             'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',

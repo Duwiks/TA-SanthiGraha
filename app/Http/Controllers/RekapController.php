@@ -146,16 +146,16 @@ class RekapController extends Controller
             $html .= '<tr style="background-color: ' . $bgRow . ';">';
             $html .= '<td align="center">' . ($index + 1) . '</td>';
             $html .= '<td>' . \Carbon\Carbon::parse($trx->transaction_date)->format('d/m/Y') . '</td>';
-            $html .= '<td>' . ($trx->project->project_name ?? '-') . '</td>';
-            $html .= '<td>' . ($trx->category->category_name ?? '-') . '</td>';
-            $html .= '<td>' . ($trx->description ?: '-') . '</td>';
+            $html .= '<td>' . e($trx->project->project_name ?? '-') . '</td>';
+            $html .= '<td>' . e($trx->category->category_name ?? '-') . '</td>';
+            $html .= '<td>' . e($trx->description ?: '-') . '</td>';
 
             // Styled Type Column
             $bgType = $trx->type == 'pemasukan' ? '#d1fae5' : '#fee2e2';
             $colorType = $trx->type == 'pemasukan' ? '#047857' : '#b91c1c';
             $html .= '<td align="center" style="background-color: ' . $bgType . '; color: ' . $colorType . '; font-weight: bold;">' . strtoupper($trx->type) . '</td>';
 
-            $html .= '<td align="center" style="background-color: #f1f5f9; color: #475569; font-weight: bold;">' . strtoupper($trx->payment_method ?? '-') . '</td>';
+            $html .= '<td align="center" style="background-color: #f1f5f9; color: #475569; font-weight: bold;">' . e(strtoupper($trx->payment_method ?? '-')) . '</td>';
             $html .= '<td align="right" style="font-weight: bold;">Rp ' . number_format($nom, 2, ',', '.') . '</td>';
             $html .= '</tr>';
         }

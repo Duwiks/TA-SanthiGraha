@@ -117,6 +117,13 @@ class ProjectController extends Controller
                 ->with('error', 'Proyek tidak dapat dihapus karena masih digunakan pada transaksi.');
         }
 
+        // Cek apakah proyek masih digunakan pada nota merah
+        if ($project->notaMerahs()->exists()) {
+            return redirect()
+                ->route('projects.index')
+                ->with('error', 'Proyek tidak dapat dihapus karena masih digunakan pada pengajuan nota merah.');
+        }
+
         $project->delete();
 
         return redirect()

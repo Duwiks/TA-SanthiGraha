@@ -84,6 +84,13 @@ class CategoryController extends Controller
                 ->with('error', 'Kategori tidak dapat dihapus karena masih digunakan pada transaksi.');
         }
 
+        // Cek apakah kategori masih digunakan pada nota merah
+        if ($category->notaMerahs()->exists()) {
+            return redirect()
+                ->route('categories.index')
+                ->with('error', 'Kategori tidak dapat dihapus karena masih digunakan pada pengajuan nota merah.');
+        }
+
         $category->delete();
 
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus!');
