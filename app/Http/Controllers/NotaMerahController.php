@@ -458,6 +458,8 @@ class NotaMerahController extends Controller
             'project_id.required' => 'Proyek wajib dipilih.',
             'category_id.required' => 'Kategori wajib dipilih.',
             'amount.required' => 'Nominal wajib diisi.',
+            'amount.numeric' => 'Nominal harus berupa angka.',
+            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
             'nota_date.required' => 'Tanggal nota wajib diisi.',
             'nota_date.date' => 'Tanggal nota harus berformat tanggal yang valid.',
             'nota_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
