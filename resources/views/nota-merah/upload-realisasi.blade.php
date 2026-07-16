@@ -34,7 +34,7 @@
             </div>
             <div>
                 <span class="text-blue-600">Metode:</span>
-                <span class="font-semibold text-blue-900 ml-1">{{ $nota->payment_method }}</span>
+                <span class="font-semibold text-blue-900 ml-1">{{ $nota->bank_tujuan }}</span>
             </div>
         </div>
     </div>

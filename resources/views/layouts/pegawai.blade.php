@@ -104,8 +104,9 @@
                     $nmPendingCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'menunggu_persetujuan')->count();
                     $nmRealisasiCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'menunggu_konfirmasi')->count();
                     $nmRejectedCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'ditolak')->count();
+                    $nmVerifyCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'menunggu_verifikasi')->count();
                 @endphp
-                @if($nmPendingCount > 0 || $nmRealisasiCount > 0 || $nmRejectedCount > 0)
+                @if($nmPendingCount > 0 || $nmRealisasiCount > 0 || $nmRejectedCount > 0 || $nmVerifyCount > 0)
                     <span class="ml-auto flex items-center gap-1">
                         @if($nmRejectedCount > 0)
                             <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -118,6 +119,10 @@
                         @if($nmRealisasiCount > 0)
                             <span class="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
                                 title="Perlu upload bukti realisasi">{{ $nmRealisasiCount }}</span>
+                        @endif
+                        @if($nmVerifyCount > 0)
+                            <span class="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Menunggu verifikasi admin">{{ $nmVerifyCount }}</span>
                         @endif
                     </span>
                 @endif

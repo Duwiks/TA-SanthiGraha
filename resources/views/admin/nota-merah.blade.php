@@ -49,7 +49,8 @@
             <option value="menunggu_persetujuan" @selected(request('status') === 'menunggu_persetujuan')>Menunggu Persetujuan
             </option>
             <option value="ditolak" @selected(request('status') === 'ditolak')>Ditolak</option>
-            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Admin Menunggu Realisasi
+            <option value="menunggu_konfirmasi" @selected(request('status') === 'menunggu_konfirmasi')>Admin Menunggu
+                Realisasi
             </option>
             <option value="menunggu_verifikasi" @selected(request('status') === 'menunggu_verifikasi')>Menunggu Verifikasi
             </option>
@@ -103,7 +104,9 @@
 
                             {{-- Tanggal Nota --}}
                             <td class="px-5 py-4 whitespace-nowrap">
-                                <div class="font-medium text-slate-700">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</div>
+                                <div class="font-medium text-slate-700">
+                                    {{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}
+                                </div>
                             </td>
 
                             {{-- Proyek & Kategori --}}
