@@ -78,6 +78,22 @@
                 class="flex items-center gap-3.5 px-4 py-3 rounded-xl {{ request()->routeIs('transactions.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition-colors' }}">
                 <i class="ph ph-currency-dollar text-[22px]"></i>
                 <span class="text-[15px]">Transaksi</span>
+                @php
+                    $txRejectedCount = \App\Models\Transaction::where('user_id', auth()->id())->where('status', 'rejected')->count();
+                    $txPendingCount = \App\Models\Transaction::where('user_id', auth()->id())->where('status', 'pending')->count();
+                @endphp
+                @if($txRejectedCount > 0 || $txPendingCount > 0)
+                    <span class="ml-auto flex items-center gap-1">
+                        @if($txRejectedCount > 0)
+                            <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Ditolak, perlu diperbaiki">{{ $txRejectedCount }}</span>
+                        @endif
+                        @if($txPendingCount > 0)
+                            <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Menunggu persetujuan admin">{{ $txPendingCount }}</span>
+                        @endif
+                    </span>
+                @endif
             </a>
 
             <a href="{{ route('nota-merah.index') }}"
@@ -85,11 +101,25 @@
                 <i class="ph ph-note-pencil text-[22px]"></i>
                 <span class="text-[15px]">Nota Merah</span>
                 @php
-                    $myNotaCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'disetujui')->count();
+                    $nmPendingCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'menunggu_persetujuan')->count();
+                    $nmRealisasiCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'menunggu_konfirmasi')->count();
+                    $nmRejectedCount = \App\Models\NotaMerah::where('user_id', auth()->id())->where('status', 'ditolak')->count();
                 @endphp
-                @if($myNotaCount > 0)
-                    <span
-                        class="ml-auto bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $myNotaCount }}</span>
+                @if($nmPendingCount > 0 || $nmRealisasiCount > 0 || $nmRejectedCount > 0)
+                    <span class="ml-auto flex items-center gap-1">
+                        @if($nmRejectedCount > 0)
+                            <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Ditolak, perlu diperbaiki">{{ $nmRejectedCount }}</span>
+                        @endif
+                        @if($nmPendingCount > 0)
+                            <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Menunggu persetujuan admin">{{ $nmPendingCount }}</span>
+                        @endif
+                        @if($nmRealisasiCount > 0)
+                            <span class="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Perlu upload bukti realisasi">{{ $nmRealisasiCount }}</span>
+                        @endif
+                    </span>
                 @endif
             </a>
 
@@ -100,9 +130,9 @@
             </a>
 
             <div class="pt-6 pb-2 border-t border-emerald-100/50 border-dashed mt-4">
-                <form method="POST" action="{{ route('logout') }}">
+                <form id="logoutFormPegawai" method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit"
+                    <button type="button" onclick="confirmLogout('logoutFormPegawai')"
                         class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
                         <i class="ph ph-sign-out text-[22px]"></i>
                         <span class="text-[15px]">Logout</span>
@@ -200,6 +230,28 @@
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#64748b',
                 confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm mr-2',
+                    cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+
+        function confirmLogout(formId) {
+            Swal.fire({
+                title: 'Keluar dari Sistem?',
+                text: 'Anda akan keluar dari akun ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Logout',
                 cancelButtonText: 'Batal',
                 customClass: {
                     popup: 'rounded-2xl shadow-xl border border-slate-100',

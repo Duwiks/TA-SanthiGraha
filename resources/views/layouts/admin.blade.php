@@ -99,8 +99,8 @@
                     $pendingCount = \App\Models\Transaction::where('status', 'pending')->count();
                 @endphp
                 @if($pendingCount > 0)
-                    <span
-                        class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pendingCount }}</span>
+                    <span class="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        title="Menunggu persetujuan">{{ $pendingCount }}</span>
                 @endif
             </a>
 
@@ -109,11 +109,20 @@
                 <i class="ph ph-note-pencil text-[22px]"></i>
                 <span class="text-[15px]">Nota Merah</span>
                 @php
-                    $notaMerahCount = \App\Models\NotaMerah::whereIn('status', ['menunggu_persetujuan', 'menunggu_konfirmasi'])->count();
+                    $nmPendingCount = \App\Models\NotaMerah::where('status', 'menunggu_persetujuan')->count();
+                    $nmVerifyCount = \App\Models\NotaMerah::where('status', 'menunggu_verifikasi')->count();
                 @endphp
-                @if($notaMerahCount > 0)
-                    <span
-                        class="ml-auto bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $notaMerahCount }}</span>
+                @if($nmPendingCount > 0 || $nmVerifyCount > 0)
+                    <span class="ml-auto flex items-center gap-1">
+                        @if($nmPendingCount > 0)
+                            <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Perlu persetujuan & transfer">{{ $nmPendingCount }}</span>
+                        @endif
+                        @if($nmVerifyCount > 0)
+                            <span class="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                title="Perlu verifikasi realisasi">{{ $nmVerifyCount }}</span>
+                        @endif
+                    </span>
                 @endif
             </a>
 
@@ -163,9 +172,9 @@
             </a>
 
             <div class="pt-6 pb-2 border-t border-indigo-100/50 border-dashed mt-4">
-                <form method="POST" action="{{ route('logout') }}">
+                <form id="logoutFormAdmin" method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit"
+                    <button type="button" onclick="confirmLogout('logoutFormAdmin')"
                         class="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
                         <i class="ph ph-sign-out text-[22px]"></i>
                         <span class="text-[15px]">Logout</span>
@@ -295,6 +304,28 @@
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#64748b',
                 confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-2xl shadow-xl border border-slate-100',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm mr-2',
+                    cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+
+        function confirmLogout(formId) {
+            Swal.fire({
+                title: 'Keluar dari Sistem?',
+                text: 'Anda akan keluar dari akun ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Logout',
                 cancelButtonText: 'Batal',
                 customClass: {
                     popup: 'rounded-2xl shadow-xl border border-slate-100',

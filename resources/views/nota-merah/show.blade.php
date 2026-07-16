@@ -140,12 +140,12 @@
                         </div>
                     @endif
 
-                    @if($nota->description)
-                        <div class="pt-2 border-t border-slate-100">
-                            <dt class="text-slate-500 mb-1">Keterangan</dt>
-                            <dd class="text-slate-700 leading-relaxed">{{ $nota->description }}</dd>
-                        </div>
-                    @endif
+                    <div class="pt-2 border-t border-slate-100">
+                        <dt class="text-slate-500 mb-1">Keterangan</dt>
+                        <dd class="text-slate-700 leading-relaxed {{ !$nota->description ? 'text-slate-400 italic' : '' }}">
+                            {{ $nota->description ?: 'Nota Merah #' . $nota->id }}
+                        </dd>
+                    </div>
                 </dl>
             </div>
 

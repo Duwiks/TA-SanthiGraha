@@ -76,10 +76,9 @@
                             <td class="px-5 py-4">
                                 <div class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $nota->category->category_name ?? '-' }}</div>
-                                @if($nota->description)
-                                    <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($nota->description, 50) }}
-                                    </div>
-                                @endif
+                                <div class="text-[12px] text-slate-400 mt-1 italic">
+                                    {{ $nota->description ? Str::limit($nota->description, 50) : 'Nota Merah #' . $nota->id }}
+                                </div>
                             </td>
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold text-red-600">Rp {{ number_format($nota->amount, 2, ',', '.') }}</span>
