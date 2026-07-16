@@ -286,12 +286,10 @@ class NotaMerahController extends Controller
 
         $request->validate([
             'realisasi_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
-            'realisasi_date' => 'required|date',
         ], [
             'realisasi_photo.required' => 'Bukti realisasi (foto struk / kwitansi) wajib dilampirkan.',
             'realisasi_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
             'realisasi_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
-            'realisasi_date.required' => 'Tanggal realisasi belanja wajib diisi.',
         ]);
 
         $realisasiPath = $this->handleUpload($request->file('realisasi_photo'), 'nota-merah/realisasi');
@@ -299,7 +297,7 @@ class NotaMerahController extends Controller
         // Simpan foto realisasi, status → menunggu_verifikasi (admin perlu verifikasi dulu)
         $nota->update([
             'realisasi_photo' => $realisasiPath,
-            'realisasi_date' => $request->realisasi_date,
+            'realisasi_date' => $nota->nota_date,
             'status' => 'menunggu_verifikasi',
             'rejection_reason' => null,
         ]);
@@ -589,8 +587,8 @@ class NotaMerahController extends Controller
             return $file->store($folder, 'public');
         }
 
-        $maxBytes   = 5 * 1024 * 1024; // 5 MB
-        $outPath    = $dir . '/' . uniqid() . '_compressed.jpg';
+        $maxBytes = 5 * 1024 * 1024; // 5 MB
+        $outPath = $dir . '/' . uniqid() . '_compressed.jpg';
         $compressed = false;
 
         // Adaptive quality loop: mulai 85, turun 15 per langkah
@@ -606,8 +604,8 @@ class NotaMerahController extends Controller
         if (!$compressed || filesize($outPath) > $maxBytes) {
             $w = imagesx($sourceImage);
             $h = imagesy($sourceImage);
-            $resized = imagecreatetruecolor((int)($w / 2), (int)($h / 2));
-            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int)($w / 2), (int)($h / 2), $w, $h);
+            $resized = imagecreatetruecolor((int) ($w / 2), (int) ($h / 2));
+            imagecopyresampled($resized, $sourceImage, 0, 0, 0, 0, (int) ($w / 2), (int) ($h / 2), $w, $h);
             imagejpeg($resized, $outPath, 60);
             imagedestroy($resized);
         }

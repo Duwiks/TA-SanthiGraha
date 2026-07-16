@@ -49,12 +49,16 @@
                 <label for="realisasi_date" class="block text-sm font-semibold text-slate-700 mb-1.5">
                     Tanggal Belanja Realisasi <span class="text-red-500">*</span>
                 </label>
-                <input type="date" id="realisasi_date" name="realisasi_date"
-                    value="{{ old('realisasi_date', date('Y-m-d')) }}"
-                    max="{{ date('Y-m-d') }}"
-                    class="w-full px-4 py-3 rounded-xl border @error('realisasi_date') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
+                <input type="date" id="realisasi_date"
+                    value="{{ $nota->nota_date->format('Y-m-d') }}"
+                    disabled
+                    class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm cursor-not-allowed outline-none">
+                <input type="hidden" name="realisasi_date" value="{{ $nota->nota_date->format('Y-m-d') }}">
                 @error('realisasi_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-slate-400 mt-1">Isikan tanggal saat Anda melakukan pembelian sesungguhnya.</p>
+                <p class="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <i class="ph ph-lock-simple"></i>
+                    Tanggal otomatis diisi sesuai tanggal nota merah dan tidak dapat diubah.
+                </p>
             </div>
 
             {{-- Upload Bukti Realisasi --}}
