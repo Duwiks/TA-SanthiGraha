@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -12,11 +11,6 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
-    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -24,21 +18,31 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'name'     => fake()->name(),
+            'username' => fake()->unique()->userName(),
+            'password' => 'password123',
+            'role'     => 'pegawai',
+            'phone'    => fake()->phoneNumber(),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * State untuk user dengan role admin.
      */
-    public function unverified(): static
+    public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'role' => 'admin',
+        ]);
+    }
+
+    /**
+     * State untuk user dengan role pegawai.
+     */
+    public function pegawai(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'pegawai',
         ]);
     }
 }

@@ -1,0 +1,356 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Category;
+use App\Models\NotaMerah;
+use App\Models\Project;
+use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class TransactionTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $admin;
+    private User $pegawai;
+    private Project $project;
+    private Category $category;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->admin    = User::factory()->admin()->create();
+        $this->pegawai  = User::factory()->pegawai()->create();
+        $this->project  = Project::factory()->aktif()->create();
+        $this->category = Category::factory()->create();
+    }
+
+    // -------------------------------------------------------
+    // Index – Tampilan Daftar Transaksi
+    // -------------------------------------------------------
+
+    /** @test */
+    public function admin_hanya_melihat_transaksi_yang_sudah_disetujui(): void
+    {
+        Transaction::factory()->approved()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+        ]);
+        Transaction::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('transactions.index'));
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function pegawai_hanya_melihat_transaksi_milik_sendiri(): void
+    {
+        // Transaksi milik pegawai ini
+        Transaction::factory()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+        ]);
+        // Transaksi milik pegawai lain
+        Transaction::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+        ]);
+
+        $response = $this->actingAs($this->pegawai)->get(route('transactions.index'));
+
+        $response->assertStatus(200);
+    }
+
+    // -------------------------------------------------------
+    // Create – Form Tambah Transaksi
+    // -------------------------------------------------------
+
+    /** @test */
+    public function pegawai_dapat_mengakses_form_tambah_transaksi(): void
+    {
+        $response = $this->actingAs($this->pegawai)->get(route('transactions.create'));
+
+        $response->assertStatus(200);
+    }
+
+    // -------------------------------------------------------
+    // Store – Simpan Transaksi
+    // -------------------------------------------------------
+
+    /** @test */
+    public function pegawai_dapat_membuat_transaksi_pengeluaran(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->format('Y-m-d'),
+                'type'             => 'pengeluaran',
+                'description'      => 'Pembelian alat',
+                'amount'           => 500000,
+                'payment_method'   => 'Transfer Bank',
+            ]);
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->pegawai->id,
+            'type'    => 'pengeluaran',
+            'status'  => 'pending',
+        ]);
+    }
+
+    /** @test */
+    public function admin_dapat_membuat_transaksi_pemasukan_dan_langsung_approved(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->format('Y-m-d'),
+                'type'             => 'pemasukan',
+                'description'      => 'Dana awal proyek',
+                'amount'           => 10000000,
+                'payment_method'   => 'Transfer Bank',
+            ]);
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'pemasukan',
+            'status'      => 'approved',
+            'approved_by' => $this->admin->id,
+        ]);
+    }
+
+    /** @test */
+    public function pembuatan_transaksi_gagal_jika_amount_nol_atau_negatif(): void
+    {
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->format('Y-m-d'),
+                'type'             => 'pengeluaran',
+                'amount'           => 0,
+                'payment_method'   => 'Tunai',
+            ]);
+
+        $response->assertSessionHasErrors('amount');
+    }
+
+    /** @test */
+    public function pembuatan_transaksi_gagal_jika_tanggal_melebihi_hari_ini(): void
+    {
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->addDays(5)->format('Y-m-d'),
+                'type'             => 'pengeluaran',
+                'amount'           => 100000,
+                'payment_method'   => 'Tunai',
+            ]);
+
+        $response->assertSessionHasErrors('transaction_date');
+    }
+
+    /** @test */
+    public function pegawai_tidak_dapat_membuat_transaksi_pemasukan(): void
+    {
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->format('Y-m-d'),
+                'type'             => 'pemasukan',
+                'amount'           => 500000,
+                'payment_method'   => 'Tunai',
+            ]);
+
+        $response->assertSessionHasErrors('type');
+    }
+
+    // -------------------------------------------------------
+    // Approve & Reject
+    // -------------------------------------------------------
+
+    /** @test */
+    public function admin_dapat_menyetujui_transaksi_pending(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.approve', $transaction->id));
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('transactions', [
+            'id'          => $transaction->id,
+            'status'      => 'approved',
+            'approved_by' => $this->admin->id,
+        ]);
+    }
+
+    /** @test */
+    public function admin_dapat_menolak_transaksi_pending_dengan_alasan(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.reject', $transaction->id), [
+                'reason' => 'Bukti tidak valid',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('transactions', ['id' => $transaction->id, 'status' => 'rejected']);
+        $this->assertDatabaseHas('transaction_rejections', [
+            'transaction_id' => $transaction->id,
+            'reason'         => 'Bukti tidak valid',
+        ]);
+    }
+
+    /** @test */
+    public function penolakan_gagal_jika_alasan_kosong(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.reject', $transaction->id), [
+                'reason' => '',
+            ]);
+
+        $response->assertSessionHasErrors('reason');
+    }
+
+    /** @test */
+    public function pegawai_tidak_dapat_mengakses_halaman_approvals(): void
+    {
+        // Route approvals bernama 'approvals.index' di sistem ini
+        $response = $this->actingAs($this->pegawai)->get(route('approvals.index'));
+
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function admin_dapat_mengakses_halaman_approvals(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('approvals.index'));
+
+        $response->assertStatus(200);
+    }
+
+    // -------------------------------------------------------
+    // Edit & Update
+    // -------------------------------------------------------
+
+    /** @test */
+    public function pegawai_dapat_mengedit_transaksi_milik_sendiri_yang_pending(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->pegawai)->get(route('transactions.edit', $transaction->id));
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function pegawai_tidak_dapat_mengedit_transaksi_yang_sudah_disetujui(): void
+    {
+        $approvedBy  = User::factory()->admin()->create();
+        $transaction = Transaction::factory()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'approved',
+            'approved_by' => $approvedBy->id,
+        ]);
+
+        $response = $this->actingAs($this->pegawai)->get(route('transactions.edit', $transaction->id));
+
+        // Redirect dengan pesan error
+        $response->assertRedirect(route('transactions.index'));
+        $response->assertSessionHas('error');
+    }
+
+    // -------------------------------------------------------
+    // Destroy (Delete)
+    // -------------------------------------------------------
+
+    /** @test */
+    public function pegawai_dapat_menghapus_transaksi_milik_sendiri_yang_pending(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->delete(route('transactions.destroy', $transaction->id));
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertDatabaseMissing('transactions', ['id' => $transaction->id]);
+    }
+
+    /** @test */
+    public function pegawai_tidak_dapat_menghapus_transaksi_yang_sudah_disetujui(): void
+    {
+        $approvedBy  = User::factory()->admin()->create();
+        $transaction = Transaction::factory()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'status'      => 'approved',
+            'approved_by' => $approvedBy->id,
+        ]);
+
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->delete(route('transactions.destroy', $transaction->id));
+
+        $response->assertRedirect(route('transactions.index'));
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('transactions', ['id' => $transaction->id]);
+    }
+}
