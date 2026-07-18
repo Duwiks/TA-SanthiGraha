@@ -271,9 +271,6 @@
                                         <span class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                                             <i class="ph ph-check-square"></i> Tercatat di Kas
                                         </span>
-                                        @if($nota->transaction)
-                                            <span class="text-[10px] text-slate-400">Trx #{{ $nota->transaction->id }}</span>
-                                        @endif
                                     @endif
 
                                 </div>
