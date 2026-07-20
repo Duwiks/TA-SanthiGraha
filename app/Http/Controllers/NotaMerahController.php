@@ -44,6 +44,29 @@ class NotaMerahController extends Controller
             });
         }
 
+        // Filter by year (based on nota_date)
+        if ($request->filled('year')) {
+            $query->whereYear('nota_date', $request->year);
+        }
+
+        // Get distinct years available in the database for the dropdown
+        if (auth()->user()->role === 'admin') {
+            $availableYears = NotaMerah::selectRaw('YEAR(nota_date) as year')
+                ->distinct()
+                ->orderByRaw('YEAR(nota_date) DESC')
+                ->pluck('year')
+                ->filter()
+                ->values();
+        } else {
+            $availableYears = NotaMerah::where('user_id', auth()->id())
+                ->selectRaw('YEAR(nota_date) as year')
+                ->distinct()
+                ->orderByRaw('YEAR(nota_date) DESC')
+                ->pluck('year')
+                ->filter()
+                ->values();
+        }
+
         $sort = $request->get('sort', 'latest');
         $sortDir = $sort === 'oldest' ? 'asc' : 'desc';
         $notaMerahs = $query->orderBy('created_at', $sortDir)->orderBy('id', $sortDir)->paginate(10)->withQueryString();
@@ -52,11 +75,12 @@ class NotaMerahController extends Controller
             // Hitung antrean yang butuh aksi admin
             $countMenungguPersetujuan = NotaMerah::where('status', 'menunggu_persetujuan')->count();
             $countMenungguKonfirmasi = NotaMerah::whereIn('status', ['menunggu_verifikasi'])->count();
-            return view('admin.nota-merah', compact('notaMerahs', 'countMenungguPersetujuan', 'countMenungguKonfirmasi'));
+            return view('admin.nota-merah', compact('notaMerahs', 'countMenungguPersetujuan', 'countMenungguKonfirmasi', 'availableYears'));
         }
 
-        return view('nota-merah.index', compact('notaMerahs'));
+        return view('nota-merah.index', compact('notaMerahs', 'availableYears'));
     }
+
 
     // ---------------------------------------------------------------
     // CREATE – Form Pengajuan Nota Merah (Pegawai)
