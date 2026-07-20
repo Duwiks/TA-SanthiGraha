@@ -38,6 +38,13 @@
             <option value="approved" @selected(request('status') === 'approved')>Disetujui</option>
             <option value="rejected" @selected(request('status') === 'rejected')>Ditolak</option>
         </select>
+        <select name="year"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+            <option value="">Semua Tahun</option>
+            @foreach($availableYears as $year)
+                <option value="{{ $year }}" @selected(request('year') == $year)>{{ $year }}</option>
+            @endforeach
+        </select>
         <select name="sort"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="latest" @selected(request('sort', 'latest') === 'latest')>Tanggal Terbaru (Nota)</option>
@@ -46,7 +53,7 @@
         </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>
-        @if(request()->anyFilled(['search', 'type', 'status', 'sort']))
+        @if(request()->anyFilled(['search', 'type', 'status', 'year']))
             <a href="{{ route('transactions.index') }}"
                 class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200 transition-colors">Reset</a>
         @endif
@@ -73,9 +80,11 @@
                             {{-- Tanggal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">
-                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}</div>
+                                    {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}
+                                </div>
                                 <div class="text-xs text-slate-400 mt-0.5">
-                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA</div>
+                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA
+                                </div>
                             </td>
 
                             {{-- Proyek & Kategori --}}
@@ -97,7 +106,7 @@
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
-                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                                                {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $trx->type }}
                                     </span>
                                     @if($trx->payment_method)

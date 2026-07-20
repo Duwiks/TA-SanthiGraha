@@ -49,11 +49,35 @@ class TransactionController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Calculate overall totals after applying all filters (search, status, type)
+        // Filter by year
+        if ($request->filled('year')) {
+            $query->whereYear('transaction_date', $request->year);
+        }
+
+        // Calculate overall totals after applying all filters (search, status, type, year)
         $summaryQuery = clone $query;
         $totalPemasukan = (clone $summaryQuery)->where('type', 'pemasukan')->where('status', 'approved')->sum('amount');
         $totalPengeluaran = (clone $summaryQuery)->where('type', 'pengeluaran')->where('status', 'approved')->sum('amount');
         $saldo = $totalPemasukan - $totalPengeluaran;
+
+        // Get distinct years available in the database for the dropdown
+        if (auth()->user()->role === 'admin') {
+            $availableYears = Transaction::where('status', 'approved')
+                ->selectRaw('YEAR(transaction_date) as year')
+                ->distinct()
+                ->orderByRaw('YEAR(transaction_date) DESC')
+                ->pluck('year')
+                ->filter()
+                ->values();
+        } else {
+            $availableYears = Transaction::where('user_id', auth()->id())
+                ->selectRaw('YEAR(transaction_date) as year')
+                ->distinct()
+                ->orderByRaw('YEAR(transaction_date) DESC')
+                ->pluck('year')
+                ->filter()
+                ->values();
+        }
 
         $sort = $request->get('sort', 'latest');
         if ($sort === 'oldest') {
@@ -66,9 +90,9 @@ class TransactionController extends Controller
         $transactions = $query->paginate(10)->withQueryString();
 
         if (auth()->user()->role === 'admin') {
-            return view('admin.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo'));
+            return view('admin.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo', 'availableYears'));
         } else {
-            return view('pegawai.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo'));
+            return view('pegawai.transaksi', compact('transactions', 'totalPemasukan', 'totalPengeluaran', 'saldo', 'availableYears'));
         }
     }
 

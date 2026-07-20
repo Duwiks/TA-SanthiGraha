@@ -78,6 +78,13 @@
             <option value="pemasukan" @selected(request('type') === 'pemasukan')>Pemasukan</option>
             <option value="pengeluaran" @selected(request('type') === 'pengeluaran')>Pengeluaran</option>
         </select>
+        <select name="year"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+            <option value="">Semua Tahun</option>
+            @foreach($availableYears as $year)
+                <option value="{{ $year }}" @selected(request('year') == $year)>{{ $year }}</option>
+            @endforeach
+        </select>
         <select name="sort"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="latest" @selected(request('sort', 'latest') === 'latest')>Tanggal Terbaru (Nota)</option>
@@ -86,7 +93,7 @@
         </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>
-        @if(request()->anyFilled(['search', 'type', 'sort']))
+        @if(request()->anyFilled(['search', 'type', 'year']))
             <a href="{{ route('transactions.index') }}"
                 class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200 transition-colors">Reset</a>
         @endif
