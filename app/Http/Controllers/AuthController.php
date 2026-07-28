@@ -22,7 +22,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:100',
             'username' => 'required|string|min:4|max:50|unique:users',
             'password' => 'required|string|min:6',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|string|digits_between:10,15',
         ], [
             'name.required' => 'Nama wajib diisi',
             'username.required' => 'Username wajib diisi',
@@ -30,6 +30,8 @@ class AuthController extends Controller
             'username.unique' => 'Username sudah digunakan',
             'password.required' => 'Kata sandi wajib diisi',
             'password.min' => 'Kata sandi harus terdiri dari minimal 6 karakter',
+            'phone.required' => 'No. Telepon wajib diisi',
+            'phone.digits_between' => 'No. Telepon harus terdiri dari 10–15 digit angka',
         ]);
 
         $user = User::create([

@@ -75,7 +75,6 @@
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">{{ $nota->created_at->format('d M Y') }}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">{{ $nota->created_at->format('H:i') }} WITA</div>
                             </td>
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-700">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</div>

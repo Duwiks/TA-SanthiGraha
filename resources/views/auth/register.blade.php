@@ -9,7 +9,7 @@
         @csrf
 
         <div>
-            <label for="name" class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
+            <label for="name" class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
             <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
                 placeholder="Cth: I Kadek Ari" oninput="filterLettersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('name') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
@@ -19,7 +19,7 @@
         </div>
 
         <div>
-            <label for="username" class="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
+            <label for="username" class="block text-sm font-semibold text-slate-700 mb-1.5">Username <span class="text-red-500">*</span></label>
             <input id="username" type="text" name="username" value="{{ old('username') }}" required
                 placeholder="Min. 4 huruf, hanya huruf" minlength="4" oninput="filterLettersNoSpace(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('username') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
@@ -29,9 +29,9 @@
         </div>
 
         <div>
-            <label for="phone" class="block text-sm font-semibold text-slate-700 mb-1.5">No. Telepon</label>
-            <input id="phone" type="text" name="phone" value="{{ old('phone') }}" placeholder="Cth: 08123456789"
-                inputmode="numeric" oninput="filterNumbersOnly(this)"
+            <label for="phone" class="block text-sm font-semibold text-slate-700 mb-1.5">No. Telepon <span class="text-red-500">*</span></label>
+            <input id="phone" type="text" name="phone" value="{{ old('phone') }}" required minlength="10" maxlength="15"
+                placeholder="Cth: 08123456789" inputmode="numeric" oninput="filterNumbersOnly(this)"
                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-200 @error('phone') border-red-500 focus:ring-red-500/20 focus:border-red-500 @enderror">
             @error('phone')
                 <p class="text-red-500 text-xs font-semibold mt-1.5">{{ $message }}</p>
@@ -39,7 +39,7 @@
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+            <label for="password" class="block text-sm font-semibold text-slate-700 mb-1.5">Password <span class="text-red-500">*</span></label>
             <div class="relative">
                 <input id="password" type="password" name="password" required autocomplete="new-password"
                     placeholder="Minimal 6 karakter"

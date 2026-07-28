@@ -89,7 +89,7 @@
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
             <option value="latest" @selected(request('sort', 'latest') === 'latest')>Tanggal Terbaru (Nota)</option>
             <option value="oldest" @selected(request('sort') === 'oldest')>Tanggal Terlama (Nota)</option>
-            <option value="newest_input" @selected(request('sort') === 'newest_input')>Data Baru Masuk</option>
+            <option value="newest_input" @selected(request('sort') === 'newest_input')>Baru Disetujui</option>
         </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>
@@ -124,17 +124,22 @@
                                 <div class="font-medium text-slate-800">
                                     {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}
                                 </div>
-                                <div class="text-xs text-slate-400 mt-0.5">
-                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA
-                                </div>
                             </td>
 
                             {{-- Proyek & Kategori --}}
                             <td class="px-5 py-4">
                                 <div class="font-medium text-slate-800">{{ $trx->project->project_name ?? '-' }}</div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $trx->category->category_name ?? '-' }}</div>
-                                @if($trx->description)
-                                    <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($trx->description, 50) }}
+                                @php
+                                    $desc = $trx->description;
+                                    if ($trx->nota_merah_id) {
+                                        $desc = Str::replaceFirst('[Nota Merah] ', '', $desc);
+                                        $desc = preg_replace('/^\[Nota Merah #\d+\]$/', '', $desc ?? '');
+                                        $desc = trim($desc);
+                                    }
+                                @endphp
+                                @if($desc)
+                                    <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($desc, 50) }}
                                     </div>
                                 @endif
                                 @if($trx->nota_merah_id)

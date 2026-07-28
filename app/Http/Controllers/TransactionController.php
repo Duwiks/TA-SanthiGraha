@@ -83,7 +83,10 @@ class TransactionController extends Controller
         if ($sort === 'oldest') {
             $query->orderBy('transaction_date', 'asc')->orderBy('id', 'asc');
         } elseif ($sort === 'newest_input') {
-            $query->orderBy('created_at', 'desc')->orderBy('id', 'desc');
+            // Admin: urutkan berdasarkan waktu disetujui/diproses (updated_at)
+            // Pegawai: urutkan berdasarkan waktu diajukan (created_at)
+            $sortColumn = auth()->user()->role === 'admin' ? 'updated_at' : 'created_at';
+            $query->orderBy($sortColumn, 'desc')->orderBy('id', 'desc');
         } else {
             $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc');
         }

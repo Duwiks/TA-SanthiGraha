@@ -55,8 +55,6 @@
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">
                                     {{ \Carbon\Carbon::parse($trx->created_at)->format('d M Y') }}</div>
-                                <div class="text-xs text-slate-400 mt-0.5">
-                                    {{ \Carbon\Carbon::parse($trx->created_at)->format('H:i') }} WITA</div>
                             </td>
 
                             {{-- Tanggal Nota --}}
@@ -248,8 +246,6 @@
                                 <td class="px-5 py-4 whitespace-nowrap">
                                     <div class="font-medium text-slate-800">
                                         {{ \Carbon\Carbon::parse($trx->updated_at)->format('d M Y') }}</div>
-                                    <div class="text-xs text-slate-400 mt-0.5">
-                                        {{ \Carbon\Carbon::parse($trx->updated_at)->format('H:i') }} WITA</div>
                                 </td>
 
                                 {{-- Tanggal Nota --}}
@@ -263,8 +259,16 @@
                                 <td class="px-5 py-4">
                                     <div class="font-medium text-slate-800">{{ $trx->project->project_name ?? '-' }}</div>
                                     <div class="text-xs text-slate-500 mt-0.5">{{ $trx->category->category_name ?? '-' }}</div>
-                                    @if($trx->description)
-                                        <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($trx->description, 45) }}
+                                    @php
+                                        $desc = $trx->description;
+                                        if ($trx->nota_merah_id) {
+                                            $desc = Str::replaceFirst('[Nota Merah] ', '', $desc);
+                                            $desc = preg_replace('/^\[Nota Merah #\d+\]$/', '', $desc ?? '');
+                                            $desc = trim($desc);
+                                        }
+                                    @endphp
+                                    @if($desc)
+                                        <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($desc, 45) }}
                                         </div>
                                     @endif
                                     @if($trx->nota_merah_id)
