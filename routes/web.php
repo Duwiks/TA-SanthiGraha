@@ -32,9 +32,7 @@ Route::middleware(['auth'])->group(function () {
             if (auth()->user()->role === 'admin') {
                 $totalPegawai = \App\Models\User::where('role', 'pegawai')->count();
                 $proyekAktif = \App\Models\Project::active()->count();
-                $proyekSelesai = \App\Models\Project::whereNotNull('end_date')
-                    ->where('end_date', '<', now()->toDateString())
-                    ->count();
+                $proyekSelesai = \App\Models\Project::where('status', 'selesai')->count();
                 $menungguApproval = \App\Models\Transaction::where('status', 'pending')->count();
                 $totalTransaksi = \App\Models\Transaction::where('status', 'approved')->count();
 
@@ -130,7 +128,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Data Akun Pegawai
         Route::get('/pegawai', [PegawaiController::class, 'index'])->name('pegawai.index');
-        Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword'])->name('pegawai.resetPassword');
+        Route::put('/pegawai/{id}/reset-password', [PegawaiController::class, 'resetPassword'])->middleware('throttle:10,1')->name('pegawai.resetPassword');
 
         // Aksi Admin — Approve (GET: form upload bukti transfer, POST: proses upload + setujui)
         Route::get('/nota-merah/{id}/approve', [NotaMerahController::class, 'approveForm'])->name('nota-merah.approve.form');
@@ -143,24 +141,24 @@ Route::middleware(['auth'])->group(function () {
     // Dedicated Transaction Web Endpoints
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::post('/transactions', [TransactionController::class, 'store'])->middleware('throttle:30,1')->name('transactions.store');
     Route::get('/transactions/{id}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
-    Route::put('/transactions/{id}', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::put('/transactions/{id}', [TransactionController::class, 'update'])->middleware('throttle:30,1')->name('transactions.update');
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 
     // Pengaturan Akun
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
-    Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+    Route::put('/account/password', [AccountController::class, 'updatePassword'])->middleware('throttle:20,1')->name('account.password');
 
     // -------------------------------------------------------
     // Nota Merah (Pre-Transaction Fund Request)
     // -------------------------------------------------------
     Route::get('/nota-merah', [NotaMerahController::class, 'index'])->name('nota-merah.index');
     Route::get('/nota-merah/create', [NotaMerahController::class, 'create'])->name('nota-merah.create');
-    Route::post('/nota-merah', [NotaMerahController::class, 'store'])->name('nota-merah.store');
+    Route::post('/nota-merah', [NotaMerahController::class, 'store'])->middleware('throttle:30,1')->name('nota-merah.store');
     Route::get('/nota-merah/{id}', [NotaMerahController::class, 'show'])->name('nota-merah.show');
     Route::get('/nota-merah/{id}/edit', [NotaMerahController::class, 'edit'])->name('nota-merah.edit');
-    Route::put('/nota-merah/{id}', [NotaMerahController::class, 'update'])->name('nota-merah.update');
+    Route::put('/nota-merah/{id}', [NotaMerahController::class, 'update'])->middleware('throttle:30,1')->name('nota-merah.update');
     Route::delete('/nota-merah/{id}', [NotaMerahController::class, 'destroy'])->name('nota-merah.destroy');
 
     // Upload Realisasi (Pegawai setelah admin transfer & status menunggu_konfirmasi)

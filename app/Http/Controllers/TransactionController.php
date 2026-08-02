@@ -316,22 +316,26 @@ class TransactionController extends Controller
         }
 
         // Sinkronisasi status Nota Merah jika transaksi ini berasal dari Nota Merah
-        if ($transaction->nota_merah_id) {
-            $nota = \App\Models\NotaMerah::find($transaction->nota_merah_id);
-            if ($nota) {
-                $nota->update([
-                    'status' => 'menunggu_verifikasi',
-                    'confirmed_at' => null,
-                ]);
+        // Dibungkus DB::transaction() agar operasi bersifat atomic
+        \Illuminate\Support\Facades\DB::transaction(function () use ($transaction) {
+            if ($transaction->nota_merah_id) {
+                $nota = \App\Models\NotaMerah::find($transaction->nota_merah_id);
+                if ($nota) {
+                    $nota->update([
+                        'status'       => 'menunggu_verifikasi',
+                        'confirmed_at' => null,
+                    ]);
+                }
             }
-        }
 
-        // Jangan hapus file bukti dari storage jika berasal dari Nota Merah, karena file tersebut masih digunakan
-        if (!$transaction->nota_merah_id && $transaction->receipt_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($transaction->receipt_photo)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($transaction->receipt_photo);
-        }
+            // Jangan hapus file bukti dari storage jika berasal dari Nota Merah, karena file tersebut masih digunakan
+            if (!$transaction->nota_merah_id && $transaction->receipt_photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($transaction->receipt_photo)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($transaction->receipt_photo);
+            }
 
-        $transaction->delete();
+            $transaction->delete();
+        });
+
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil dihapus');
     }
 

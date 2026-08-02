@@ -170,7 +170,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal Mengubah Password',
-                html: '{!! implode("<br>", $errors->all()) !!}',
+                html: @json(implode('<br>', $errors->all())),
                 confirmButtonColor: '#059669',
             });
         @endif

@@ -416,7 +416,12 @@ class NotaMerahController extends Controller
 
             return back()->with('success', $result['message']);
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan saat memproses data: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('NotaMerah Confirm Error: ' . $e->getMessage(), [
+                'nota_id' => $id,
+                'user_id' => auth()->id(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+            return back()->with('error', 'Terjadi kesalahan saat memproses data. Silakan coba beberapa saat lagi.');
         }
     }
 
@@ -538,6 +543,11 @@ class NotaMerahController extends Controller
             if (!in_array($nota->status, ['menunggu_persetujuan', 'ditolak'])) {
                 return back()->with('error', 'Nota merah yang sudah disetujui tidak dapat dihapus.');
             }
+        }
+
+        // Admin tidak boleh menghapus Nota Merah yang sudah selesai karena sudah tercatat di buku kas
+        if ($nota->status === 'selesai') {
+            return back()->with('error', 'Nota merah berstatus selesai tidak dapat dihapus karena sudah tercatat di buku kas.');
         }
 
         // Hapus file terlampir
