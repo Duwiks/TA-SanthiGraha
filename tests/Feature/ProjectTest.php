@@ -240,4 +240,31 @@ class ProjectTest extends TestCase
 
         $response->assertSessionHasErrors('new_end_date');
     }
+
+    // -------------------------------------------------------
+    // Security Fix Test – Dashboard proyekSelesai Count
+    // -------------------------------------------------------
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function dashboard_admin_menghitung_proyek_selesai_dengan_benar(): void
+    {
+        // 1 proyek selesai resmi (status=selesai)
+        Project::factory()->selesai()->create();
+
+        // 1 proyek aktif dengan end_date sudah terlewat (overdue) – tidak boleh dihitung sebagai selesai
+        Project::factory()->aktif()->create([
+            'end_date' => now()->subDays(5)->format('Y-m-d'),
+        ]);
+
+        // 1 proyek aktif normal
+        Project::factory()->aktif()->create();
+
+        $response = $this->actingAs($this->admin)->get(route('dashboard'));
+
+        $response->assertStatus(200);
+
+        // Hanya 1 proyek yang berstatus 'selesai', bukan 2 (yang include overdue)
+        $proyekSelesai = \App\Models\Project::where('status', 'selesai')->count();
+        $this->assertEquals(1, $proyekSelesai);
+    }
 }

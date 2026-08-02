@@ -416,4 +416,66 @@ class NotaMerahTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertDatabaseHas('nota_merah', ['id' => $nota->id]);
     }
+
+    // -------------------------------------------------------
+    // Security Fixes Tests – Verifikasi Perbaikan Keamanan
+    // -------------------------------------------------------
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_tidak_dapat_menghapus_nota_merah_yang_sudah_selesai(): void
+    {
+        // Buat nota merah berstatus selesai
+        $nota = NotaMerah::factory()->selesai()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'approved_by' => $this->admin->id,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->delete(route('nota-merah.destroy', $nota->id));
+
+        // Harus ditolak dengan pesan error – nota merah selesai tidak boleh dihapus
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('nota_merah', ['id' => $nota->id]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function menghapus_transaksi_dari_nota_merah_mengembalikan_status_nota_ke_menunggu_verifikasi(): void
+    {
+        // Buat nota merah selesai dengan transaksi terkait
+        $nota = NotaMerah::factory()->selesai()->create([
+            'user_id'     => $this->pegawai->id,
+            'project_id'  => $this->project->id,
+            'category_id' => $this->category->id,
+            'approved_by' => $this->admin->id,
+        ]);
+
+        // Buat transaksi terkait nota merah
+        $transaction = Transaction::factory()->approved()->create([
+            'user_id'       => $this->pegawai->id,
+            'project_id'    => $this->project->id,
+            'category_id'   => $this->category->id,
+            'nota_merah_id' => $nota->id,
+            'approved_by'   => $this->admin->id,
+        ]);
+
+        // Admin menghapus transaksi (aksi yang valid)
+        $response = $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->delete(route('transactions.destroy', $transaction->id));
+
+        $response->assertRedirect(route('transactions.index'));
+
+        // Transaksi harus terhapus
+        $this->assertDatabaseMissing('transactions', ['id' => $transaction->id]);
+
+        // Nota merah harus kembali ke status menunggu_verifikasi (bukan tetap selesai)
+        $this->assertDatabaseHas('nota_merah', [
+            'id'           => $nota->id,
+            'status'       => 'menunggu_verifikasi',
+            'confirmed_at' => null,
+        ]);
+    }
 }
