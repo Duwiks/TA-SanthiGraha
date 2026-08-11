@@ -25,4 +25,10 @@ class Category extends Model
     {
         return $this->hasMany(NotaMerah::class, 'category_id');
     }
+
+    // Relasi ke Payment Group
+    public function paymentGroups()
+    {
+        return $this->hasMany(PaymentGroup::class, 'category_id');
+    }
 }

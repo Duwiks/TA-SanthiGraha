@@ -102,6 +102,36 @@
                 @error('category_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            {{-- Status Pembayaran (Pegawai: Uang Muka / Proses) --}}
+            <div id="payment-stage-field">
+                {{-- Box Info saat Kelompok Sebelumnya Selesai --}}
+                <div id="payment-stage-completed-info" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 flex items-start gap-3 mb-2">
+                    <i class="ph ph-info text-lg text-amber-600 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold text-amber-900 text-sm block mb-0.5">Kelompok Pembayaran Sebelumnya Selesai</span>
+                        <p class="text-amber-700 leading-relaxed">Kelompok pembayaran untuk proyek & kategori ini sebelumnya sudah selesai. Status pembayaran dan penentuan kelompok baru akan divalidasi oleh Admin saat proses persetujuan (approval).</p>
+                    </div>
+                </div>
+
+                <div id="payment-stage-select-wrapper">
+                    <label for="payment_stage" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Status Pembayaran <span class="text-red-500">*</span>
+                        <span class="ml-1 text-xs font-normal text-slate-400">(Uang Muka / Proses)</span>
+                    </label>
+                    <select id="payment_stage" name="payment_stage"
+                        class="w-full px-4 py-3 rounded-xl border @error('payment_stage') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none"
+                        required>
+                        <option value="">-- Pilih Status Pembayaran --</option>
+                        <option value="uang_muka" @selected(old('payment_stage', $nota->payment_stage) === 'uang_muka')>Uang Muka</option>
+                        <option value="proses"    @selected(old('payment_stage', $nota->payment_stage) === 'proses')>Proses</option>
+                    </select>
+                    <p id="payment-stage-helper" class="text-xs text-indigo-600 font-medium mt-1.5 hidden flex items-center gap-1">
+                        <i class="ph ph-info"></i> Pembayaran lanjutan terdeteksi — status otomatis Proses.
+                    </p>
+                    @error('payment_stage') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             {{-- Tanggal Nota --}}
             <div>
                 <label for="nota_date" class="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -408,5 +438,71 @@
             reader.readAsDataURL(file);
         }
     }
+
+    // ---------------------------------------------------------------
+    // Dynamic Filter Uang Muka (AJAX Check Payment Group)
+    // ---------------------------------------------------------------
+    const projectSelect  = document.getElementById('project_id');
+    const categorySelect = document.getElementById('category_id');
+    const stageSelect    = document.getElementById('payment_stage');
+    const stageHelper    = document.getElementById('payment-stage-helper');
+
+    function updatePaymentStageOptions(hasActiveGroup) {
+        if (hasActiveGroup) {
+            stageSelect.innerHTML = `
+                <option value="proses" selected>Proses</option>
+            `;
+            if (stageHelper) {
+                stageHelper.innerHTML = '<i class="ph ph-info"></i> Pembayaran lanjutan terdeteksi — status otomatis Proses.';
+                stageHelper.classList.remove('hidden');
+            }
+        } else {
+            stageSelect.innerHTML = `
+                <option value="uang_muka" selected>Uang Muka</option>
+            `;
+            if (stageHelper) stageHelper.classList.add('hidden');
+        }
+    }
+
+    function checkGroupForNotaMerah() {
+        const projectId  = projectSelect.value;
+        const categoryId = categorySelect.value;
+
+        if (!projectId || !categoryId) {
+            updatePaymentStageOptions(false);
+            return;
+        }
+
+        fetch(`{{ route('transactions.check-payment-group') }}?project_id=${projectId}&category_id=${categoryId}`, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const completedInfo = document.getElementById('payment-stage-completed-info');
+            const selectWrapper = document.getElementById('payment-stage-select-wrapper');
+
+            if (data.is_completed) {
+                // Pegawai: kelompok sebelumnya selesai → sembunyikan dropdown status pembayaran!
+                if (completedInfo) completedInfo.classList.remove('hidden');
+                if (selectWrapper) selectWrapper.classList.add('hidden');
+                stageSelect.required = false;
+                stageSelect.value = '';
+            } else {
+                if (completedInfo) completedInfo.classList.add('hidden');
+                if (selectWrapper) selectWrapper.classList.remove('hidden');
+                stageSelect.required = true;
+
+                if (data.has_active_group) {
+                    updatePaymentStageOptions(true);
+                } else {
+                    updatePaymentStageOptions(false);
+                }
+            }
+        })
+        .catch(() => {});
+    }
+
+    projectSelect.addEventListener('change', checkGroupForNotaMerah);
+    categorySelect.addEventListener('change', checkGroupForNotaMerah);
 </script>
 @endsection

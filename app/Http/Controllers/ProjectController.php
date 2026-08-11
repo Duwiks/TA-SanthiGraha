@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\Models\PaymentGroup;
 
 class ProjectController extends Controller
 {
@@ -133,7 +134,8 @@ class ProjectController extends Controller
 
     /**
      * Tandai project sebagai selesai (admin action).
-     * Setelah ini, project tidak bisa diperpanjang atau diedit.
+     * Setelah ini, project tidak bisa diperpanjang atau diedit,
+     * dan semua kelompok pembayaran proyek ini otomatis diset selesai.
      */
     public function complete($id)
     {
@@ -147,9 +149,13 @@ class ProjectController extends Controller
 
         $project->update(['status' => 'selesai']);
 
+        // Otomatis ubah status seluruh kelompok pembayaran proyek ini menjadi selesai
+        PaymentGroup::where('project_id', $project->id)
+            ->update(['payment_status' => 'selesai']);
+
         return redirect()
             ->route('projects.index')
-            ->with('success', "Proyek \"{$project->project_name}\" telah ditandai selesai.");
+            ->with('success', "Proyek \"{$project->project_name}\" telah ditandai selesai dan seluruh kelompok pembayaran telah diselesaikan.");
     }
 
     /**

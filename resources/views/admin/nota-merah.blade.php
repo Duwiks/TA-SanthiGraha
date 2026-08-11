@@ -117,7 +117,26 @@
 
                             {{-- Proyek & Kategori --}}
                             <td class="px-5 py-4">
-                                <div class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</div>
+                                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</span>
+                                    @php
+                                        $stageColor = match($nota->payment_stage) {
+                                            'uang_muka' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                            'proses'    => 'bg-amber-100 text-amber-700 border-amber-200',
+                                            'selesai'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                            default     => 'bg-slate-100 text-slate-700 border-slate-200',
+                                        };
+                                        $stageLabel = match($nota->payment_stage) {
+                                            'uang_muka' => 'Uang Muka',
+                                            'proses'    => 'Proses',
+                                            'selesai'   => 'Selesai',
+                                            default     => ucfirst($nota->payment_stage ?? '-'),
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold border {{ $stageColor }}">
+                                        {{ $stageLabel }}
+                                    </span>
+                                </div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $nota->category->category_name ?? '-' }}</div>
                                 <div class="text-[12px] text-slate-400 mt-1 italic">
                                     {{ $nota->description ? Str::limit($nota->description, 55) : 'Nota Merah #' . $nota->id }}
@@ -260,13 +279,10 @@
                                         {{-- Tahap 3: Menunggu Verifikasi — pegawai sudah upload realisasi, admin perlu konfirmasi
                                         --}}
                                     @elseif($nota->status === 'menunggu_verifikasi')
-                                        <form action="{{ route('nota-merah.confirm', $nota->id) }}" method="POST" class="w-full">
-                                            @csrf
-                                            <button type="submit"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500 text-white font-semibold text-xs hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-500/20 transition-all w-full justify-center">
-                                                <i class="ph ph-check-square text-sm"></i> Konfirmasi & Catat Kas
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="handleConfirmNotaClick({{ $nota->id }}, {{ $nota->project_id }}, {{ $nota->category_id }}, '{{ $nota->payment_stage ?? 'proses' }}')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500 text-white font-semibold text-xs hover:bg-purple-600 hover:shadow-lg hover:shadow-purple-500/20 transition-all w-full justify-center">
+                                            <i class="ph ph-check-square text-sm"></i> Konfirmasi & Catat Kas
+                                        </button>
                                         <button onclick="rejectRealisasi({{ $nota->id }})"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500 w-full justify-center">
                                             <i class="ph ph-x-circle text-sm"></i> Tolak Realisasi
@@ -311,7 +327,207 @@
         <input type="hidden" name="reason" id="rejectNotaReason">
     </form>
 
+    {{-- Hidden Direct Confirm Form --}}
+    <form id="directConfirmNotaForm" method="POST" action="" class="hidden">
+        @csrf
+        <input type="hidden" name="payment_stage" id="directNotaPaymentStage">
+        <input type="hidden" name="payment_group_action" id="directNotaGroupAction">
+        <input type="hidden" name="payment_group_label" id="directNotaGroupLabel">
+    </form>
+
+    {{-- Modal Konfirmasi Approval Payment Group Selesai (Nota Merah) --}}
+    <div id="confirmNotaGroupModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            {{-- Icon & Judul --}}
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-warning-circle text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base">Kelompok Sebelumnya Selesai</h3>
+                    <p class="text-xs text-slate-500">Proyek & kategori nota merah ini sebelumnya sudah selesai.</p>
+                </div>
+            </div>
+
+            {{-- Info Group Sebelumnya --}}
+            <div class="bg-slate-50 rounded-xl p-4 mb-4 text-xs space-y-1.5 border border-slate-100">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Proyek:</span>
+                    <span class="font-semibold text-slate-700" id="modal_nota_project_name">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Kategori:</span>
+                    <span class="font-semibold text-slate-700" id="modal_nota_category_name">-</span>
+                </div>
+                <div class="flex justify-between" id="modal_nota_label_row">
+                    <span class="text-slate-500">Label Sebelumnya:</span>
+                    <span class="font-semibold text-slate-700" id="modal_nota_label">-</span>
+                </div>
+                <div class="flex justify-between border-t border-slate-200 pt-1.5 mt-1.5">
+                    <span class="text-slate-500">Total Sebelumnya:</span>
+                    <span class="font-bold text-emerald-600" id="modal_nota_total_amount">-</span>
+                </div>
+            </div>
+
+            {{-- Pertanyaan / Pilihan --}}
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tindakan Kelompok Pembayaran:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-indigo-50/40">
+                        <input type="radio" name="modal_nota_group_action" value="lanjutkan" checked onchange="toggleNotaNewGroupLabel(this.value)" class="text-brand-500">
+                        <span class="text-xs font-medium text-slate-700">Lanjutkan Kelompok Lama</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-indigo-50/40">
+                        <input type="radio" name="modal_nota_group_action" value="baru" onchange="toggleNotaNewGroupLabel(this.value)" class="text-brand-500">
+                        <span class="text-xs font-medium text-slate-700">Buat Kelompok Baru</span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Input Label Baru (hidden default) --}}
+            <div id="notaNewGroupLabelSection" class="hidden mb-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                    Label Kelompok Baru <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="modal_nota_new_label" placeholder="Contoh: Tahap 2, Perbaikan Lanjutan"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-400 outline-none">
+                <p class="text-[11px] text-red-500 mt-1 hidden" id="modal_nota_label_error">Label kelompok baru wajib diisi.</p>
+            </div>
+
+            {{-- Konfirmasi Status Pembayaran --}}
+            <div class="mb-5">
+                <label for="modal_nota_stage" class="block text-xs font-semibold text-slate-700 mb-1">
+                    Status Pembayaran Transaksi Ini <span class="text-red-500">*</span>
+                </label>
+                <select id="modal_nota_stage" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-400 outline-none">
+                    <option value="uang_muka">Uang Muka</option>
+                    <option value="proses" selected>Proses</option>
+                    <option value="selesai">Selesai</option>
+                </select>
+            </div>
+
+            {{-- Tombol Aksi --}}
+            <div class="flex gap-2">
+                <button type="button" onclick="submitConfirmNotaModal()"
+                    class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-1.5">
+                    <i class="ph ph-check-circle"></i> Konfirmasi & Catat Kas
+                </button>
+                <button type="button" onclick="closeConfirmNotaGroupModal()"
+                    class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-200 transition-colors">
+                    Batal
+                </button>
+            </div>
+
+            <button type="button" onclick="closeConfirmNotaGroupModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </div>
+    </div>
+
     <script>
+        let currentConfirmNotaId = null;
+
+        function handleConfirmNotaClick(notaId, projectId, categoryId, currentStage) {
+            currentConfirmNotaId = notaId;
+
+            fetch(`{{ route('transactions.check-payment-group') }}?project_id=${projectId}&category_id=${categoryId}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.needs_confirmation) {
+                    openConfirmNotaGroupModal(data.group, currentStage);
+                } else {
+                    directConfirmNota(notaId, currentStage);
+                }
+            })
+            .catch(() => {
+                directConfirmNota(notaId, currentStage);
+            });
+        }
+
+        function directConfirmNota(notaId, stage) {
+            const form = document.getElementById('directConfirmNotaForm');
+            form.action = `/nota-merah/${notaId}/confirm`;
+            document.getElementById('directNotaPaymentStage').value = stage || 'proses';
+            document.getElementById('directNotaGroupAction').value = '';
+            document.getElementById('directNotaGroupLabel').value = '';
+            form.submit();
+        }
+
+        function openConfirmNotaGroupModal(group, currentStage) {
+            document.getElementById('modal_nota_project_name').textContent  = group.project_name;
+            document.getElementById('modal_nota_category_name').textContent = group.category_name;
+            document.getElementById('modal_nota_total_amount').textContent  =
+                'Rp ' + Number(group.total_amount).toLocaleString('id-ID', {minimumFractionDigits: 0});
+
+            const labelRow = document.getElementById('modal_nota_label_row');
+            if (group.label) {
+                document.getElementById('modal_nota_label').textContent = group.label;
+                labelRow.classList.remove('hidden');
+            } else {
+                labelRow.classList.add('hidden');
+            }
+
+            document.querySelector('input[name="modal_nota_group_action"][value="lanjutkan"]').checked = true;
+            toggleNotaNewGroupLabel('lanjutkan');
+            if (currentStage === 'selesai') {
+                document.getElementById('modal_nota_stage').value = 'selesai';
+            }
+            document.getElementById('modal_nota_new_label').value = '';
+            document.getElementById('modal_nota_label_error').classList.add('hidden');
+
+            document.getElementById('confirmNotaGroupModal').classList.remove('hidden');
+        }
+
+        function closeConfirmNotaGroupModal() {
+            document.getElementById('confirmNotaGroupModal').classList.add('hidden');
+            currentConfirmNotaId = null;
+        }
+
+        function toggleNotaNewGroupLabel(action) {
+            const section = document.getElementById('notaNewGroupLabelSection');
+            const stageSelect = document.getElementById('modal_nota_stage');
+
+            if (action === 'baru') {
+                section.classList.remove('hidden');
+                stageSelect.innerHTML = `
+                    <option value="uang_muka" selected>Uang Muka</option>
+                    <option value="selesai">Selesai</option>
+                `;
+            } else {
+                section.classList.add('hidden');
+                stageSelect.innerHTML = `
+                    <option value="proses" selected>Proses</option>
+                    <option value="selesai">Selesai</option>
+                `;
+            }
+        }
+
+        function submitConfirmNotaModal() {
+            if (!currentConfirmNotaId) return;
+
+            const action = document.querySelector('input[name="modal_nota_group_action"]:checked').value;
+            const stage = document.getElementById('modal_nota_stage').value;
+            let label = '';
+
+            if (action === 'baru') {
+                label = document.getElementById('modal_nota_new_label').value.trim();
+                if (!label) {
+                    document.getElementById('modal_nota_label_error').classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const form = document.getElementById('directConfirmNotaForm');
+            form.action = `/nota-merah/${currentConfirmNotaId}/confirm`;
+            document.getElementById('directNotaPaymentStage').value = stage;
+            document.getElementById('directNotaGroupAction').value = action;
+            document.getElementById('directNotaGroupLabel').value = label;
+            form.submit();
+        }
+
         function rejectRealisasi(id) {
             Swal.fire({
                 title: 'Tolak Bukti Realisasi',

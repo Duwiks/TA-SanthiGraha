@@ -128,13 +128,10 @@
                                         <i class="ph ph-eye text-sm"></i> Detail
                                     </a>
                                     <div class="flex items-center gap-2">
-                                        <form action="{{ route('transactions.approve', $trx->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit"
-                                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
-                                                <i class="ph ph-check-circle text-sm"></i> Setujui
-                                            </button>
-                                        </form>
+                                        <button type="button" onclick="handleApproveClick({{ $trx->id }}, {{ $trx->project_id }}, {{ $trx->category_id }}, '{{ $trx->payment_stage ?? 'proses' }}')"
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
+                                            <i class="ph ph-check-circle text-sm"></i> Setujui
+                                        </button>
                                         <button onclick="rejectTransaction({{ $trx->id }})"
                                             class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500">
                                             <i class="ph ph-x-circle text-sm"></i> Tolak
@@ -383,7 +380,210 @@
         <input type="hidden" name="reason" id="rejectReason">
     </form>
 
+    {{-- Hidden Approve Form --}}
+    <form id="directApproveForm" method="POST" action="" class="hidden">
+        @csrf
+        <input type="hidden" name="payment_stage" id="directPaymentStage">
+        <input type="hidden" name="payment_group_action" id="directGroupAction">
+        <input type="hidden" name="payment_group_label" id="directGroupLabel">
+    </form>
+
+    {{-- Modal Konfirmasi Approval Payment Group Selesai --}}
+    <div id="approvalGroupModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            {{-- Icon & Judul --}}
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i class="ph ph-warning-circle text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base">Kelompok Sebelumnya Selesai</h3>
+                    <p class="text-xs text-slate-500">Proyek & kategori transaksi ini sebelumnya sudah selesai.</p>
+                </div>
+            </div>
+
+            {{-- Info Group Sebelumnya --}}
+            <div class="bg-slate-50 rounded-xl p-4 mb-4 text-xs space-y-1.5 border border-slate-100">
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Proyek:</span>
+                    <span class="font-semibold text-slate-700" id="modal_app_project_name">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500">Kategori:</span>
+                    <span class="font-semibold text-slate-700" id="modal_app_category_name">-</span>
+                </div>
+                <div class="flex justify-between" id="modal_app_label_row">
+                    <span class="text-slate-500">Label Sebelumnya:</span>
+                    <span class="font-semibold text-slate-700" id="modal_app_label">-</span>
+                </div>
+                <div class="flex justify-between border-t border-slate-200 pt-1.5 mt-1.5">
+                    <span class="text-slate-500">Total Sebelumnya:</span>
+                    <span class="font-bold text-emerald-600" id="modal_app_total_amount">-</span>
+                </div>
+            </div>
+
+            {{-- Pertanyaan / Pilihan --}}
+            <div id="modalAppChoiceSection" class="mb-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tindakan Kelompok Pembayaran:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-indigo-50/40">
+                        <input type="radio" name="modal_group_action" value="lanjutkan" checked onchange="toggleAppNewGroupLabel(this.value)" class="text-brand-500">
+                        <span class="text-xs font-medium text-slate-700">Lanjutkan Kelompok Lama</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:border-brand-500 has-[:checked]:bg-indigo-50/40">
+                        <input type="radio" name="modal_group_action" value="baru" onchange="toggleAppNewGroupLabel(this.value)" class="text-brand-500">
+                        <span class="text-xs font-medium text-slate-700">Buat Kelompok Baru</span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Input Label Baru (hidden default) --}}
+            <div id="appNewGroupLabelSection" class="hidden mb-4">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                    Label Kelompok Baru <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="modal_app_new_label" placeholder="Contoh: Tahap 2, Perbaikan Lanjutan"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-400 outline-none">
+                <p class="text-[11px] text-red-500 mt-1 hidden" id="modal_app_label_error">Label kelompok baru wajib diisi.</p>
+            </div>
+
+            {{-- Konfirmasi Status Pembayaran --}}
+            <div class="mb-5">
+                <label for="modal_app_stage" class="block text-xs font-semibold text-slate-700 mb-1">
+                    Status Pembayaran Transaksi Ini <span class="text-red-500">*</span>
+                </label>
+                <select id="modal_app_stage" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-400 outline-none">
+                    <option value="uang_muka">Uang Muka</option>
+                    <option value="proses" selected>Proses</option>
+                    <option value="selesai">Selesai</option>
+                </select>
+            </div>
+
+            {{-- Tombol Aksi --}}
+            <div class="flex gap-2">
+                <button type="button" onclick="submitApproveModal()"
+                    class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5">
+                    <i class="ph ph-check-circle"></i> Konfirmasi & Setujui
+                </button>
+                <button type="button" onclick="closeApprovalGroupModal()"
+                    class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-200 transition-colors">
+                    Batal
+                </button>
+            </div>
+
+            <button type="button" onclick="closeApprovalGroupModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </div>
+    </div>
+
     <script>
+        let currentApproveTrxId = null;
+
+        function handleApproveClick(trxId, projectId, categoryId, currentStage) {
+            currentApproveTrxId = trxId;
+
+            // Cek status kelompok pembayaran via AJAX
+            fetch(`{{ route('transactions.check-payment-group') }}?project_id=${projectId}&category_id=${categoryId}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.needs_confirmation) {
+                    // Kelompok sebelumnya selesai → buka pop-up konfirmasi
+                    openApprovalGroupModal(data.group, currentStage);
+                } else {
+                    // Kelompok belum selesai atau baru pertama kali → langsung setujui
+                    directApprove(trxId, currentStage);
+                }
+            })
+            .catch(() => {
+                directApprove(trxId, currentStage);
+            });
+        }
+
+        function directApprove(trxId, stage) {
+            const form = document.getElementById('directApproveForm');
+            form.action = `/transactions/${trxId}/approve`;
+            document.getElementById('directPaymentStage').value = stage || 'proses';
+            document.getElementById('directGroupAction').value = '';
+            document.getElementById('directGroupLabel').value = '';
+            form.submit();
+        }
+
+        function openApprovalGroupModal(group, currentStage) {
+            document.getElementById('modal_app_project_name').textContent  = group.project_name;
+            document.getElementById('modal_app_category_name').textContent = group.category_name;
+            document.getElementById('modal_app_total_amount').textContent  =
+                'Rp ' + Number(group.total_amount).toLocaleString('id-ID', {minimumFractionDigits: 0});
+
+            const labelRow = document.getElementById('modal_app_label_row');
+            if (group.label) {
+                document.getElementById('modal_app_label').textContent = group.label;
+                labelRow.classList.remove('hidden');
+            } else {
+                labelRow.classList.add('hidden');
+            }
+
+            document.querySelector('input[name="modal_group_action"][value="lanjutkan"]').checked = true;
+            toggleAppNewGroupLabel('lanjutkan');
+            if (currentStage === 'selesai') {
+                document.getElementById('modal_app_stage').value = 'selesai';
+            }
+            document.getElementById('modal_app_new_label').value = '';
+            document.getElementById('modal_app_label_error').classList.add('hidden');
+
+            document.getElementById('approvalGroupModal').classList.remove('hidden');
+        }
+
+        function closeApprovalGroupModal() {
+            document.getElementById('approvalGroupModal').classList.add('hidden');
+            currentApproveTrxId = null;
+        }
+
+        function toggleAppNewGroupLabel(action) {
+            const section = document.getElementById('appNewGroupLabelSection');
+            const stageSelect = document.getElementById('modal_app_stage');
+
+            if (action === 'baru') {
+                section.classList.remove('hidden');
+                stageSelect.innerHTML = `
+                    <option value="uang_muka" selected>Uang Muka</option>
+                    <option value="selesai">Selesai</option>
+                `;
+            } else {
+                section.classList.add('hidden');
+                stageSelect.innerHTML = `
+                    <option value="proses" selected>Proses</option>
+                    <option value="selesai">Selesai</option>
+                `;
+            }
+        }
+
+        function submitApproveModal() {
+            if (!currentApproveTrxId) return;
+
+            const action = document.querySelector('input[name="modal_group_action"]:checked').value;
+            const stage = document.getElementById('modal_app_stage').value;
+            let label = '';
+
+            if (action === 'baru') {
+                label = document.getElementById('modal_app_new_label').value.trim();
+                if (!label) {
+                    document.getElementById('modal_app_label_error').classList.remove('hidden');
+                    return;
+                }
+            }
+
+            const form = document.getElementById('directApproveForm');
+            form.action = `/transactions/${currentApproveTrxId}/approve`;
+            document.getElementById('directPaymentStage').value = stage;
+            document.getElementById('directGroupAction').value = action;
+            document.getElementById('directGroupLabel').value = label;
+            form.submit();
+        }
+
         function rejectTransaction(id) {
             Swal.fire({
                 title: 'Tolak Transaksi',

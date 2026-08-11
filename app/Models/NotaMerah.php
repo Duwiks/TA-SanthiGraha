@@ -24,6 +24,8 @@ class NotaMerah extends Model
         'nota_photo',
         'realisasi_photo',
         'realisasi_date',
+        'payment_stage',
+        'payment_group_id',
         'transfer_proof',
         'status',
         'rejection_reason',
@@ -85,6 +87,12 @@ class NotaMerah extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    // Relasi ke PaymentGroup
+    public function paymentGroup()
+    {
+        return $this->belongsTo(PaymentGroup::class, 'payment_group_id');
     }
 
     // Relasi ke Transaction yang lahir dari nota merah ini

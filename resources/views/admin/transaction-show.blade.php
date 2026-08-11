@@ -4,7 +4,7 @@
 @section('page_title', 'Detail Transaksi')
 
 @section('content')
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-4xl mx-auto">
 
         {{-- Back + Header --}}
         <div class="mb-6">
@@ -15,9 +15,11 @@
             </a>
             <div class="flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800">Transaksi #{{ $transaction->id }}</h2>
+                    <h2 class="text-lg font-bold text-slate-800">
+                        {{ $paymentGroup ? 'Transaksi Kelompok #' . $paymentGroup->id . ' (' . ($paymentGroup->project->project_name ?? '') . ')' : 'Transaksi #' . $transaction->id }}
+                    </h2>
                     <p class="text-sm text-slate-500 mt-0.5">
-                        Diajukan pada {{ $transaction->created_at->format('d M Y, H:i') }} WITA
+                        {{ $paymentGroup ? 'Akumulasi ' . $groupTransactions->count() . ' nota untuk ' . ($paymentGroup->category->category_name ?? '-') : 'Diajukan pada ' . $transaction->created_at->format('d M Y, H:i') . ' WITA' }}
                     </p>
                 </div>
                 {{-- Badge Status --}}
@@ -36,7 +38,8 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {{-- Ringkasan Utama Transaksi --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
 
             {{-- Informasi Pengajuan --}}
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -59,6 +62,9 @@
                         <dt class="text-slate-500">Tanggal Nota</dt>
                         <dd class="font-semibold text-slate-800">
                             {{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d M Y') }}
+                            @if($paymentGroup && $groupTransactions->count() > 1)
+                                <span class="text-xs text-slate-400 font-normal">(Terakhir)</span>
+                            @endif
                         </dd>
                     </div>
 
@@ -73,10 +79,20 @@
                         </dd>
                     </div>
 
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Nominal</dt>
-                        <dd class="font-bold text-base {{ $transaction->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                            {{ $transaction->type === 'pemasukan' ? '+' : '' }} Rp {{ number_format($transaction->amount, 2, ',', '.') }}
+                    {{-- Nominal Total Akumulasi --}}
+                    <div class="flex justify-between items-start pt-1">
+                        <dt class="text-slate-500">
+                            {{ $paymentGroup && $groupTransactions->count() > 1 ? 'Total Nominal (Akumulasi)' : 'Nominal' }}
+                        </dt>
+                        <dd class="text-right">
+                            <span class="font-bold text-lg {{ $transaction->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
+                                {{ $transaction->type === 'pemasukan' ? '+' : '' }} Rp {{ number_format($totalGroupAmount, 2, ',', '.') }}
+                            </span>
+                            @if($paymentGroup && $groupTransactions->count() > 1)
+                                <div class="text-[11px] text-indigo-600 font-medium mt-0.5">
+                                    Hasil penjumlahan {{ $groupTransactions->count() }} nota
+                                </div>
+                            @endif
                         </dd>
                     </div>
 
@@ -85,51 +101,59 @@
                         <dd class="font-semibold text-slate-800">{{ $transaction->payment_method ?? '-' }}</dd>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100">
-                        <dt class="text-slate-500 mb-1">Keterangan</dt>
-                        <dd class="text-slate-700 leading-relaxed {{ !$transaction->description ? 'text-slate-400 italic' : '' }}">
+                    @if($transaction->type === 'pengeluaran')
+                    <div class="flex justify-between items-center">
+                        <dt class="text-slate-500">Status Pembayaran</dt>
+                        <dd>
                             @php
-                                $desc = $transaction->description;
-                                if ($transaction->nota_merah_id) {
-                                    $desc = Str::replaceFirst('[Nota Merah] ', '', $desc ?? '');
-                                    $desc = preg_replace('/^\[Nota Merah #\d+\]$/', '', $desc ?? '');
-                                    $desc = trim($desc);
-                                }
+                                $stage = $paymentGroup ? $paymentGroup->payment_status : $transaction->payment_stage;
+                                $stageColor = match($stage) {
+                                    'uang_muka' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                    'proses'    => 'bg-amber-100 text-amber-700 border-amber-200',
+                                    'selesai'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                    default     => 'bg-slate-100 text-slate-600 border-slate-200',
+                                };
+                                $stageLabel = match($stage) {
+                                    'uang_muka' => 'Uang Muka',
+                                    'proses'    => 'Proses',
+                                    'selesai'   => 'Selesai',
+                                    default     => $stage ?: 'Belum diisi',
+                                };
                             @endphp
-                            {{ $desc ?: 'Tidak ada keterangan' }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $stageColor }}">
+                                {{ $stageLabel }}
+                            </span>
                         </dd>
                     </div>
+                    @endif
+
+                    @if(!$paymentGroup || $groupTransactions->count() <= 1)
+                        <div class="pt-2 border-t border-slate-100">
+                            <dt class="text-slate-500 mb-1">Keterangan</dt>
+                            <dd class="text-slate-700 leading-relaxed {{ !$transaction->description ? 'text-slate-400 italic' : '' }}">
+                                @php
+                                    $desc = $transaction->description;
+                                    if ($transaction->nota_merah_id) {
+                                        $desc = Str::replaceFirst('[Nota Merah] ', '', $desc ?? '');
+                                        $desc = preg_replace('/^\[Nota Merah #\d+\]$/', '', $desc ?? '');
+                                        $desc = trim($desc);
+                                    }
+                                @endphp
+                                {{ $desc ?: 'Tidak ada keterangan' }}
+                            </dd>
+                        </div>
+                    @endif
 
                 </dl>
             </div>
 
-            {{-- Kolom kanan: Bukti + Info Pengaju/Penyetuju + Nota Merah --}}
+            {{-- Kolom kanan: Info Pengaju/Penyetuju + Link Kelompok --}}
             <div class="space-y-4">
-
-                {{-- Foto Bukti Transaksi --}}
-                @if($transaction->receipt_photo)
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                        <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                            <i class="ph ph-image text-amber-500"></i> Foto Bukti Transaksi
-                        </h3>
-                        @if(str_ends_with(strtolower($transaction->receipt_photo), '.pdf'))
-                            <a href="{{ asset('storage/' . $transaction->receipt_photo) }}" target="_blank"
-                                class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 text-red-600 font-medium text-sm hover:bg-red-100 transition-colors border border-red-100">
-                                <i class="ph ph-file-pdf text-xl"></i> Lihat Dokumen PDF
-                            </a>
-                        @else
-                            <a href="{{ asset('storage/' . $transaction->receipt_photo) }}" target="_blank">
-                                <img src="{{ asset('storage/' . $transaction->receipt_photo) }}" alt="Bukti Transaksi"
-                                    class="w-full h-40 object-cover rounded-xl border border-slate-200 hover:opacity-80 transition-opacity">
-                            </a>
-                        @endif
-                    </div>
-                @endif
 
                 {{-- Info Pengaju & Penyetuju --}}
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
                     <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                        <i class="ph ph-users text-blue-500"></i> Pengaju & Pengelola
+                        <i class="ph ph-users text-blue-500"></i> Pengaju & Penyetuju
                     </h3>
                     <div class="space-y-3">
                         {{-- Pengaju --}}
@@ -174,8 +198,157 @@
                     </div>
                 @endif
 
+                {{-- Info Payment Group --}}
+                @if($paymentGroup)
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                        <div class="flex items-center gap-3">
+                            <i class="ph ph-stack text-indigo-500 text-lg flex-shrink-0"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-indigo-700 mb-0.5">Kelompok Pembayaran #{{ $paymentGroup->id }}</p>
+                                <p class="text-xs text-indigo-600">Tergabung dalam kelompok pembayaran dengan total {{ $groupTransactions->count() }} nota.</p>
+                                <a href="{{ route('payment-groups.show', $paymentGroup->id) }}"
+                                    class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 underline mt-1 hover:text-indigo-900 transition-colors">
+                                    <i class="ph ph-arrow-square-out"></i> Lihat Riwayat Lengkap Kelompok
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
+            </div>
+        </div>
 
+        {{-- ======================================================= --}}
+        {{-- SECTION: DAFTAR SEMUA NOTA & BUKTI TRANSAKSI TERKAIT --}}
+        {{-- ======================================================= --}}
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold">
+                        <i class="ph ph-images text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">
+                            {{ $groupTransactions->count() > 1 ? 'Rincian Semua Nota Terkait (' . $groupTransactions->count() . ' Nota)' : 'Bukti & Rincian Nota' }}
+                        </h3>
+                        <p class="text-xs text-slate-400">Daftar seluruh nota fisik dan nominal rincian dalam transaksi ini</p>
+                    </div>
+                </div>
+                <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    Total: Rp {{ number_format($totalGroupAmount, 2, ',', '.') }}
+                </span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                @foreach($groupTransactions as $index => $trxItem)
+                    @php
+                        $itemStageColor = match($trxItem->payment_stage) {
+                            'uang_muka' => 'bg-blue-100 text-blue-700 border-blue-200',
+                            'proses'    => 'bg-amber-100 text-amber-700 border-amber-200',
+                            'selesai'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                            default     => 'bg-slate-100 text-slate-600 border-slate-200',
+                        };
+                        $itemStageLabel = match($trxItem->payment_stage) {
+                            'uang_muka' => 'Uang Muka',
+                            'proses'    => 'Proses',
+                            'selesai'   => 'Selesai',
+                            default     => $trxItem->payment_stage ?: '-',
+                        };
+                    @endphp
+
+                    <div class="p-6 hover:bg-slate-50/50 transition-colors">
+                        <div class="flex flex-col lg:flex-row gap-5 items-start">
+                            
+                            {{-- Bukti Struk / Foto Nota (Kiri) --}}
+                            <div class="w-full lg:w-48 shrink-0">
+                                @if($trxItem->receipt_photo)
+                                    @if(str_ends_with(strtolower($trxItem->receipt_photo), '.pdf'))
+                                        <div class="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
+                                            <i class="ph ph-file-pdf text-4xl text-red-500 mb-1"></i>
+                                            <p class="text-xs font-bold text-red-700 mb-2">Dokumen PDF</p>
+                                            <a href="{{ asset('storage/' . $trxItem->receipt_photo) }}" target="_blank"
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold shadow-sm transition-colors">
+                                                <i class="ph ph-arrow-square-out"></i> Buka PDF
+                                            </a>
+                                        </div>
+                                    @else
+                                        <a href="{{ asset('storage/' . $trxItem->receipt_photo) }}" target="_blank" class="block group relative overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+                                            <img src="{{ asset('storage/' . $trxItem->receipt_photo) }}" alt="Nota #{{ $trxItem->id }}"
+                                                class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200">
+                                            <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
+                                                <i class="ph ph-magnifying-glass-plus text-base"></i> Lihat Penuh
+                                            </div>
+                                        </a>
+                                    @endif
+                                @else
+                                    <div class="h-32 bg-slate-100 rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 text-xs">
+                                        <i class="ph ph-image-broken text-3xl mb-1"></i>
+                                        <span>Tidak ada foto nota</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Rincian Data Nota (Kanan) --}}
+                            <div class="flex-1 min-w-0 space-y-2">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-0.5 rounded-md bg-slate-800 text-white font-bold text-xs">
+                                            Nota #{{ $index + 1 }}
+                                        </span>
+                                        <span class="text-xs text-slate-400">ID Transaksi #{{ $trxItem->id }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-base font-bold text-slate-800">
+                                            Rp {{ number_format($trxItem->amount, 2, ',', '.') }}
+                                        </span>
+                                        <form action="{{ route('transactions.destroy', $trxItem->id) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus data nota transaksi #{{ $trxItem->id }} ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-200" title="Hapus Nota Ini">
+                                                <i class="ph ph-trash"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                                    <div>
+                                        <span class="text-slate-400 block mb-0.5">Tanggal Nota:</span>
+                                        <span class="font-semibold text-slate-700">
+                                            {{ \Carbon\Carbon::parse($trxItem->transaction_date)->format('d M Y') }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 block mb-0.5">Tahap Pembayaran:</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border {{ $itemStageColor }}">
+                                            {{ $itemStageLabel }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 block mb-0.5">Metode Bayar:</span>
+                                        <span class="font-semibold text-slate-700">{{ $trxItem->payment_method ?? '-' }}</span>
+                                    </div>
+                                </div>
+
+                                @if($trxItem->description)
+                                    <div class="bg-slate-50 rounded-xl p-3 text-xs text-slate-600 mt-2">
+                                        <span class="font-semibold text-slate-700 block mb-0.5">Keterangan Nota:</span>
+                                        {{ $trxItem->description }}
+                                    </div>
+                                @endif
+
+                                <div class="text-[11px] text-slate-400 flex items-center gap-4 pt-1">
+                                    <span>Diajukan oleh: <strong class="text-slate-600">{{ $trxItem->user->name ?? '-' }}</strong></span>
+                                    @if($trxItem->approver)
+                                        <span>Disetujui oleh: <strong class="text-slate-600">{{ $trxItem->approver->name }}</strong></span>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
 
@@ -186,13 +359,24 @@
                     <p class="font-bold text-amber-800 text-sm">Transaksi ini menunggu persetujuan Anda.</p>
                     <p class="text-sm text-amber-700 mt-0.5">Tinjau data di atas sebelum mengambil keputusan.</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <button onclick="rejectTransaction({{ $transaction->id }})"
                         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-500 hover:text-white transition-colors whitespace-nowrap border border-red-100 hover:border-red-500">
                         <i class="ph ph-x-circle"></i> Tolak
                     </button>
-                    <form action="{{ route('transactions.approve', $transaction->id) }}" method="POST">
+                    <form action="{{ route('transactions.approve', $transaction->id) }}" method="POST" class="flex items-center gap-2">
                         @csrf
+                        @if($transaction->type === 'pengeluaran' && $transaction->payment_stage)
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-semibold text-amber-700 whitespace-nowrap">Koreksi Status:</label>
+                                <select name="payment_stage"
+                                    class="px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold focus:ring-2 focus:ring-amber-400 outline-none">
+                                    <option value="uang_muka" @selected($transaction->payment_stage === 'uang_muka')>Uang Muka</option>
+                                    <option value="proses"    @selected($transaction->payment_stage === 'proses')>Proses</option>
+                                    <option value="selesai"   @selected($transaction->payment_stage === 'selesai')>Selesai</option>
+                                </select>
+                            </div>
+                        @endif
                         <button type="submit"
                             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition-colors whitespace-nowrap">
                             <i class="ph ph-check-circle"></i> Setujui

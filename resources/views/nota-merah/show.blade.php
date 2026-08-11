@@ -108,6 +108,39 @@
                         <dt class="text-slate-500">Tanggal Nota</dt>
                         <dd class="font-semibold text-slate-800">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</dd>
                     </div>
+                    <div class="flex justify-between items-center">
+                        <dt class="text-slate-500">Status Pembayaran</dt>
+                        <dd>
+                            @php
+                                $stageColor = match($nota->payment_stage) {
+                                    'uang_muka' => 'bg-blue-100 text-blue-700',
+                                    'proses'    => 'bg-amber-100 text-amber-700',
+                                    'selesai'   => 'bg-emerald-100 text-emerald-700',
+                                    default     => 'bg-slate-100 text-slate-700',
+                                };
+                                $stageLabel = match($nota->payment_stage) {
+                                    'uang_muka' => 'Uang Muka',
+                                    'proses'    => 'Proses',
+                                    'selesai'   => 'Selesai',
+                                    default     => ucfirst($nota->payment_stage ?? '-'),
+                                };
+                            @endphp
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ $stageColor }}">
+                                {{ $stageLabel }}
+                            </span>
+                        </dd>
+                    </div>
+                    @if($nota->payment_group_id && auth()->user()->role === 'admin')
+                    <div class="flex justify-between items-center">
+                        <dt class="text-slate-500">Kelompok Kas</dt>
+                        <dd>
+                            <a href="{{ route('payment-groups.show', $nota->payment_group_id) }}"
+                                class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                <i class="ph ph-squares-four"></i> Lihat Kelompok #{{ $nota->payment_group_id }}
+                            </a>
+                        </dd>
+                    </div>
+                    @endif
                     <div class="flex justify-between">
                         <dt class="text-slate-500">Nominal</dt>
                         <dd class="font-bold text-red-600 text-base">Rp {{ number_format($nota->amount, 2, ',', '.') }}</dd>

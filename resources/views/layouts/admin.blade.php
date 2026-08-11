@@ -141,14 +141,18 @@
                         <span class="text-[15px]">Master Data</span>
                     </div>
                     <i class="ph ph-caret-down text-sm transition-transform duration-200" id="masterDataIcon"
-                        style="transform: {{ request()->routeIs('categories.*') ? 'rotate(0deg)' : 'rotate(-90deg)' }}"></i>
+                        style="transform: {{ request()->routeIs('categories.*') || request()->routeIs('payment-groups.*') ? 'rotate(0deg)' : 'rotate(-90deg)' }}"></i>
                 </button>
 
                 <div id="masterDataMenu"
-                    class="pl-12 pr-4 py-2 space-y-1 {{ request()->routeIs('categories.*') ? 'block' : 'hidden' }}">
+                    class="pl-12 pr-4 py-2 space-y-1 {{ request()->routeIs('categories.*') || request()->routeIs('payment-groups.*') ? 'block' : 'hidden' }}">
                     <a href="{{ route('categories.index') }}"
                         class="block px-4 py-2.5 rounded-lg text-[14.5px] {{ request()->routeIs('categories.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:text-brand-600 hover:bg-slate-50 transition-colors' }}">
                         Kategori Transaksi
+                    </a>
+                    <a href="{{ route('payment-groups.index') }}"
+                        class="block px-4 py-2.5 rounded-lg text-[14.5px] {{ request()->routeIs('payment-groups.*') ? 'bg-emerald-50 text-emerald-600 font-medium' : 'text-slate-600 hover:text-brand-600 hover:bg-slate-50 transition-colors' }}">
+                        Kelompok Pembayaran
                     </a>
                 </div>
             </div>

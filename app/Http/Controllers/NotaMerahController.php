@@ -7,6 +7,7 @@ use App\Models\NotaMerah;
 use App\Models\Transaction;
 use App\Models\Category;
 use App\Models\Project;
+use App\Models\PaymentGroup;
 use Illuminate\Support\Facades\Storage;
 
 class NotaMerahController extends Controller
@@ -23,6 +24,7 @@ class NotaMerahController extends Controller
             'project:id,project_name',
             'category:id,category_name',
             'approver:id,name',
+            'paymentGroup',
         ]);
 
         if (auth()->user()->role === 'pegawai') {
@@ -106,53 +108,84 @@ class NotaMerahController extends Controller
             abort(403);
         }
 
+        $existingGroup = PaymentGroup::where('project_id', $request->project_id)
+            ->where('category_id', $request->category_id)
+            ->where('type', 'pengeluaran')
+            ->orderByDesc('id')
+            ->first();
+        $isExistingCompleted = $existingGroup && $existingGroup->payment_status === 'selesai';
+        $hasActiveGroup      = $existingGroup && $existingGroup->payment_status !== 'selesai';
+
+        if ($isExistingCompleted) {
+            $stageRule = 'nullable|in:uang_muka,proses';
+        } elseif ($hasActiveGroup) {
+            $stageRule = 'required|in:proses';
+        } else {
+            $stageRule = 'required|in:uang_muka';
+        }
+
         $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|gt:0',
-            'nota_date' => 'required|date|before_or_equal:today',
-            'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
-            'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
+            'project_id'            => 'required|exists:projects,id',
+            'category_id'           => 'required|exists:categories,id',
+            'payment_stage'         => $stageRule,
+            'description'           => 'nullable|string',
+            'amount'                => 'required|numeric|gt:0',
+            'nota_date'             => 'required|date|before_or_equal:today',
+            'bank_tujuan'           => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
+            'no_rekening'           => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo' => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
+            'nota_photo'            => 'required|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
-            'project_id.required' => 'Proyek wajib dipilih.',
-            'project_id.exists' => 'Proyek tidak valid.',
-            'category_id.required' => 'Kategori wajib dipilih.',
-            'category_id.exists' => 'Kategori tidak valid.',
-            'amount.required' => 'Nominal wajib diisi.',
-            'amount.numeric' => 'Nominal harus berupa angka.',
-            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
-            'nota_date.required' => 'Tanggal nota wajib diisi.',
-            'nota_date.date' => 'Tanggal nota harus berformat tanggal yang valid.',
-            'nota_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
-            'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
-            'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
-            'no_rekening.required' => 'No. rekening wajib diisi.',
-            'no_rekening.regex' => 'No. rekening hanya boleh berisi angka.',
+            'project_id.required'            => 'Proyek wajib dipilih.',
+            'project_id.exists'              => 'Proyek tidak valid.',
+            'category_id.required'           => 'Kategori wajib dipilih.',
+            'category_id.exists'             => 'Kategori tidak valid.',
+            'payment_stage.required'         => 'Status pembayaran wajib dipilih.',
+            'payment_stage.in'               => 'Status pembayaran tidak valid.',
+            'amount.required'                => 'Nominal wajib diisi.',
+            'amount.numeric'                 => 'Nominal harus berupa angka.',
+            'amount.gt'                      => 'Nominal harus lebih besar dari Rp 0.',
+            'nota_date.required'             => 'Tanggal nota wajib diisi.',
+            'nota_date.date'                 => 'Tanggal nota harus berformat tanggal yang valid.',
+            'nota_date.before_or_equal'      => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
+            'bank_tujuan.required'           => 'Bank tujuan wajib diisi.',
+            'bank_tujuan.regex'              => 'Nama bank hanya boleh berisi huruf dan spasi.',
+            'no_rekening.required'           => 'No. rekening wajib diisi.',
+            'no_rekening.regex'              => 'No. rekening hanya boleh berisi angka.',
             'nama_pemilik_rekening.required' => 'Nama pemilik rekening wajib diisi.',
-            'nama_pemilik_rekening.regex' => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
-            'nota_photo.required' => 'Foto nota merah wajib dilampirkan.',
-            'nota_photo.file' => 'File tidak valid.',
-            'nota_photo.mimes' => 'Foto harus berupa JPG, PNG, atau PDF.',
-            'nota_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
+            'nama_pemilik_rekening.regex'    => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
+            'nota_photo.required'            => 'Foto nota merah wajib dilampirkan.',
+            'nota_photo.file'                => 'File tidak valid.',
+            'nota_photo.mimes'               => 'Foto harus berupa JPG, PNG, atau PDF.',
+            'nota_photo.max'                 => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
+
+        $stage = $request->payment_stage;
+        if ($isExistingCompleted) {
+            // Pegawai pada kelompok yang sudah selesai -> status pembayaran wajib null sampai divalidasi admin
+            $stage = null;
+        } elseif ($stage === 'uang_muka') {
+            // Pencegahan duplikasi uang muka jika sudah ada kelompok aktif
+            if ($existingGroup && $existingGroup->payment_status !== 'selesai') {
+                $stage = 'proses';
+            }
+        }
 
         $notaPath = $this->handleUpload($request->file('nota_photo'), 'nota-merah');
 
         NotaMerah::create([
-            'user_id' => auth()->id(),
-            'project_id' => $request->project_id,
-            'category_id' => $request->category_id,
-            'description' => $request->description,
-            'amount' => $request->amount,
-            'nota_date' => $request->nota_date,
-            'bank_tujuan' => $request->bank_tujuan,
-            'no_rekening' => $request->no_rekening,
+            'user_id'               => auth()->id(),
+            'project_id'            => $request->project_id,
+            'category_id'           => $request->category_id,
+            'payment_stage'         => $stage,
+            'description'           => $request->description,
+            'amount'                => $request->amount,
+            'nota_date'             => $request->nota_date,
+            'bank_tujuan'           => $request->bank_tujuan,
+            'no_rekening'           => $request->no_rekening,
             'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
-            'nota_photo' => $notaPath,
-            'status' => 'menunggu_persetujuan',
+            'nota_photo'            => $notaPath,
+            'status'                => 'menunggu_persetujuan',
         ]);
 
         return redirect()->route('nota-merah.index')
@@ -370,42 +403,93 @@ class NotaMerahController extends Controller
     // ---------------------------------------------------------------
     // CONFIRM – Admin Verifikasi Realisasi → Auto-create Transaction + Selesai
     // ---------------------------------------------------------------
-    public function confirm($id)
+    public function confirm(Request $request, $id)
     {
         if (auth()->user()->role !== 'admin') {
             abort(403);
         }
 
+        $stageRule = 'nullable|in:uang_muka,proses,selesai';
+        if ($request->payment_group_action === 'baru') {
+            $stageRule = 'required|in:uang_muka,selesai';
+        } elseif ($request->payment_group_action === 'lanjutkan') {
+            $stageRule = 'required|in:proses,selesai';
+        }
+
+        $request->validate([
+            'payment_stage'        => $stageRule,
+            'payment_group_action' => 'nullable|in:lanjutkan,baru',
+            'payment_group_label'  => 'required_if:payment_group_action,baru|nullable|string|max:255',
+        ], [
+            'payment_stage.required'          => 'Status pembayaran wajib dipilih.',
+            'payment_stage.in'                => 'Status pembayaran tidak valid untuk pilihan kelompok.',
+            'payment_group_label.required_if' => 'Label kelompok baru wajib diisi.',
+        ]);
+
         try {
-            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
                 $nota = NotaMerah::lockForUpdate()->findOrFail($id);
 
                 if ($nota->status !== 'menunggu_verifikasi') {
                     return ['status' => 'error', 'message' => 'Nota merah ini tidak dalam status menunggu verifikasi realisasi.'];
                 }
 
-                // Buat transaksi resmi di tabel transactions
-                Transaction::create([
-                    'user_id' => $nota->user_id,
-                    'project_id' => $nota->project_id,
-                    'category_id' => $nota->category_id,
-                    'transaction_date' => $nota->realisasi_date,
-                    'type' => 'pengeluaran',
-                    'description' => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
-                    'amount' => $nota->amount,
-                    'payment_method' => $nota->bank_tujuan ?? 'Transfer',
-                    'receipt_photo' => $nota->realisasi_photo,
-                    'status' => 'approved',
-                    'approved_by' => auth()->id(),
-                    'nota_merah_id' => $nota->id,
+                $existingGroup = PaymentGroup::where('project_id', $nota->project_id)
+                    ->where('category_id', $nota->category_id)
+                    ->where('type', 'pengeluaran')
+                    ->orderByDesc('id')
+                    ->first();
+
+                $stage = $request->input('payment_stage', $nota->payment_stage ?: 'proses');
+
+                if ($request->payment_group_action === 'baru') {
+                    $paymentGroup = PaymentGroup::create([
+                        'project_id'     => $nota->project_id,
+                        'category_id'    => $nota->category_id,
+                        'type'           => 'pengeluaran',
+                        'payment_status' => $stage,
+                        'label'          => $request->payment_group_label,
+                    ]);
+                } elseif ($existingGroup) {
+                    $paymentGroup = $existingGroup;
+                } else {
+                    $paymentGroup = PaymentGroup::create([
+                        'project_id'     => $nota->project_id,
+                        'category_id'    => $nota->category_id,
+                        'type'           => 'pengeluaran',
+                        'payment_status' => $stage,
+                    ]);
+                }
+
+                // Update nota merah → selesai dan set payment_group_id
+                $nota->update([
+                    'status'           => 'selesai',
+                    'confirmed_at'     => now(),
+                    'approved_by'      => auth()->id(),
+                    'payment_group_id' => $paymentGroup->id,
+                    'payment_stage'    => $stage,
                 ]);
 
-                // Update nota merah → selesai
-                $nota->update([
-                    'status' => 'selesai',
-                    'confirmed_at' => now(),
-                    'approved_by' => auth()->id(),
+                // Buat transaksi resmi di tabel transactions
+                $trx = Transaction::create([
+                    'user_id'          => $nota->user_id,
+                    'project_id'       => $nota->project_id,
+                    'category_id'      => $nota->category_id,
+                    'transaction_date' => $nota->realisasi_date ?? $nota->nota_date,
+                    'type'             => 'pengeluaran',
+                    'description'      => $nota->description ? '[Nota Merah] ' . $nota->description : '[Nota Merah #' . $nota->id . ']',
+                    'amount'           => $nota->amount,
+                    'payment_method'   => $nota->bank_tujuan ?? 'Transfer',
+                    'receipt_photo'    => $nota->realisasi_photo ?? $nota->nota_photo,
+                    'status'           => 'approved',
+                    'approved_by'      => auth()->id(),
+                    'nota_merah_id'    => $nota->id,
+                    'payment_stage'    => $stage,
+                    'payment_group_id' => $paymentGroup->id,
                 ]);
+
+                // Sinkronkan status Payment Group
+                $paymentGroup->syncStatus();
 
                 return ['status' => 'success', 'message' => 'Realisasi dikonfirmasi! Transaksi telah tercatat resmi di buku kas.'];
             });
@@ -471,47 +555,81 @@ class NotaMerahController extends Controller
                 ->with('error', 'Nota merah ini tidak dapat diedit karena sudah diproses oleh admin.');
         }
 
+        $existingGroup = PaymentGroup::where('project_id', $request->project_id)
+            ->where('category_id', $request->category_id)
+            ->where('type', 'pengeluaran')
+            ->orderByDesc('id')
+            ->first();
+        $isExistingCompleted = $existingGroup && $existingGroup->payment_status === 'selesai';
+        $hasActiveGroup      = $existingGroup && $existingGroup->payment_status !== 'selesai';
+
+        if ($isExistingCompleted) {
+            $stageRule = 'nullable|in:uang_muka,proses';
+        } elseif ($hasActiveGroup) {
+            $stageRule = 'required|in:proses';
+        } else {
+            $stageRule = 'required|in:uang_muka';
+        }
+
         $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|gt:0',
-            'nota_date' => 'required|date|before_or_equal:today',
-            'bank_tujuan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
-            'no_rekening' => 'required|regex:/^[0-9]+$/|max:50',
+            'project_id'            => 'required|exists:projects,id',
+            'category_id'           => 'required|exists:categories,id',
+            'payment_stage'         => $stageRule,
+            'description'           => 'nullable|string',
+            'amount'                => 'required|numeric|gt:0',
+            'nota_date'             => 'required|date|before_or_equal:today',
+            'bank_tujuan'           => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
+            'no_rekening'           => 'required|regex:/^[0-9]+$/|max:50',
             'nama_pemilik_rekening' => 'required|regex:/^[a-zA-Z\s]+$/|max:150',
-            'nota_photo' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
+            'nota_photo'            => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
         ], [
-            'project_id.required' => 'Proyek wajib dipilih.',
-            'category_id.required' => 'Kategori wajib dipilih.',
-            'amount.required' => 'Nominal wajib diisi.',
-            'amount.numeric' => 'Nominal harus berupa angka.',
-            'amount.gt' => 'Nominal harus lebih besar dari Rp 0.',
-            'nota_date.required' => 'Tanggal nota wajib diisi.',
-            'nota_date.date' => 'Tanggal nota harus berformat tanggal yang valid.',
-            'nota_date.before_or_equal' => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
-            'bank_tujuan.required' => 'Bank tujuan wajib diisi.',
-            'bank_tujuan.regex' => 'Nama bank hanya boleh berisi huruf dan spasi.',
-            'no_rekening.required' => 'No. rekening wajib diisi.',
-            'no_rekening.regex' => 'No. rekening hanya boleh berisi angka.',
+            'project_id.required'            => 'Proyek wajib dipilih.',
+            'project_id.exists'              => 'Proyek tidak valid.',
+            'category_id.required'           => 'Kategori wajib dipilih.',
+            'category_id.exists'             => 'Kategori tidak valid.',
+            'payment_stage.required'         => 'Status pembayaran wajib dipilih.',
+            'payment_stage.in'               => 'Status pembayaran tidak valid.',
+            'amount.required'                => 'Nominal wajib diisi.',
+            'amount.numeric'                 => 'Nominal harus berupa angka.',
+            'amount.gt'                      => 'Nominal harus lebih besar dari Rp 0.',
+            'nota_date.required'             => 'Tanggal nota wajib diisi.',
+            'nota_date.date'                 => 'Tanggal nota harus berformat tanggal yang valid.',
+            'nota_date.before_or_equal'      => 'Tanggal nota tidak boleh melebihi tanggal hari ini.',
+            'bank_tujuan.required'           => 'Bank tujuan wajib diisi.',
+            'bank_tujuan.regex'              => 'Nama bank hanya boleh berisi huruf dan spasi.',
+            'no_rekening.required'           => 'No. rekening wajib diisi.',
+            'no_rekening.regex'              => 'No. rekening hanya boleh berisi angka.',
             'nama_pemilik_rekening.required' => 'Nama pemilik rekening wajib diisi.',
-            'nama_pemilik_rekening.regex' => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
-            'nota_photo.mimes' => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
-            'nota_photo.max' => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
+            'nama_pemilik_rekening.regex'    => 'Nama pemilik rekening hanya boleh berisi huruf dan spasi.',
+            'nota_photo.mimes'               => 'Format file harus berupa jpeg, png, jpg, atau pdf.',
+            'nota_photo.max'                 => 'Ukuran file terlalu besar (maks. 15 MB). Gambar >5MB akan dikompres otomatis.',
         ]);
 
+        $stage = $request->payment_stage;
+        if ($stage === 'uang_muka') {
+            $existingGroup = PaymentGroup::where('project_id', $request->project_id)
+                ->where('category_id', $request->category_id)
+                ->where('type', 'pengeluaran')
+                ->orderByDesc('id')
+                ->first();
+            if ($existingGroup && $existingGroup->payment_status !== 'selesai') {
+                $stage = 'proses';
+            }
+        }
+
         $data = [
-            'project_id' => $request->project_id,
-            'category_id' => $request->category_id,
-            'description' => $request->description,
-            'amount' => $request->amount,
-            'nota_date' => $request->nota_date,
-            'bank_tujuan' => $request->bank_tujuan,
-            'no_rekening' => $request->no_rekening,
+            'project_id'            => $request->project_id,
+            'category_id'           => $request->category_id,
+            'payment_stage'         => $stage,
+            'description'           => $request->description,
+            'amount'                => $request->amount,
+            'nota_date'             => $request->nota_date,
+            'bank_tujuan'           => $request->bank_tujuan,
+            'no_rekening'           => $request->no_rekening,
             'nama_pemilik_rekening' => $request->nama_pemilik_rekening,
-            'status' => 'menunggu_persetujuan',
-            'rejection_reason' => null,
-            'approved_by' => null,
+            'status'                => 'menunggu_persetujuan',
+            'rejection_reason'      => null,
+            'approved_by'           => null,
         ];
 
         if ($request->hasFile('nota_photo')) {

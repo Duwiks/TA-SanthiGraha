@@ -73,4 +73,10 @@ class Project extends Model
     {
         return $this->hasMany(NotaMerah::class, 'project_id');
     }
+
+    // Relasi ke Payment Group
+    public function paymentGroups()
+    {
+        return $this->hasMany(PaymentGroup::class, 'project_id');
+    }
 }

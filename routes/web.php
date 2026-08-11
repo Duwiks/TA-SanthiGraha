@@ -9,6 +9,7 @@ use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\NotaMerahController;
+use App\Http\Controllers\PaymentGroupController;
 
 Route::get('/', function () {
     return redirect('/dashboard')
@@ -137,10 +138,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/nota-merah/{id}/reject', [NotaMerahController::class, 'reject'])->name('nota-merah.reject');
         Route::post('/nota-merah/{id}/reject-realisasi', [NotaMerahController::class, 'rejectRealisasi'])->name('nota-merah.reject-realisasi');
         Route::post('/nota-merah/{id}/confirm', [NotaMerahController::class, 'confirm'])->name('nota-merah.confirm');
+
+        // Payment Group — Admin view
+        Route::get('/payment-groups', [PaymentGroupController::class, 'index'])->name('payment-groups.index');
+        Route::get('/payment-groups/{id}', [PaymentGroupController::class, 'show'])->name('payment-groups.show');
+        Route::delete('/payment-groups/{id}', [PaymentGroupController::class, 'destroy'])->name('payment-groups.destroy');
     });
 
     // Dedicated Transaction Web Endpoints
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    // AJAX: cek Payment Group untuk proyek+kategori (harus sebelum /{id}/show agar tidak konflik)
+    Route::get('/transactions/check-payment-group', [TransactionController::class, 'checkPaymentGroup'])->name('transactions.check-payment-group');
     Route::get('/transactions/{id}/show', [TransactionController::class, 'show'])->name('transactions.show');
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('/transactions', [TransactionController::class, 'store'])->middleware('throttle:30,1')->name('transactions.store');

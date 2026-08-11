@@ -23,6 +23,8 @@ class Transaction extends Model
         'status',
         'approved_by',
         'nota_merah_id',
+        'payment_group_id',
+        'payment_stage',
     ];
 
     // Relasi ke User pembuat (Pegawai)
@@ -59,5 +61,11 @@ class Transaction extends Model
     public function notaMerah()
     {
         return $this->belongsTo(NotaMerah::class, 'nota_merah_id');
+    }
+
+    // Relasi ke Payment Group (nullable — transaksi lama tidak punya ini)
+    public function paymentGroup()
+    {
+        return $this->belongsTo(PaymentGroup::class, 'payment_group_id');
     }
 }

@@ -33,10 +33,17 @@
         </select>
         <select name="status"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
-            <option value="">Semua Status</option>
+            <option value="">Semua Status Persetujuan</option>
             <option value="pending" @selected(request('status') === 'pending')>Menunggu Persetujuan</option>
             <option value="approved" @selected(request('status') === 'approved')>Disetujui</option>
             <option value="rejected" @selected(request('status') === 'rejected')>Ditolak</option>
+        </select>
+        <select name="payment_stage"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+            <option value="">Semua Status Pembayaran</option>
+            <option value="uang_muka" @selected(request('payment_stage') === 'uang_muka')>Uang Muka</option>
+            <option value="proses"    @selected(request('payment_stage') === 'proses')>Proses</option>
+            <option value="selesai"   @selected(request('payment_stage') === 'selesai')>Selesai</option>
         </select>
         <select name="year"
             class="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
@@ -53,7 +60,7 @@
         </select>
         <button type="submit"
             class="px-5 py-2.5 rounded-xl bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors">Cari</button>
-        @if(request()->anyFilled(['search', 'type', 'status', 'year']))
+        @if(request()->anyFilled(['search', 'type', 'status', 'payment_stage', 'year']))
             <a href="{{ route('transactions.index') }}"
                 class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200 transition-colors">Reset</a>
         @endif
@@ -75,19 +82,55 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($transactions as $trx)
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr class="hover:bg-slate-50 transition-colors {{ !empty($trx->is_grouped) && $trx->group_receipts_count > 1 ? 'bg-indigo-50/20' : '' }}">
 
                             {{-- Tanggal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="font-medium text-slate-800">
                                     {{ \Carbon\Carbon::parse($trx->transaction_date)->format('d M Y') }}
                                 </div>
+                                @if(!empty($trx->is_grouped) && $trx->group_receipts_count > 1)
+                                    <div class="text-[11px] text-slate-400 mt-0.5">Nota Terakhir</div>
+                                @endif
                             </td>
 
                             {{-- Proyek & Kategori --}}
                             <td class="px-5 py-4">
                                 <div class="font-medium text-slate-800">{{ $trx->project->project_name ?? '-' }}</div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $trx->category->category_name ?? '-' }}</div>
+
+                                <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                    @if(!empty($trx->is_grouped) && $trx->group_receipts_count > 1)
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200" title="{{ $trx->group_receipts_count }} transaksi digabungkan">
+                                            <i class="ph ph-stack"></i> {{ $trx->group_receipts_count }} Nota Tergabung
+                                        </span>
+                                    @endif
+
+                                    @if($trx->payment_stage)
+                                        @php
+                                            $stageStyle = match($trx->payment_stage) {
+                                                'uang_muka' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                                'proses'    => 'bg-amber-50 text-amber-700 border-amber-200',
+                                                'selesai'   => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                                default     => 'bg-slate-50 text-slate-700 border-slate-200',
+                                            };
+                                            $stageText = match($trx->payment_stage) {
+                                                'uang_muka' => 'Uang Muka',
+                                                'proses'    => 'Proses',
+                                                'selesai'   => 'Selesai',
+                                                default     => $trx->payment_stage,
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border {{ $stageStyle }}">
+                                            {{ $stageText }}
+                                        </span>
+                                    @elseif($trx->status === 'pending')
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200" title="Status pembayaran akan ditentukan oleh admin saat approval">
+                                            <i class="ph ph-hourglass-simple"></i> Menunggu Validasi Admin
+                                        </span>
+                                    @endif
+                                </div>
+
                                 @php
                                     $desc = $trx->description;
                                     if ($trx->nota_merah_id) {
@@ -100,8 +143,7 @@
                                     <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($desc, 50) }}</div>
                                 @endif
                                 @if($trx->nota_merah_id)
-                                    <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100 mt-1">
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100 mt-1">
                                         <i class="ph ph-note-pencil"></i> Nota Merah
                                     </span>
                                 @endif
@@ -110,25 +152,43 @@
                             {{-- Nominal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp
-                                    {{ number_format($trx->amount, 2, ',', '.') }}
+                                    {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp {{ number_format($trx->amount, 2, ',', '.') }}
                                 </span>
                                 <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span
-                                        class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
-                                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                                    <span class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $trx->type }}
                                     </span>
-                                    @if($trx->payment_method)
-                                        <span
-                                            class="text-[10px] uppercase font-medium tracking-wide text-slate-400">{{ $trx->payment_method }}</span>
+                                    @if(!empty($trx->is_grouped) && $trx->group_receipts_count > 1)
+                                        <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                            Total {{ $trx->group_receipts_count }} Nota
+                                        </span>
+                                    @elseif($trx->payment_method)
+                                        <span class="text-[10px] uppercase font-medium tracking-wide text-slate-400">{{ $trx->payment_method }}</span>
                                     @endif
                                 </div>
                             </td>
 
                             {{-- Bukti --}}
                             <td class="px-5 py-4">
-                                @if($trx->receipt_photo)
+                                @if(!empty($trx->is_grouped) && $trx->group_receipt_photos && $trx->group_receipt_photos->count() > 1)
+                                    <div class="flex items-center gap-2">
+                                        @php $firstPhoto = $trx->group_receipt_photos->first(); @endphp
+                                        @if(str_ends_with(strtolower($firstPhoto), '.pdf'))
+                                            <a href="{{ asset('storage/' . $firstPhoto) }}" target="_blank"
+                                                class="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-lg hover:bg-red-100 transition-colors border border-red-100">
+                                                <i class="ph ph-file-pdf"></i> PDF
+                                            </a>
+                                        @else
+                                            <a href="{{ asset('storage/' . $firstPhoto) }}" target="_blank">
+                                                <img src="{{ asset('storage/' . $firstPhoto) }}" alt="Bukti"
+                                                    class="h-10 w-14 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity">
+                                            </a>
+                                        @endif
+                                        <span class="inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200" title="{{ $trx->group_receipt_photos->count() }} berkas bukti tersedia">
+                                            <i class="ph ph-images"></i> +{{ $trx->group_receipt_photos->count() - 1 }}
+                                        </span>
+                                    </div>
+                                @elseif($trx->receipt_photo)
                                     @if(str_ends_with(strtolower($trx->receipt_photo), '.pdf'))
                                         <a href="{{ asset('storage/' . $trx->receipt_photo) }}" target="_blank"
                                             class="inline-flex items-center gap-1 text-[11px] font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg hover:bg-red-100 transition-colors border border-red-100">
@@ -148,23 +208,20 @@
                             {{-- Status --}}
                             <td class="px-5 py-4 text-center whitespace-nowrap">
                                 @if($trx->status === 'approved')
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
                                         <i class="ph ph-check-circle"></i> Disetujui
                                     </span>
                                 @elseif($trx->status === 'rejected')
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
                                         <i class="ph ph-x-circle"></i> Ditolak
                                     </span>
-                                    @if($trx->rejections->count() > 0)
+                                    @if($trx->rejections && $trx->rejections->count() > 0)
                                         <div class="mt-1.5 text-[11px] text-red-500 italic text-left px-1">
                                             <i class="ph ph-warning"></i> {{ Str::limit($trx->rejections->last()->reason, 60) }}
                                         </div>
                                     @endif
                                 @else
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
                                         <i class="ph ph-clock"></i> Menunggu
                                     </span>
                                 @endif
@@ -176,7 +233,7 @@
                                     {{-- Lihat Detail (tersedia untuk semua status) --}}
                                     <a href="{{ route('transactions.show', $trx->id) }}"
                                         class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-                                        title="Lihat Detail">
+                                        title="Lihat Detail Lengkap & Semua Nota">
                                         <i class="ph ph-eye text-base"></i>
                                     </a>
                                     @if(in_array($trx->status, ['pending', 'rejected']))
@@ -196,8 +253,7 @@
                                             </button>
                                         </form>
                                     @else
-                                        <span
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-400 text-xs font-semibold border border-slate-100 cursor-not-allowed"
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-50 text-slate-400 text-xs font-semibold border border-slate-100 cursor-not-allowed"
                                             title="Terkunci (Transaksi sudah valid/disetujui)">
                                             <i class="ph ph-lock text-sm"></i> Terkunci
                                         </span>

@@ -80,7 +80,26 @@
                                 <div class="font-medium text-slate-700">{{ $nota->nota_date ? $nota->nota_date->format('d M Y') : '-' }}</div>
                             </td>
                             <td class="px-5 py-4">
-                                <div class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</div>
+                                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span class="font-medium text-slate-800">{{ $nota->project->project_name ?? '-' }}</span>
+                                    @php
+                                        $stageColor = match($nota->payment_stage) {
+                                            'uang_muka' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                            'proses'    => 'bg-amber-100 text-amber-700 border-amber-200',
+                                            'selesai'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                            default     => 'bg-slate-100 text-slate-700 border-slate-200',
+                                        };
+                                        $stageLabel = match($nota->payment_stage) {
+                                            'uang_muka' => 'Uang Muka',
+                                            'proses'    => 'Proses',
+                                            'selesai'   => 'Selesai',
+                                            default     => ucfirst($nota->payment_stage ?? '-'),
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold border {{ $stageColor }}">
+                                        {{ $stageLabel }}
+                                    </span>
+                                </div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $nota->category->category_name ?? '-' }}</div>
                                 <div class="text-[12px] text-slate-400 mt-1 italic">
                                     {{ $nota->description ? Str::limit($nota->description, 50) : 'Nota Merah #' . $nota->id }}
