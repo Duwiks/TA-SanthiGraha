@@ -100,7 +100,8 @@
                                     <div class="text-[12px] text-slate-400 mt-1 italic">{{ Str::limit($desc, 50) }}</div>
                                 @endif
                                 @if($trx->nota_merah_id)
-                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100 mt-1">
+                                    <span
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100 mt-1">
                                         <i class="ph ph-note-pencil"></i> Nota Merah
                                     </span>
                                 @endif
@@ -115,7 +116,7 @@
                                 <div class="flex items-center gap-1.5 mt-0.5">
                                     <span
                                         class="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded
-                                                {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
+                                                        {{ $trx->type === 'pemasukan' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600' }}">
                                         {{ $trx->type }}
                                     </span>
                                     @if($trx->payment_method)
