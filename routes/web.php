@@ -118,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Dedicated Transaction Approval Endpoints
         Route::get('/approvals', [TransactionController::class, 'approvals'])->name('approvals.index');
+        Route::get('/transactions/{id}/detail', [TransactionController::class, 'adminShow'])->name('transactions.admin-show');
         Route::post('/transactions/{id}/approve', [TransactionController::class, 'approve'])->name('transactions.approve');
         Route::post('/transactions/{id}/reject', [TransactionController::class, 'reject'])->name('transactions.reject');
 
@@ -140,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Dedicated Transaction Web Endpoints
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/{id}/show', [TransactionController::class, 'show'])->name('transactions.show');
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('/transactions', [TransactionController::class, 'store'])->middleware('throttle:30,1')->name('transactions.store');
     Route::get('/transactions/{id}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');

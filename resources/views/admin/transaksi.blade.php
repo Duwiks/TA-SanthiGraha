@@ -153,7 +153,7 @@
                             {{-- Nominal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp
+                                    {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp
                                     {{ number_format($trx->amount, 2, ',', '.') }}
                                 </span>
                                 <div class="flex items-center gap-1.5 mt-0.5">
@@ -227,6 +227,12 @@
                             {{-- Aksi --}}
                             <td class="px-5 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    {{-- Lihat Detail --}}
+                                    <a href="{{ route('transactions.admin-show', [$trx->id, 'from' => 'transactions']) }}"
+                                        class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                                        title="Lihat Detail">
+                                        <i class="ph ph-eye text-base"></i>
+                                    </a>
                                     <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST"
                                         id="delete-form-{{ $trx->id }}" class="inline">
                                         @csrf @method('DELETE')

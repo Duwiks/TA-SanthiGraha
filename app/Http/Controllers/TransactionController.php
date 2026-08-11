@@ -140,6 +140,43 @@ class TransactionController extends Controller
         ));
     }
 
+    public function adminShow(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin')
+            abort(403);
+
+        $transaction = Transaction::with([
+            'user',
+            'project',
+            'category',
+            'approver',
+            'notaMerah',
+        ])->findOrFail($id);
+
+        // 'from' menentukan tombol Kembali: 'approvals' atau 'transactions' (default)
+        $from = $request->get('from', 'transactions');
+
+        return view('admin.transaction-show', compact('transaction', 'from'));
+    }
+
+    public function show($id)
+    {
+        $transaction = Transaction::with([
+            'user',
+            'project',
+            'category',
+            'approver',
+            'notaMerah',
+        ])->findOrFail($id);
+
+        // Pegawai hanya boleh melihat transaksi miliknya sendiri
+        if (auth()->user()->role === 'pegawai' && $transaction->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('pegawai.transaction-show', compact('transaction'));
+    }
+
     public function create()
     {
         $categories = Category::all();
@@ -322,7 +359,7 @@ class TransactionController extends Controller
                 $nota = \App\Models\NotaMerah::find($transaction->nota_merah_id);
                 if ($nota) {
                     $nota->update([
-                        'status'       => 'menunggu_verifikasi',
+                        'status' => 'menunggu_verifikasi',
                         'confirmed_at' => null,
                     ]);
                 }

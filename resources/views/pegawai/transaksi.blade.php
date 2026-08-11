@@ -109,7 +109,7 @@
                             {{-- Nominal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp
+                                    {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp
                                     {{ number_format($trx->amount, 2, ',', '.') }}
                                 </span>
                                 <div class="flex items-center gap-1.5 mt-0.5">
@@ -172,6 +172,12 @@
                             {{-- Aksi --}}
                             <td class="px-5 py-4 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    {{-- Lihat Detail (tersedia untuk semua status) --}}
+                                    <a href="{{ route('transactions.show', $trx->id) }}"
+                                        class="p-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                                        title="Lihat Detail">
+                                        <i class="ph ph-eye text-base"></i>
+                                    </a>
                                     @if(in_array($trx->status, ['pending', 'rejected']))
                                         <a href="{{ route('transactions.edit', $trx->id) }}"
                                             class="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors"

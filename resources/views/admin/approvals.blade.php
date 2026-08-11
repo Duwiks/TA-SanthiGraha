@@ -92,7 +92,7 @@
                             {{-- Nominal --}}
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                    {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp
+                                    {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp
                                     {{ number_format($trx->amount, 2, ',', '.') }}
                                 </span>
                                 <div class="flex items-center gap-1.5 mt-0.5">
@@ -121,18 +121,25 @@
 
                             {{-- Tindakan --}}
                             <td class="px-5 py-4 text-center whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-2">
-                                    <form action="{{ route('transactions.approve', $trx->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit"
-                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
-                                            <i class="ph ph-check-circle text-sm"></i> Setujui
+                                <div class="flex flex-col items-center gap-2">
+                                    {{-- Lihat Detail --}}
+                                    <a href="{{ route('transactions.admin-show', [$trx->id, 'from' => 'approvals']) }}"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-200 transition-colors w-full justify-center">
+                                        <i class="ph ph-eye text-sm"></i> Detail
+                                    </a>
+                                    <div class="flex items-center gap-2">
+                                        <form action="{{ route('transactions.approve', $trx->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 text-white font-semibold text-xs hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 transition-all">
+                                                <i class="ph ph-check-circle text-sm"></i> Setujui
+                                            </button>
+                                        </form>
+                                        <button onclick="rejectTransaction({{ $trx->id }})"
+                                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500">
+                                            <i class="ph ph-x-circle text-sm"></i> Tolak
                                         </button>
-                                    </form>
-                                    <button onclick="rejectTransaction({{ $trx->id }})"
-                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-50 text-red-600 font-semibold text-xs hover:bg-red-500 hover:text-white transition-all border border-red-100 hover:border-red-500">
-                                        <i class="ph ph-x-circle text-sm"></i> Tolak
-                                    </button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -282,7 +289,7 @@
                                 {{-- Nominal --}}
                                 <td class="px-5 py-4 whitespace-nowrap">
                                     <span class="font-bold {{ $trx->type === 'pemasukan' ? 'text-emerald-600' : 'text-red-600' }}">
-                                        {{ $trx->type === 'pemasukan' ? '+' : '-' }} Rp
+                                        {{ $trx->type === 'pemasukan' ? '+' : '' }} Rp
                                         {{ number_format($trx->amount, 2, ',', '.') }}
                                     </span>
                                     <div class="flex items-center gap-1.5 mt-0.5">
