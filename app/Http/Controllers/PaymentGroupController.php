@@ -22,7 +22,7 @@ class PaymentGroupController extends Controller
                 $q->where('status', 'approved');
             }])
             ->with(['transactions' => function ($q) {
-                $q->where('status', 'approved')->orderByDesc('transaction_date');
+                $q->where('status', 'approved')->orderByDesc('updated_at')->orderByDesc('id');
             }])
             ->orderByDesc('updated_at');
 
@@ -75,8 +75,8 @@ class PaymentGroupController extends Controller
             'category',
             'transactions' => function ($q) {
                 $q->with(['user:id,name', 'approver:id,name'])
-                  ->orderByDesc('transaction_date')
-                  ->orderByDesc('created_at');
+                  ->orderByDesc('updated_at')
+                  ->orderByDesc('id');
             },
         ])->findOrFail($id);
 

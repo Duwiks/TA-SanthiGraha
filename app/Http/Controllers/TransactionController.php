@@ -131,17 +131,23 @@ class TransactionController extends Controller
 
             // Ambil semua transaksi APPROVED dalam kelompok ini
             if ($trx->payment_group_id) {
-                $groupMembers = $rawTransactions->where('status', 'approved')->where('payment_group_id', $trx->payment_group_id);
+                $groupMembers = $rawTransactions->where('status', 'approved')
+                    ->where('payment_group_id', $trx->payment_group_id)
+                    ->sortByDesc(fn($item) => $item->updated_at?->timestamp . '_' . str_pad((string)$item->id, 10, '0', STR_PAD_LEFT))
+                    ->values();
             } else {
                 $groupMembers = $rawTransactions->where('status', 'approved')
                     ->where('project_id', $trx->project_id)
                     ->where('category_id', $trx->category_id)
-                    ->where('type', $trx->type);
+                    ->where('type', $trx->type)
+                    ->sortByDesc(fn($item) => $item->updated_at?->timestamp . '_' . str_pad((string)$item->id, 10, '0', STR_PAD_LEFT))
+                    ->values();
             }
 
             if ($groupMembers->count() > 1 || $trx->payment_group_id) {
-                // Representasi baris kelompok
-                $rep = clone $trx;
+                // Representasi baris kelompok menggunakan member yang paling baru di-ACC
+                $latestMember = $groupMembers->first() ?? $trx;
+                $rep = clone $latestMember;
                 $rep->is_grouped = $groupMembers->count() > 1;
                 $rep->group_id = $trx->payment_group_id;
                 $rep->group_receipts_count = $groupMembers->count();
@@ -149,7 +155,7 @@ class TransactionController extends Controller
                 $rep->amount = $groupMembers->sum('amount'); // Nominal akumulasi seluruh nota
                 $rep->group_transactions = $groupMembers;
                 $rep->group_receipt_photos = $groupMembers->pluck('receipt_photo')->filter()->values();
-                $rep->payment_stage = $trx->paymentGroup ? $trx->paymentGroup->payment_status : $trx->payment_stage;
+                $rep->payment_stage = $trx->paymentGroup ? $trx->paymentGroup->payment_status : $latestMember->payment_stage;
 
                 $consolidated->push($rep);
             } else {
@@ -251,7 +257,7 @@ class TransactionController extends Controller
                 'transactions' => function ($q) {
                     $q->where('status', 'approved')
                       ->with(['user:id,name', 'approver:id,name'])
-                      ->orderByDesc('transaction_date')
+                      ->orderByDesc('updated_at')
                       ->orderByDesc('id');
                 }
             ])->find($transaction->payment_group_id);
@@ -303,7 +309,7 @@ class TransactionController extends Controller
                     $q->where('user_id', auth()->id())
                       ->where('status', 'approved')
                       ->with(['user:id,name', 'approver:id,name'])
-                      ->orderByDesc('transaction_date')
+                      ->orderByDesc('updated_at')
                       ->orderByDesc('id');
                 }
             ])->find($transaction->payment_group_id);

@@ -90,7 +90,7 @@ class PaymentGroup extends Model
         $latest = $this->transactions()
             ->where('status', 'approved')
             ->whereNotNull('payment_stage')
-            ->orderByDesc('transaction_date')
+            ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->first();
 

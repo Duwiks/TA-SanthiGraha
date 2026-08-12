@@ -507,4 +507,71 @@ class TransactionTest extends TestCase
             ->count();
         $this->assertEquals(1, $countUangMuka);
     }
+
+    /** @test */
+    public function riwayat_nota_dalam_detail_menampilkan_transaksi_terakhir_di_acc_paling_atas(): void
+    {
+        // Trx 1 diajukan pegawai dengan tanggal hari ini
+        $trx1 = Transaction::factory()->create([
+            'user_id'          => $this->pegawai->id,
+            'project_id'       => $this->project->id,
+            'category_id'      => $this->category->id,
+            'type'             => 'pengeluaran',
+            'amount'           => 500000,
+            'status'           => 'pending',
+            'payment_group_id' => null,
+            'payment_stage'    => 'uang_muka',
+            'transaction_date' => now()->format('Y-m-d'),
+        ]);
+
+        // Trx 2 diajukan pegawai dengan tanggal kemarin
+        $trx2 = Transaction::factory()->create([
+            'user_id'          => $this->pegawai->id,
+            'project_id'       => $this->project->id,
+            'category_id'      => $this->category->id,
+            'type'             => 'pengeluaran',
+            'amount'           => 300000,
+            'status'           => 'pending',
+            'payment_group_id' => null,
+            'payment_stage'    => 'proses',
+            'transaction_date' => now()->subDay()->format('Y-m-d'),
+        ]);
+
+        // 1. Admin ACC Trx 1 terlebih dahulu (waktu approval awal)
+        $this->travel(1)->minutes();
+        $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.approve', $trx1->id), ['payment_stage' => 'uang_muka']);
+
+        // 2. Admin ACC Trx 2 setelah Trx 1 (waktu approval paling akhir)
+        $this->travel(5)->minutes();
+        $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.approve', $trx2->id), ['payment_stage' => 'proses']);
+
+        // Akses halaman detail transaksi admin
+        $responseAdmin = $this->actingAs($this->admin)
+            ->get(route('transactions.admin-show', $trx1->id));
+
+        $responseAdmin->assertStatus(200);
+        $groupTrxAdmin = $responseAdmin->viewData('groupTransactions');
+
+        // Pastikan transaksi yang terakhir di-ACC (Trx 2 / Proses) berada di urutan index 0 (paling atas)
+        $this->assertEquals($trx2->id, $groupTrxAdmin->first()->id);
+        $this->assertEquals('proses', $groupTrxAdmin->first()->payment_stage);
+
+        // Pastikan transaksi pertama yang di-ACC (Trx 1 / Uang Muka) berada di bawahnya
+        $this->assertEquals($trx1->id, $groupTrxAdmin->last()->id);
+        $this->assertEquals('uang_muka', $groupTrxAdmin->last()->payment_stage);
+
+        // Akses halaman detail transaksi pegawai
+        $responsePegawai = $this->actingAs($this->pegawai)
+            ->get(route('transactions.show', $trx1->id));
+
+        $responsePegawai->assertStatus(200);
+        $groupTrxPegawai = $responsePegawai->viewData('groupTransactions');
+
+        $this->assertEquals($trx2->id, $groupTrxPegawai->first()->id);
+        $this->assertEquals($trx1->id, $groupTrxPegawai->last()->id);
+    }
 }
