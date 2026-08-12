@@ -301,11 +301,14 @@
                                         <span class="text-base font-bold text-slate-800">
                                             Rp {{ number_format($trxItem->amount, 2, ',', '.') }}
                                         </span>
-                                        <form action="{{ route('transactions.destroy', $trxItem->id) }}" method="POST" class="inline"
-                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus data nota transaksi #{{ $trxItem->id }} ini?');">
+                                        <form action="{{ route('transactions.destroy', $trxItem->id) }}" method="POST"
+                                              id="delete-nota-form-{{ $trxItem->id }}" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-200" title="Hapus Nota Ini">
+                                            <button type="button"
+                                                    onclick="confirmDelete('delete-nota-form-{{ $trxItem->id }}', 'Apakah Anda yakin ingin menghapus data nota transaksi #{{ $trxItem->id }} ini?')"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-200"
+                                                    title="Hapus Nota Ini">
                                                 <i class="ph ph-trash"></i> Hapus
                                             </button>
                                         </form>
@@ -364,16 +367,62 @@
                         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-500 hover:text-white transition-colors whitespace-nowrap border border-red-100 hover:border-red-500">
                         <i class="ph ph-x-circle"></i> Tolak
                     </button>
-                    <form action="{{ route('transactions.approve', $transaction->id) }}" method="POST" class="flex items-center gap-2">
+                    <form action="{{ route('transactions.approve', $transaction->id) }}" method="POST" class="flex items-center gap-2 flex-wrap">
                         @csrf
-                        @if($transaction->type === 'pengeluaran' && $transaction->payment_stage)
+                        @php
+                            $targetGroup = $transaction->paymentGroup ?: \App\Models\PaymentGroup::where('project_id', $transaction->project_id)->where('category_id', $transaction->category_id)->where('type', $transaction->type)->orderByDesc('id')->first();
+                            $isGroupCompleted = $targetGroup && $targetGroup->payment_status === 'selesai';
+                        @endphp
+
+                        @if($isGroupCompleted)
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <select name="payment_group_action" id="approve_group_action" onchange="toggleApproveStage(this.value)"
+                                    class="px-3 py-2 rounded-xl border border-amber-300 bg-white text-slate-800 text-xs font-semibold focus:ring-2 focus:ring-amber-400 outline-none">
+                                    <option value="lanjutkan">Gunakan Kelompok Sebelumnya (Lanjutkan)</option>
+                                    <option value="baru">Buat Label Baru</option>
+                                </select>
+                                <input type="text" name="payment_group_label" id="approve_group_label" placeholder="Label Baru (cth: Tahap 2)"
+                                    class="hidden px-3 py-2 rounded-xl border border-amber-300 bg-white text-slate-800 text-xs focus:ring-2 focus:ring-amber-400 outline-none">
+                                <select name="payment_stage" id="approve_stage"
+                                    class="px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold focus:ring-2 focus:ring-amber-400 outline-none">
+                                    <option value="proses" selected>Proses</option>
+                                    <option value="selesai">Selesai</option>
+                                </select>
+                            </div>
+                            <script>
+                                function toggleApproveStage(val) {
+                                    const labelInput = document.getElementById('approve_group_label');
+                                    const stageSel   = document.getElementById('approve_stage');
+                                    if (val === 'baru') {
+                                        labelInput.classList.remove('hidden');
+                                        labelInput.required = true;
+                                        stageSel.innerHTML = `
+                                            <option value="uang_muka" selected>Uang Muka</option>
+                                            <option value="selesai">Selesai</option>
+                                        `;
+                                    } else {
+                                        labelInput.classList.add('hidden');
+                                        labelInput.required = false;
+                                        labelInput.value = '';
+                                        stageSel.innerHTML = `
+                                            <option value="proses" selected>Proses</option>
+                                            <option value="selesai">Selesai</option>
+                                        `;
+                                    }
+                                }
+                            </script>
+                        @elseif($transaction->payment_stage)
                             <div class="flex items-center gap-2">
-                                <label class="text-xs font-semibold text-amber-700 whitespace-nowrap">Koreksi Status:</label>
+                                <label class="text-xs font-semibold text-amber-700 whitespace-nowrap">Status Pembayaran:</label>
                                 <select name="payment_stage"
                                     class="px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold focus:ring-2 focus:ring-amber-400 outline-none">
-                                    <option value="uang_muka" @selected($transaction->payment_stage === 'uang_muka')>Uang Muka</option>
-                                    <option value="proses"    @selected($transaction->payment_stage === 'proses')>Proses</option>
-                                    <option value="selesai"   @selected($transaction->payment_stage === 'selesai')>Selesai</option>
+                                    @if($targetGroup && $targetGroup->payment_status !== 'selesai')
+                                        <option value="proses"  @selected($transaction->payment_stage === 'proses')>Proses</option>
+                                        <option value="selesai" @selected($transaction->payment_stage === 'selesai')>Selesai</option>
+                                    @else
+                                        <option value="uang_muka" @selected($transaction->payment_stage === 'uang_muka')>Uang Muka</option>
+                                        <option value="selesai"   @selected($transaction->payment_stage === 'selesai')>Selesai</option>
+                                    @endif
                                 </select>
                             </div>
                         @endif

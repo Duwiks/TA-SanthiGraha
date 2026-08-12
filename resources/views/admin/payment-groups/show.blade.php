@@ -175,11 +175,12 @@
                                    title="Lihat Detail">
                                     <i class="ph ph-eye"></i> Detail
                                 </a>
-                                <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi #{{ $trx->id }} ini dari kelompok pembayaran?');">
+                                <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST"
+                                      id="delete-trx-form-{{ $trx->id }}" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
+                                    <button type="button"
+                                            onclick="confirmDelete('delete-trx-form-{{ $trx->id }}', 'Apakah Anda yakin ingin menghapus transaksi #{{ $trx->id }} dari kelompok pembayaran ini?')"
                                             class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors border border-red-200"
                                             title="Hapus Transaksi">
                                         <i class="ph ph-trash"></i> Hapus

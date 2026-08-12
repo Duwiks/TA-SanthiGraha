@@ -73,8 +73,8 @@ class PaymentGroup extends Model
     /**
      * Sinkronkan payment_status (cache) secara robust:
      * 1. Jika Proyek induk berstatus 'selesai' -> kelompok wajib 'selesai'.
-     * 2. Jika ada minimal 1 transaksi approved 'selesai' -> kelompok 'selesai'.
-     * 3. Fallback ke transaksi approved terbaru berdasarkan ID aktual.
+     * 2. Status kelompok ditentukan dari transaksi approved paling akhir (berdasarkan tanggal nota & ID).
+     *    Jika transaksi lanjutan dibuat dengan status 'proses', status kelompok otomatis berubah menjadi 'proses'.
      */
     public function syncStatus(): void
     {
@@ -86,28 +86,18 @@ class PaymentGroup extends Model
             return;
         }
 
-        // 2. Prioritas Status Selesai
-        $hasCompleted = $this->transactions()
-            ->where('status', 'approved')
-            ->where('payment_stage', 'selesai')
-            ->exists();
-
-        if ($hasCompleted) {
-            if ($this->payment_status !== 'selesai') {
-                $this->update(['payment_status' => 'selesai']);
-            }
-            return;
-        }
-
-        // 3. Fallback urutan ID transaksi approved
+        // 2. Status berdasarkan transaksi approved paling akhir
         $latest = $this->transactions()
             ->where('status', 'approved')
             ->whereNotNull('payment_stage')
+            ->orderByDesc('transaction_date')
             ->orderByDesc('id')
             ->first();
 
         if ($latest) {
-            $this->update(['payment_status' => $latest->payment_stage]);
+            if ($this->payment_status !== $latest->payment_stage) {
+                $this->update(['payment_status' => $latest->payment_stage]);
+            }
         }
     }
 }

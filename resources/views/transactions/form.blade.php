@@ -83,14 +83,23 @@
                 <label for="type" class="block text-sm font-semibold text-slate-700 mb-1.5">
                     Tipe Arus Kas <span class="text-red-500">*</span>
                 </label>
+                @if(auth()->user()->role === 'admin')
+                {{-- Admin: dropdown dengan pilihan Pemasukan / Pengeluaran --}}
                 <select id="type" name="type"
                     class="w-full px-4 py-3 rounded-xl border @error('type') border-red-400 bg-red-50 @else border-slate-200 @enderror text-sm focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 outline-none">
                     <option value="">-- Pilih Tipe Transaksi --</option>
-                    @if(auth()->user()->role === 'admin')
                     <option value="pemasukan"   @selected(old('type', $transaction->type ?? '') === 'pemasukan')>Pemasukan (Uang Masuk)</option>
-                    @endif
                     <option value="pengeluaran" @selected(old('type', $transaction->type ?? '') === 'pengeluaran')>Pengeluaran (Uang Keluar)</option>
                 </select>
+                @else
+                {{-- Pegawai: hanya Pengeluaran — tampilkan sebagai display + hidden input --}}
+                <input type="hidden" id="type" name="type" value="pengeluaran">
+                <div class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-600 flex items-center gap-2 cursor-default select-none">
+                    <i class="ph ph-trend-down text-red-500"></i>
+                    <span>Pengeluaran (Uang Keluar)</span>
+                    <span class="ml-auto text-xs text-slate-400 font-medium">Otomatis</span>
+                </div>
+                @endif
                 @error('type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -138,6 +147,53 @@
                         <p class="text-amber-700 leading-relaxed">Kelompok pembayaran untuk proyek & kategori ini sebelumnya sudah selesai. Status pembayaran dan penentuan kelompok baru akan divalidasi oleh Admin saat proses persetujuan (approval).</p>
                     </div>
                 </div>
+
+                @if(auth()->user()->role === 'admin')
+                {{-- Card Konfirmasi Kelompok Selesai (Inline di Form Khusus Admin) --}}
+                <div id="payment-group-inline-card" class="hidden bg-amber-50/70 border border-amber-200 rounded-2xl p-4 mb-4">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                            <i class="ph ph-warning-circle text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-amber-900 text-sm">Kelompok Pembayaran Sebelumnya Selesai</h4>
+                            <p class="text-xs text-amber-700 mt-0.5">Tentukan apakah transaksi ini melanjutkan pengelompokan lama atau membuat label baru.</p>
+                        </div>
+                    </div>
+
+                    {{-- Card Selection --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label id="card_opt_lanjutkan" onclick="applyGroupAction('lanjutkan')"
+                            class="cursor-pointer border-2 border-emerald-500 bg-white rounded-xl p-3 flex items-center gap-3 transition-all shadow-sm">
+                            <input type="radio" name="inline_action_radio" value="lanjutkan" class="text-emerald-600 focus:ring-emerald-500" checked>
+                            <div>
+                                <span class="font-bold text-xs text-slate-800 block">Lanjutkan Kelompok Lama</span>
+                                <span class="text-[11px] text-slate-500 block">Status: Proses / Selesai</span>
+                            </div>
+                        </label>
+
+                        <label id="card_opt_baru" onclick="applyGroupAction('baru')"
+                            class="cursor-pointer border-2 border-slate-200 bg-white rounded-xl p-3 flex items-center gap-3 transition-all hover:border-slate-300">
+                            <input type="radio" name="inline_action_radio" value="baru" class="text-emerald-600 focus:ring-emerald-500">
+                            <div>
+                                <span class="font-bold text-xs text-slate-800 block">Buat Label Baru</span>
+                                <span class="text-[11px] text-slate-500 block">Status: Uang Muka / Selesai</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    {{-- Input Label Baru Inline --}}
+                    <div id="inline_new_label_wrapper" class="hidden mt-3 pt-3 border-t border-amber-200/60">
+                        <label for="inline_group_label_input" class="block text-xs font-semibold text-amber-900 mb-1">
+                            Label Kelompok Baru <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="inline_group_label_input" placeholder="Contoh: Tahap 2, Perbaikan Lanjutan"
+                            oninput="syncInlineLabelToForm(this.value)"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-xs text-slate-800 focus:ring-2 focus:ring-emerald-400 outline-none">
+                        <p class="text-[11px] text-red-500 mt-1 hidden" id="inline_label_error">Label kelompok baru wajib diisi.</p>
+                    </div>
+                </div>
+                @endif
 
                 {{-- Input Select Status Pembayaran --}}
                 <div id="payment-stage-select-wrapper">
@@ -325,8 +381,8 @@
 
         {{-- Pertanyaan / Form --}}
         <div id="modalChoiceSection">
-            <p class="text-sm text-slate-700 font-medium mb-4">
-                Apakah transaksi baru ini ingin digabungkan ke kelompok sebelumnya, atau membuat kelompok pembayaran baru?
+            <p class="text-sm text-slate-700 font-medium mb-4 leading-relaxed">
+                Apakah Anda ingin membuat label baru pada pengelompokan pembayaran, atau menggunakan pengelompokan sebelumnya?
             </p>
         </div>
 
@@ -341,24 +397,24 @@
         </div>
 
         {{-- Tombol Aksi --}}
-        <div class="flex gap-2" id="modalButtonsYesNo">
+        <div class="flex flex-col sm:flex-row gap-2.5" id="modalButtonsYesNo">
             <button type="button" onclick="confirmPaymentGroup('lanjutkan')"
-                class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors">
-                Lanjutkan Kelompok Ini
+                class="flex-1 py-3 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5">
+                <i class="ph ph-arrow-counter-clockwise font-bold text-sm"></i> Gunakan Pengelompokan Sebelumnya
             </button>
             <button type="button" onclick="showNewGroupForm()"
-                class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 transition-all">
-                Buat Kelompok Baru
+                class="flex-1 py-3 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5">
+                <i class="ph ph-plus-circle font-bold text-sm"></i> Buat Label Baru
             </button>
         </div>
 
-        <div class="flex gap-2 hidden" id="modalButtonsConfirmNew">
+        <div class="flex gap-2.5 hidden" id="modalButtonsConfirmNew">
             <button type="button" onclick="confirmPaymentGroup('baru')"
-                class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 transition-all">
-                Simpan & Gunakan Kelompok Baru
+                class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 transition-all">
+                Simpan & Buat Label Baru
             </button>
             <button type="button" onclick="resetModalToChoice()"
-                class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm hover:bg-slate-200 transition-colors">
+                class="px-4 py-3 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-200 transition-colors">
                 Kembali
             </button>
         </div>
@@ -411,21 +467,28 @@
     const stageSelect = document.getElementById('payment_stage');
 
     function togglePaymentStage() {
-        // Tampilkan untuk pengeluaran, atau (admin) untuk pemasukan
-        const isEligible = typeSelect.value === 'pengeluaran' || (isAdmin && typeSelect.value === 'pemasukan');
+        // Untuk pegawai: type hidden = 'pengeluaran' → selalu eligible
+        // Untuk admin: eligible jika pengeluaran atau pemasukan
+        const currentType = typeSelect.value;
+        const isEligible = currentType === 'pengeluaran' || (isAdmin && currentType === 'pemasukan');
         stageField.classList.toggle('hidden', !isEligible);
         stageSelect.required = isEligible;
-        
-        const actionInput = document.getElementById('payment_group_action');
-        const labelInput  = document.getElementById('payment_group_label');
-        if (actionInput) actionInput.value = '';
-        if (labelInput)  labelInput.value  = '';
 
-        checkPaymentGroupIfNeeded();
+        if (isEligible) {
+            checkPaymentGroupIfNeeded();
+        }
     }
 
-    typeSelect.addEventListener('change', togglePaymentStage);
-    togglePaymentStage();
+    // Untuk pegawai: type adalah hidden input, tidak punya event 'change'
+    // Langsung panggil togglePaymentStage satu kali saat halaman load
+    if (!isAdmin) {
+        // Pegawai: type sudah 'pengeluaran' → langsung tampilkan stage field
+        stageField.classList.remove('hidden');
+        stageSelect.required = true;
+    } else {
+        typeSelect.addEventListener('change', togglePaymentStage);
+        togglePaymentStage();
+    }
 
     // ─────────────────────────────────────────────
     // AJAX: cek Payment Group saat proyek + kategori dipilih
@@ -439,7 +502,7 @@
         const currentValue = stageSelect.value;
 
         if (hasActiveGroup) {
-            // Transaksi Lanjutan: Opsi = 'Proses' (+ 'Selesai' untuk Admin), TIDAK ADA 'Uang Muka'
+            // Transaksi Lanjutan: Opsi = HANYA 'Proses' (+ 'Selesai' untuk Admin), TIDAK ADA 'Uang Muka'
             if (isAdmin) {
                 stageSelect.innerHTML = `
                     <option value="">-- Pilih Status Pembayaran --</option>
@@ -452,11 +515,11 @@
                 `;
             }
             if (helperText) {
-                helperText.innerHTML = '<i class="ph ph-info"></i> ' + (isAdmin ? 'Pembayaran lanjutan terdeteksi — silakan pilih Proses atau Selesai.' : 'Pembayaran lanjutan terdeteksi — status otomatis Proses.');
+                helperText.innerHTML = '<i class="ph ph-info"></i> Pembayaran lanjutan terdeteksi — status: Proses atau Selesai.';
                 helperText.classList.remove('hidden');
             }
         } else {
-            // Transaksi Baru: Opsi = 'Uang Muka' (+ 'Selesai' untuk Admin), TIDAK ADA 'Proses'
+            // Transaksi Baru: Opsi = HANYA 'Uang Muka' (+ 'Selesai' untuk Admin), TIDAK ADA 'Proses'
             if (isAdmin) {
                 stageSelect.innerHTML = `
                     <option value="">-- Pilih Status Pembayaran --</option>
@@ -477,10 +540,27 @@
     function checkPaymentGroupIfNeeded() {
         const projectId  = projectSel.value;
         const categoryId = categorySel.value;
-        const trxType    = typeSelect.value || 'pengeluaran';
+        const trxType    = typeSelect.value;
 
+        const inlineCard    = document.getElementById('payment-group-inline-card');
+        const completedInfo = document.getElementById('payment-stage-completed-info');
+        const selectWrapper = document.getElementById('payment-stage-select-wrapper');
+
+        // Jika project atau kategori belum dipilih → reset ke default
         if (!projectId || !categoryId) {
             updatePaymentStageOptions(false);
+            if (inlineCard)    inlineCard.classList.add('hidden');
+            if (completedInfo) completedInfo.classList.add('hidden');
+            if (selectWrapper) selectWrapper.classList.remove('hidden');
+            stageSelect.required = true;
+            return;
+        }
+
+        // Jika tipe belum dipilih (khusus Admin yang harus memilih tipe dulu)
+        if (!trxType) {
+            stageSelect.innerHTML = `<option value="" disabled selected>— Pilih tipe transaksi dulu —</option>`;
+            if (inlineCard)    inlineCard.classList.add('hidden');
+            if (completedInfo) completedInfo.classList.add('hidden');
             return;
         }
 
@@ -494,45 +574,138 @@
         })
         .then(r => r.json())
         .then(data => {
-            const completedInfo = document.getElementById('payment-stage-completed-info');
-            const selectWrapper = document.getElementById('payment-stage-select-wrapper');
-
             if (!isAdmin && data.is_completed) {
-                // Pegawai: jika kelompok sebelumnya sudah selesai, sembunyikan dropdown status!
+                // ── PEGAWAI: kelompok lama sudah selesai ──────────────────
+                // Sembunyikan dropdown, tampilkan info box
                 if (completedInfo) completedInfo.classList.remove('hidden');
                 if (selectWrapper) selectWrapper.classList.add('hidden');
+                if (inlineCard)    inlineCard.classList.add('hidden');
                 stageSelect.required = false;
-                stageSelect.value = '';
-            } else {
+                stageSelect.value    = '';
+                pendingGroupData     = null;
+
+            } else if (!isAdmin && data.has_active_group) {
+                // ── PEGAWAI: kelompok aktif (proses/uang muka berjalan) ───
+                // Hanya tampilkan PROSES (fixed, tidak ada pilihan lain)
                 if (completedInfo) completedInfo.classList.add('hidden');
                 if (selectWrapper) selectWrapper.classList.remove('hidden');
+                if (inlineCard)    inlineCard.classList.add('hidden');
+                stageSelect.required = true;
+                stageSelect.innerHTML = `<option value="proses" selected>Proses</option>`;
+                const helperText = document.getElementById('payment-stage-helper');
+                if (helperText) {
+                    helperText.innerHTML = '<i class="ph ph-info"></i> Pembayaran lanjutan terdeteksi — status: Proses.';
+                    helperText.classList.remove('hidden');
+                }
+                pendingGroupData = null;
+
+            } else if (isAdmin && data.needs_confirmation) {
+                // ── ADMIN: kelompok lama sudah selesai → buka modal konfirmasi ──
+                if (completedInfo) completedInfo.classList.add('hidden');
+                if (selectWrapper) selectWrapper.classList.remove('hidden');
+                if (inlineCard)    inlineCard.classList.remove('hidden');
                 stageSelect.required = true;
 
-                if (data.has_active_group) {
-                    updatePaymentStageOptions(true);
-                } else {
-                    updatePaymentStageOptions(false);
-                }
-            }
+                // Set dropdown ke mode menunggu — TIDAK langsung apply action
+                // (user harus pilih di modal dulu)
+                stageSelect.innerHTML = `<option value="" disabled selected>— Pilih di pop-up konfirmasi —</option>`;
 
-            // Pop-up modal konfirmasi hanya untuk Admin
-            if (isAdmin && data.needs_confirmation) {
                 pendingGroupData = data.group;
                 openPaymentGroupModal(data.group);
+
+            } else if (isAdmin && data.has_active_group) {
+                // ── ADMIN: kelompok aktif → tampilkan Proses & Selesai ────
+                if (completedInfo) completedInfo.classList.add('hidden');
+                if (selectWrapper) selectWrapper.classList.remove('hidden');
+                if (inlineCard)    inlineCard.classList.add('hidden');
+                stageSelect.required = true;
+                updatePaymentStageOptions(true);
+                pendingGroupData = null;
+
             } else {
+                // ── Tidak ada kelompok / kelompok baru ───────────────────
+                if (completedInfo) completedInfo.classList.add('hidden');
+                if (selectWrapper) selectWrapper.classList.remove('hidden');
+                if (inlineCard)    inlineCard.classList.add('hidden');
+                stageSelect.required = true;
+                updatePaymentStageOptions(false);
                 pendingGroupData = null;
             }
         })
-        .catch(() => {});
+        .catch(() => {
+            // Jika fetch gagal → reset ke default aman
+            updatePaymentStageOptions(false);
+        });
     }
 
     projectSel.addEventListener('change',  checkPaymentGroupIfNeeded);
     categorySel.addEventListener('change', checkPaymentGroupIfNeeded);
+    // typeSelect listener untuk admin sudah ditangani via togglePaymentStage di atas
+    // Untuk pegawai: type adalah hidden input — tidak perlu listener
+
+    // Panggil saat halaman load (untuk form edit yang sudah ada nilai proyek & kategori)
+    checkPaymentGroupIfNeeded();
 
     @if(auth()->user()->role === 'admin')
     // ─────────────────────────────────────────────
-    // Modal logic (Khusus Admin)
+    // Logic Inline Card & Modal Sync (Khusus Admin)
     // ─────────────────────────────────────────────
+    function applyGroupAction(action, label = '') {
+        const actionInput = document.getElementById('payment_group_action');
+        const labelInput  = document.getElementById('payment_group_label');
+        const stageSelect = document.getElementById('payment_stage');
+        const helperText  = document.getElementById('payment-stage-helper');
+
+        if (actionInput) actionInput.value = action;
+        if (labelInput)  labelInput.value  = label;
+
+        const radioLanjutkan = document.querySelector('input[name="inline_action_radio"][value="lanjutkan"]');
+        const radioBaru      = document.querySelector('input[name="inline_action_radio"][value="baru"]');
+        const cardLanjutkan  = document.getElementById('card_opt_lanjutkan');
+        const cardBaru       = document.getElementById('card_opt_baru');
+        const labelWrapper   = document.getElementById('inline_new_label_wrapper');
+        const labelInputInline = document.getElementById('inline_group_label_input');
+
+        if (action === 'baru') {
+            if (radioBaru) radioBaru.checked = true;
+            if (cardBaru) cardBaru.className = "cursor-pointer border-2 border-emerald-500 bg-white rounded-xl p-3 flex items-center gap-3 transition-all shadow-sm";
+            if (cardLanjutkan) cardLanjutkan.className = "cursor-pointer border-2 border-slate-200 bg-white rounded-xl p-3 flex items-center gap-3 transition-all hover:border-slate-300";
+            if (labelWrapper) labelWrapper.classList.remove('hidden');
+            if (labelInputInline && label) labelInputInline.value = label;
+
+            const curVal = stageSelect.value;
+            stageSelect.innerHTML = `
+                <option value="uang_muka" ${curVal === 'uang_muka' || !curVal || curVal === 'proses' ? 'selected' : ''}>Uang Muka</option>
+                <option value="selesai" ${curVal === 'selesai' ? 'selected' : ''}>Selesai</option>
+            `;
+            if (helperText) {
+                const labelTxt = label ? ` ("${label}")` : '';
+                helperText.innerHTML = `<i class="ph ph-info"></i> Label baru${labelTxt} dibuat — status: Uang Muka atau Selesai.`;
+                helperText.classList.remove('hidden');
+            }
+        } else {
+            if (radioLanjutkan) radioLanjutkan.checked = true;
+            if (cardLanjutkan) cardLanjutkan.className = "cursor-pointer border-2 border-emerald-500 bg-white rounded-xl p-3 flex items-center gap-3 transition-all shadow-sm";
+            if (cardBaru) cardBaru.className = "cursor-pointer border-2 border-slate-200 bg-white rounded-xl p-3 flex items-center gap-3 transition-all hover:border-slate-300";
+            if (labelWrapper) labelWrapper.classList.add('hidden');
+
+            const curVal = stageSelect.value;
+            stageSelect.innerHTML = `
+                <option value="proses" ${curVal === 'proses' || !curVal || curVal === 'uang_muka' ? 'selected' : ''}>Proses</option>
+                <option value="selesai" ${curVal === 'selesai' ? 'selected' : ''}>Selesai</option>
+            `;
+            if (helperText) {
+                helperText.innerHTML = '<i class="ph ph-info"></i> Melanjutkan pengelompokan sebelumnya — status: Proses atau Selesai.';
+                helperText.classList.remove('hidden');
+            }
+        }
+    }
+
+    function syncInlineLabelToForm(val) {
+        const labelInput = document.getElementById('payment_group_label');
+        if (labelInput) labelInput.value = val;
+    }
+
     function openPaymentGroupModal(group) {
         document.getElementById('modal_project_name').textContent  = group.project_name;
         document.getElementById('modal_category_name').textContent = group.category_name;
@@ -551,7 +724,8 @@
     }
 
     function closePaymentGroupModal() {
-        document.getElementById('paymentGroupModal').classList.add('hidden');
+        const modal = document.getElementById('paymentGroupModal');
+        if (modal) modal.classList.add('hidden');
     }
 
     function showNewGroupForm() {
@@ -569,38 +743,19 @@
     }
 
     function confirmPaymentGroup(action) {
-        const stageSelect = document.getElementById('payment_stage');
-        const helperText = document.getElementById('payment-stage-helper');
-
         if (action === 'baru') {
             const label = document.getElementById('new_group_label_input').value.trim();
             if (!label) {
                 document.getElementById('label_error').classList.remove('hidden');
                 return;
             }
-            document.getElementById('payment_group_label').value = label;
-
-            // Buat Kelompok Baru → Hanya Uang Muka dan Selesai
-            stageSelect.innerHTML = `
-                <option value="">-- Pilih Status Pembayaran --</option>
-                <option value="uang_muka" selected>Uang Muka</option>
-                <option value="selesai">Selesai</option>
-            `;
-            if (helperText) helperText.classList.add('hidden');
+            applyGroupAction('baru', label);
         } else {
-            // Lanjutkan Kelompok Lama → Hanya Proses dan Selesai
-            stageSelect.innerHTML = `
-                <option value="">-- Pilih Status Pembayaran --</option>
-                <option value="proses" selected>Proses</option>
-                <option value="selesai">Selesai</option>
-            `;
-            if (helperText) {
-                helperText.innerHTML = '<i class="ph ph-info"></i> Pembayaran lanjutan terdeteksi — silakan pilih Proses atau Selesai.';
-                helperText.classList.remove('hidden');
-            }
+            applyGroupAction('lanjutkan');
         }
-        document.getElementById('payment_group_action').value = action;
-        closePaymentGroupModal();
+
+        const modal = document.getElementById('paymentGroupModal');
+        if (modal) modal.classList.add('hidden');
     }
     @endif
 </script>

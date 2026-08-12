@@ -347,21 +347,30 @@ class TransactionController extends Controller
         $isExistingCompleted = $existingGroup && $existingGroup->payment_status === 'selesai';
         $hasActiveGroup      = $existingGroup && $existingGroup->payment_status !== 'selesai';
 
+        if ($isAdmin && $isExistingCompleted) {
+            $action = $request->payment_group_action ?: 'lanjutkan';
+            $request->merge(['payment_group_action' => $action]);
+        }
+
         if ($isAdmin) {
             if ($request->payment_group_action === 'baru') {
                 $stageRule = 'required|in:uang_muka,selesai';
             } elseif ($request->payment_group_action === 'lanjutkan' || $hasActiveGroup) {
-                $stageRule = 'required|in:proses,selesai';
+                // Safety net: izinkan uang_muka juga (akan dinormalisasi ke proses di bawah)
+                $stageRule = 'required|in:uang_muka,proses,selesai';
             } else {
-                $stageRule = 'required|in:uang_muka,selesai';
+                $stageRule = 'required|in:uang_muka,proses,selesai';
             }
         } elseif ($isExistingCompleted) {
             $stageRule = 'nullable|in:uang_muka,proses';
         } elseif ($hasActiveGroup) {
-            $stageRule = 'required|in:proses';
+            // Safety net: izinkan uang_muka juga (akan dinormalisasi ke proses di bawah)
+            $stageRule = 'required|in:uang_muka,proses';
         } else {
-            $stageRule = 'required|in:uang_muka';
+            $stageRule = 'required|in:uang_muka,selesai';
         }
+
+        $actionRule = ($isAdmin && $isExistingCompleted) ? 'required|in:lanjutkan,baru' : 'nullable|in:lanjutkan,baru';
 
         $request->validate([
             'project_id'           => 'required|exists:projects,id',
@@ -373,9 +382,10 @@ class TransactionController extends Controller
             'payment_method'       => 'required|string|max:100',
             'receipt_photo'        => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
             'payment_stage'        => $stageRule,
-            'payment_group_action' => 'nullable|in:lanjutkan,baru',
+            'payment_group_action' => $actionRule,
             'payment_group_label'  => 'required_if:payment_group_action,baru|nullable|string|max:255',
         ], [
+            'payment_group_action.required'   => 'Kombinasi proyek dan kategori ini sebelumnya sudah selesai. Silakan tentukan apakah transaksi ini melanjutkan kelompok lama atau membuat kelompok baru pada pop-up konfirmasi.',
             'project_id.required'             => 'Proyek wajib dipilih.',
             'project_id.exists'               => 'Proyek tidak valid.',
             'category_id.required'            => 'Kategori wajib dipilih.',
@@ -416,13 +426,14 @@ class TransactionController extends Controller
 
         $stage = $request->payment_stage;
         if (!$isAdmin && $isExistingCompleted) {
-            // Pegawai pada kelompok yang sudah selesai -> status pembayaran wajib null sampai divalidasi admin
+            // Pegawai pada kelompok yang sudah selesai -> status null sampai divalidasi admin
             $stage = null;
-        } elseif ($stage === 'uang_muka' && $action !== 'baru') {
-            // Pencegahan duplikasi uang muka jika grup aktif sudah ada & bukan aksi baru
-            if ($existingGroup && $existingGroup->payment_status !== 'selesai') {
-                $stage = 'proses';
-            }
+        } elseif ($hasActiveGroup && $stage === 'uang_muka' && $action !== 'baru') {
+            // Safety net: normalisasi uang_muka → proses jika grup aktif berjalan & bukan aksi baru
+            $stage = 'proses';
+        } elseif (!$isAdmin && $hasActiveGroup) {
+            // Pegawai pada kelompok aktif → selalu proses
+            $stage = 'proses';
         }
 
         $transaction = Transaction::create([
@@ -495,21 +506,30 @@ class TransactionController extends Controller
         $isExistingCompleted = $existingGroup && $existingGroup->payment_status === 'selesai';
         $hasActiveGroup      = $existingGroup && $existingGroup->payment_status !== 'selesai';
 
+        if ($isAdmin && $isExistingCompleted) {
+            $action = $request->payment_group_action ?: 'lanjutkan';
+            $request->merge(['payment_group_action' => $action]);
+        }
+
         if ($isAdmin) {
             if ($request->payment_group_action === 'baru') {
                 $stageRule = 'required|in:uang_muka,selesai';
             } elseif ($request->payment_group_action === 'lanjutkan' || $hasActiveGroup) {
-                $stageRule = 'required|in:proses,selesai';
+                // Safety net: izinkan uang_muka juga (akan dinormalisasi ke proses di bawah)
+                $stageRule = 'required|in:uang_muka,proses,selesai';
             } else {
-                $stageRule = 'required|in:uang_muka,selesai';
+                $stageRule = 'required|in:uang_muka,proses,selesai';
             }
         } elseif ($isExistingCompleted) {
             $stageRule = 'nullable|in:uang_muka,proses';
         } elseif ($hasActiveGroup) {
-            $stageRule = 'required|in:proses';
+            // Safety net: izinkan uang_muka juga (akan dinormalisasi ke proses di bawah)
+            $stageRule = 'required|in:uang_muka,proses';
         } else {
-            $stageRule = 'required|in:uang_muka';
+            $stageRule = 'required|in:uang_muka,selesai';
         }
+
+        $actionRule = ($isAdmin && $isExistingCompleted) ? 'required|in:lanjutkan,baru' : 'nullable|in:lanjutkan,baru';
 
         $request->validate([
             'project_id'           => 'required|exists:projects,id',
@@ -521,9 +541,10 @@ class TransactionController extends Controller
             'payment_method'       => 'required|string|max:100',
             'receipt_photo'        => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:15360',
             'payment_stage'        => $stageRule,
-            'payment_group_action' => 'nullable|in:lanjutkan,baru',
+            'payment_group_action' => $actionRule,
             'payment_group_label'  => 'required_if:payment_group_action,baru|nullable|string|max:255',
         ], [
+            'payment_group_action.required'   => 'Kombinasi proyek dan kategori ini sebelumnya sudah selesai. Silakan tentukan apakah transaksi ini melanjutkan kelompok lama atau membuat kelompok baru pada pop-up konfirmasi.',
             'project_id.required'             => 'Proyek wajib dipilih.',
             'project_id.exists'               => 'Proyek tidak valid.',
             'category_id.required'            => 'Kategori wajib dipilih.',
@@ -565,15 +586,14 @@ class TransactionController extends Controller
         }
 
         $stage = $request->payment_stage;
-        if ($stage === 'uang_muka' && (!$isAdmin || $request->payment_group_action !== 'baru')) {
-            $existingGroup = PaymentGroup::where('project_id', $request->project_id)
-                ->where('category_id', $request->category_id)
-                ->where('type', $request->type)
-                ->orderByDesc('id')
-                ->first();
-            if ($existingGroup && $existingGroup->payment_status !== 'selesai') {
-                $stage = 'proses';
-            }
+        if (!$isAdmin && $isExistingCompleted) {
+            $stage = null;
+        } elseif ($hasActiveGroup && $stage === 'uang_muka' && $request->payment_group_action !== 'baru') {
+            // Safety net: normalisasi uang_muka → proses jika grup aktif berjalan
+            $stage = 'proses';
+        } elseif (!$isAdmin && $hasActiveGroup) {
+            // Pegawai pada kelompok aktif → selalu proses
+            $stage = 'proses';
         }
 
         $data = [
@@ -646,8 +666,36 @@ class TransactionController extends Controller
         });
 
         // Sinkronkan kembali status Payment Group setelah transaksi dihapus
+        $remainingTrxInGroup = null;
         if ($paymentGroupId) {
-            PaymentGroup::find($paymentGroupId)?->syncStatus();
+            $group = PaymentGroup::find($paymentGroupId);
+            if ($group) {
+                if ($group->transactions()->count() === 0) {
+                    $group->delete();
+                } else {
+                    $group->syncStatus();
+                    $remainingTrxInGroup = $group->transactions()->orderByDesc('id')->first();
+                }
+            }
+        }
+
+        // Penanganan Redirect yang aman untuk mencegah 404 Not Found:
+        $previousUrl = url()->previous();
+
+        // 1. Jika request berasal dari halaman detail transaksi (adminShow)
+        if (str_contains($previousUrl, 'transactions/admin-show') || str_contains($previousUrl, 'transactions/' . $id)) {
+            if ($remainingTrxInGroup) {
+                return redirect()->route('transactions.admin-show', $remainingTrxInGroup->id)
+                    ->with('success', 'Nota transaksi berhasil dihapus.');
+            }
+            return redirect()->route('transactions.index')
+                ->with('success', 'Transaksi berhasil dihapus.');
+        }
+
+        // 2. Jika berasal dari detail kelompok pembayaran dan kelompok telah terhapus (karena 0 transaksi)
+        if ($paymentGroupId && !PaymentGroup::find($paymentGroupId) && str_contains($previousUrl, 'payment-groups/' . $paymentGroupId)) {
+            return redirect()->route('payment-groups.index')
+                ->with('success', 'Transaksi dan kelompok pembayaran berhasil dihapus.');
         }
 
         return back()->with('success', 'Transaksi berhasil dihapus.');
