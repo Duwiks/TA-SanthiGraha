@@ -447,7 +447,7 @@ class NotaMerahController extends Controller
                         'project_id'     => $nota->project_id,
                         'category_id'    => $nota->category_id,
                         'type'           => 'pengeluaran',
-                        'payment_status' => $stage,
+                        'payment_status' => 'uang_muka',
                         'label'          => $request->payment_group_label,
                     ]);
                 } elseif ($existingGroup) {
@@ -457,8 +457,20 @@ class NotaMerahController extends Controller
                         'project_id'     => $nota->project_id,
                         'category_id'    => $nota->category_id,
                         'type'           => 'pengeluaran',
-                        'payment_status' => $stage,
+                        'payment_status' => 'uang_muka',
                     ]);
+                }
+
+                // Cek apakah PaymentGroup sudah memiliki transaksi approved sebelumnya
+                $hasExistingApproved = Transaction::where('payment_group_id', $paymentGroup->id)
+                    ->where('status', 'approved')
+                    ->exists();
+
+                $requestedStage = $request->input('payment_stage', $nota->payment_stage ?: 'proses');
+                if ($hasExistingApproved) {
+                    $stage = ($requestedStage === 'selesai') ? 'selesai' : 'proses';
+                } else {
+                    $stage = ($requestedStage === 'selesai') ? 'selesai' : 'uang_muka';
                 }
 
                 // Update nota merah → selesai dan set payment_group_id

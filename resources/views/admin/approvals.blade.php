@@ -493,9 +493,12 @@
                 if (data.needs_confirmation) {
                     // Kelompok sebelumnya selesai → buka pop-up konfirmasi
                     openApprovalGroupModal(data.group, currentStage);
+                } else if (data.has_active_group) {
+                    // Kelompok sudah aktif berjalan → transaksi lanjutan otomatis 'proses' (atau 'selesai')
+                    directApprove(trxId, currentStage === 'selesai' ? 'selesai' : 'proses');
                 } else {
-                    // Kelompok belum selesai atau baru pertama kali → langsung setujui
-                    directApprove(trxId, currentStage);
+                    // Kelompok baru pertama kali dibuat → transaksi awal adalah 'uang_muka'
+                    directApprove(trxId, currentStage === 'selesai' ? 'selesai' : 'uang_muka');
                 }
             })
             .catch(() => {

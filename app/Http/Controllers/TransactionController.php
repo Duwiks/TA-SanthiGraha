@@ -772,19 +772,31 @@ class TransactionController extends Controller
             }
         }
 
+        // Cek apakah PaymentGroup ini sudah memiliki transaksi approved sebelumnya
+        $hasExistingApproved = Transaction::where('payment_group_id', $paymentGroupId)
+            ->where('status', 'approved')
+            ->where('id', '!=', $transaction->id)
+            ->exists();
+
+        // Tentukan tahap pembayaran:
+        $requestedStage = $request->input('payment_stage', $transaction->payment_stage);
+
+        if ($hasExistingApproved) {
+            // Jika grup sudah memiliki transaksi approved sebelumnya:
+            // Transaksi lanjutan TIDAK BOLEH menjadi uang_muka. Otomatis jadi 'proses', kecuali jika admin memilih 'selesai'
+            $stage = ($requestedStage === 'selesai') ? 'selesai' : 'proses';
+        } else {
+            // Jika ini transaksi approved pertama di grup ini:
+            // Statusnya adalah 'uang_muka', kecuali jika admin memilih 'selesai'
+            $stage = ($requestedStage === 'selesai') ? 'selesai' : 'uang_muka';
+        }
+
         $updateData = [
             'status'           => 'approved',
             'approved_by'      => auth()->id(),
             'payment_group_id' => $paymentGroupId,
+            'payment_stage'    => $stage,
         ];
-
-        if ($request->filled('payment_stage')) {
-            $updateData['payment_stage'] = $request->payment_stage;
-        } elseif (!$transaction->payment_stage) {
-            // Default stage jika belum ada: sesuaikan dengan grup
-            $group = PaymentGroup::find($paymentGroupId);
-            $updateData['payment_stage'] = ($group && $group->transactions()->where('status', 'approved')->count() > 0) ? 'proses' : 'uang_muka';
-        }
 
         $transaction->update($updateData);
 

@@ -445,4 +445,66 @@ class TransactionTest extends TestCase
         // Transaksi 2 sekarang tergabung dalam kelompok yang sama dengan transaksi 1
         $this->assertEquals($trx1Fresh->payment_group_id, $trx2Fresh->payment_group_id);
     }
+
+    /** @test */
+    public function empat_transaksi_uang_muka_hanya_menjadi_satu_uang_muka_dan_tiga_proses_setelah_di_acc(): void
+    {
+        // 4 transaksi diajukan pegawai dengan payment_stage awal uang_muka
+        $transactions = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $transactions[] = Transaction::factory()->create([
+                'user_id'          => $this->pegawai->id,
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'type'             => 'pengeluaran',
+                'amount'           => 100000 * $i,
+                'status'           => 'pending',
+                'payment_group_id' => null,
+                'payment_stage'    => 'uang_muka',
+            ]);
+        }
+
+        // Admin melakukan ACC pada ke-4 transaksi satu per satu
+        foreach ($transactions as $trx) {
+            $this->actingAs($this->admin)
+                ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+                ->post(route('transactions.approve', $trx->id), [
+                    'payment_stage' => 'uang_muka', // Input request mengirim uang_muka
+                ]);
+        }
+
+        // Ambil transaksi segar dari database
+        $freshTrx1 = $transactions[0]->fresh();
+        $freshTrx2 = $transactions[1]->fresh();
+        $freshTrx3 = $transactions[2]->fresh();
+        $freshTrx4 = $transactions[3]->fresh();
+
+        // Semua berstatus approved
+        $this->assertEquals('approved', $freshTrx1->status);
+        $this->assertEquals('approved', $freshTrx2->status);
+        $this->assertEquals('approved', $freshTrx3->status);
+        $this->assertEquals('approved', $freshTrx4->status);
+
+        // Semua masuk ke PaymentGroup yang sama
+        $groupId = $freshTrx1->payment_group_id;
+        $this->assertNotNull($groupId);
+        $this->assertEquals($groupId, $freshTrx2->payment_group_id);
+        $this->assertEquals($groupId, $freshTrx3->payment_group_id);
+        $this->assertEquals($groupId, $freshTrx4->payment_group_id);
+
+        // Transaksi 1 tetap Uang Muka
+        $this->assertEquals('uang_muka', $freshTrx1->payment_stage);
+
+        // Transaksi 2, 3, 4 otomatis dinormalisasi menjadi Proses
+        $this->assertEquals('proses', $freshTrx2->payment_stage);
+        $this->assertEquals('proses', $freshTrx3->payment_stage);
+        $this->assertEquals('proses', $freshTrx4->payment_stage);
+
+        // Hitung transaksi uang muka dalam PaymentGroup ini: harus tepat 1
+        $countUangMuka = Transaction::where('payment_group_id', $groupId)
+            ->where('status', 'approved')
+            ->where('payment_stage', 'uang_muka')
+            ->count();
+        $this->assertEquals(1, $countUangMuka);
+    }
 }
