@@ -98,6 +98,7 @@ class NotaMerahTest extends TestCase
             ->post(route('nota-merah.store'), [
                 'project_id'             => $this->project->id,
                 'category_id'            => $this->category->id,
+                'payment_stage'          => 'uang_muka',
                 'description'            => 'Pembelian material proyek',
                 'amount'                 => 750000,
                 'nota_date'              => now()->subDay()->format('Y-m-d'),
@@ -463,6 +464,7 @@ class NotaMerahTest extends TestCase
 
         // Admin menghapus transaksi (aksi yang valid)
         $response = $this->actingAs($this->admin)
+            ->from(route('transactions.index'))
             ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
             ->delete(route('transactions.destroy', $transaction->id));
 

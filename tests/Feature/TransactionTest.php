@@ -104,6 +104,7 @@ class TransactionTest extends TestCase
                 'description'      => 'Pembelian alat',
                 'amount'           => 500000,
                 'payment_method'   => 'Transfer Bank',
+                'payment_stage'    => 'uang_muka',
             ]);
 
         $response->assertRedirect(route('transactions.index'));
@@ -129,6 +130,7 @@ class TransactionTest extends TestCase
                 'description'      => 'Dana awal proyek',
                 'amount'           => 10000000,
                 'payment_method'   => 'Transfer Bank',
+                'payment_stage'    => 'uang_muka',
             ]);
 
         $response->assertRedirect(route('transactions.index'));
@@ -326,6 +328,7 @@ class TransactionTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->pegawai)
+            ->from(route('transactions.index'))
             ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
             ->delete(route('transactions.destroy', $transaction->id));
 
@@ -352,5 +355,94 @@ class TransactionTest extends TestCase
         $response->assertRedirect(route('transactions.index'));
         $response->assertSessionHas('error');
         $this->assertDatabaseHas('transactions', ['id' => $transaction->id]);
+    }
+
+    /** @test */
+    public function pegawai_membuat_transaksi_status_pending_dan_payment_group_id_null(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->actingAs($this->pegawai)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.store'), [
+                'project_id'       => $this->project->id,
+                'category_id'      => $this->category->id,
+                'transaction_date' => now()->format('Y-m-d'),
+                'type'             => 'pengeluaran',
+                'description'      => 'Pembelian bahan A',
+                'amount'           => 350000,
+                'payment_method'   => 'Cash',
+                'payment_stage'    => 'uang_muka',
+            ]);
+
+        $response->assertRedirect(route('transactions.index'));
+        $this->assertDatabaseHas('transactions', [
+            'user_id'          => $this->pegawai->id,
+            'project_id'       => $this->project->id,
+            'category_id'      => $this->category->id,
+            'status'           => 'pending',
+            'payment_group_id' => null,
+        ]);
+        $this->assertDatabaseCount('payment_groups', 0);
+    }
+
+    /** @test */
+    public function transaksi_dikelompokkan_hanya_setelah_di_acc_admin(): void
+    {
+        // 1. Pegawai ajukan transaksi 1
+        $trx1 = Transaction::factory()->create([
+            'user_id'          => $this->pegawai->id,
+            'project_id'       => $this->project->id,
+            'category_id'      => $this->category->id,
+            'type'             => 'pengeluaran',
+            'amount'           => 100000,
+            'status'           => 'pending',
+            'payment_group_id' => null,
+            'payment_stage'    => 'uang_muka',
+        ]);
+
+        // 2. Pegawai ajukan transaksi 2 dengan project dan category sama
+        $trx2 = Transaction::factory()->create([
+            'user_id'          => $this->pegawai->id,
+            'project_id'       => $this->project->id,
+            'category_id'      => $this->category->id,
+            'type'             => 'pengeluaran',
+            'amount'           => 200000,
+            'status'           => 'pending',
+            'payment_group_id' => null,
+            'payment_stage'    => 'proses',
+        ]);
+
+        // Keduanya belum punya group
+        $this->assertNull($trx1->fresh()->payment_group_id);
+        $this->assertNull($trx2->fresh()->payment_group_id);
+
+        // 3. Admin ACC transaksi 1
+        $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.approve', $trx1->id), [
+                'payment_stage' => 'uang_muka',
+            ]);
+
+        $trx1Fresh = $trx1->fresh();
+        $this->assertEquals('approved', $trx1Fresh->status);
+        $this->assertNotNull($trx1Fresh->payment_group_id);
+
+        // Transaksi 2 masih pending dan payment_group_id masih null
+        $trx2Fresh = $trx2->fresh();
+        $this->assertEquals('pending', $trx2Fresh->status);
+        $this->assertNull($trx2Fresh->payment_group_id);
+
+        // 4. Admin ACC transaksi 2
+        $this->actingAs($this->admin)
+            ->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class)
+            ->post(route('transactions.approve', $trx2->id), [
+                'payment_stage' => 'proses',
+            ]);
+
+        $trx2Fresh = $trx2->fresh();
+        $this->assertEquals('approved', $trx2Fresh->status);
+        // Transaksi 2 sekarang tergabung dalam kelompok yang sama dengan transaksi 1
+        $this->assertEquals($trx1Fresh->payment_group_id, $trx2Fresh->payment_group_id);
     }
 }

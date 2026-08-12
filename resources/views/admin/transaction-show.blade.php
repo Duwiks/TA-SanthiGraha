@@ -411,16 +411,16 @@
                                     }
                                 }
                             </script>
-                        @elseif($transaction->payment_stage)
+                        @else
                             <div class="flex items-center gap-2">
                                 <label class="text-xs font-semibold text-amber-700 whitespace-nowrap">Status Pembayaran:</label>
                                 <select name="payment_stage"
                                     class="px-3 py-2 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-xs font-semibold focus:ring-2 focus:ring-amber-400 outline-none">
                                     @if($targetGroup && $targetGroup->payment_status !== 'selesai')
-                                        <option value="proses"  @selected($transaction->payment_stage === 'proses')>Proses</option>
+                                        <option value="proses"  @selected(($transaction->payment_stage ?? 'proses') === 'proses')>Proses</option>
                                         <option value="selesai" @selected($transaction->payment_stage === 'selesai')>Selesai</option>
                                     @else
-                                        <option value="uang_muka" @selected($transaction->payment_stage === 'uang_muka')>Uang Muka</option>
+                                        <option value="uang_muka" @selected(($transaction->payment_stage ?? 'uang_muka') === 'uang_muka')>Uang Muka</option>
                                         <option value="selesai"   @selected($transaction->payment_stage === 'selesai')>Selesai</option>
                                     @endif
                                 </select>

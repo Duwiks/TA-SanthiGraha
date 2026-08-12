@@ -111,6 +111,15 @@ class TransactionController extends Controller
         $processedKeys = [];
 
         foreach ($rawTransactions as $trx) {
+            // JIKA STATUS BUKAN APPROVED (misal pending atau rejected) -> Jangan kelompokkan! Tampilkan mandiri
+            if ($trx->status !== 'approved') {
+                $trx->is_grouped = false;
+                $trx->group_receipts_count = 1;
+                $trx->group_total_amount = $trx->amount;
+                $consolidated->push($trx);
+                continue;
+            }
+
             $groupKey = $trx->payment_group_id
                 ? 'pg_' . $trx->payment_group_id
                 : 'pc_' . $trx->project_id . '_' . $trx->category_id . '_' . $trx->type;
@@ -120,11 +129,12 @@ class TransactionController extends Controller
             }
             $processedKeys[] = $groupKey;
 
-            // Ambil semua transaksi yang relevan dalam kelompok ini
+            // Ambil semua transaksi APPROVED dalam kelompok ini
             if ($trx->payment_group_id) {
-                $groupMembers = $rawTransactions->where('payment_group_id', $trx->payment_group_id);
+                $groupMembers = $rawTransactions->where('status', 'approved')->where('payment_group_id', $trx->payment_group_id);
             } else {
-                $groupMembers = $rawTransactions->where('project_id', $trx->project_id)
+                $groupMembers = $rawTransactions->where('status', 'approved')
+                    ->where('project_id', $trx->project_id)
                     ->where('category_id', $trx->category_id)
                     ->where('type', $trx->type);
             }
@@ -233,7 +243,8 @@ class TransactionController extends Controller
         $groupTransactions = collect([$transaction]);
         $totalGroupAmount = $transaction->amount;
 
-        if ($transaction->payment_group_id) {
+        // Hanya kelompokkan jika transaksi sudah approved dan punya payment_group_id
+        if ($transaction->status === 'approved' && $transaction->payment_group_id) {
             $paymentGroup = PaymentGroup::with([
                 'project',
                 'category',
@@ -248,21 +259,6 @@ class TransactionController extends Controller
             if ($paymentGroup && $paymentGroup->transactions->count() > 0) {
                 $groupTransactions = $paymentGroup->transactions;
                 $totalGroupAmount = $groupTransactions->sum('amount');
-            }
-        } else {
-            // Transaksi tanpa payment_group_id: cari semua transaksi approved dengan project, category, dan type yang sama
-            $sameCategoryTrx = Transaction::where('project_id', $transaction->project_id)
-                ->where('category_id', $transaction->category_id)
-                ->where('type', $transaction->type)
-                ->where('status', 'approved')
-                ->with(['user:id,name', 'approver:id,name'])
-                ->orderByDesc('transaction_date')
-                ->orderByDesc('id')
-                ->get();
-
-            if ($sameCategoryTrx->count() > 0) {
-                $groupTransactions = $sameCategoryTrx;
-                $totalGroupAmount = $sameCategoryTrx->sum('amount');
             }
         }
 
@@ -298,24 +294,23 @@ class TransactionController extends Controller
         $groupTransactions = collect([$transaction]);
         $totalGroupAmount = $transaction->amount;
 
-        if ($transaction->payment_group_id) {
+        // Hanya tampilkan grup jika transaksi sudah approved dan punya payment_group_id
+        if ($transaction->status === 'approved' && $transaction->payment_group_id) {
             $paymentGroup = PaymentGroup::with([
                 'project',
                 'category',
                 'transactions' => function ($q) {
                     $q->where('user_id', auth()->id())
+                      ->where('status', 'approved')
                       ->with(['user:id,name', 'approver:id,name'])
                       ->orderByDesc('transaction_date')
                       ->orderByDesc('id');
                 }
             ])->find($transaction->payment_group_id);
 
-            if ($paymentGroup) {
+            if ($paymentGroup && $paymentGroup->transactions->count() > 0) {
                 $groupTransactions = $paymentGroup->transactions;
-                $totalGroupAmount = $groupTransactions->where('status', 'approved')->sum('amount');
-                if ($totalGroupAmount == 0) {
-                    $totalGroupAmount = $groupTransactions->sum('amount');
-                }
+                $totalGroupAmount = $groupTransactions->sum('amount');
             }
         }
 
@@ -413,22 +408,25 @@ class TransactionController extends Controller
             $receiptPath = $this->compressAndSave($request->file('receipt_photo'), 'receipts');
         }
 
-        // Deteksi / buat Payment Group untuk pemasukan maupun pengeluaran
-        $action = $isAdmin ? $request->payment_group_action : null;
-        $label  = $isAdmin ? $request->payment_group_label  : null;
-        $paymentGroupId = $this->resolvePaymentGroup(
-            $request->project_id,
-            $request->category_id,
-            $request->type,
-            $action,
-            $label
-        );
+        // Deteksi / buat Payment Group HANYA jika admin
+        $paymentGroupId = null;
+        if ($isAdmin) {
+            $action = $request->payment_group_action;
+            $label  = $request->payment_group_label;
+            $paymentGroupId = $this->resolvePaymentGroup(
+                $request->project_id,
+                $request->category_id,
+                $request->type,
+                $action,
+                $label
+            );
+        }
 
         $stage = $request->payment_stage;
         if (!$isAdmin && $isExistingCompleted) {
             // Pegawai pada kelompok yang sudah selesai -> status null sampai divalidasi admin
             $stage = null;
-        } elseif ($hasActiveGroup && $stage === 'uang_muka' && $action !== 'baru') {
+        } elseif ($hasActiveGroup && $stage === 'uang_muka' && (!$isAdmin || $request->payment_group_action !== 'baru')) {
             // Safety net: normalisasi uang_muka → proses jika grup aktif berjalan & bukan aksi baru
             $stage = 'proses';
         } elseif (!$isAdmin && $hasActiveGroup) {
@@ -567,28 +565,31 @@ class TransactionController extends Controller
             'payment_group_label.required_if' => 'Label Payment Group wajib diisi saat membuat kelompok pembayaran baru.',
         ]);
 
-        $projectChanged  = (int) $request->project_id  !== (int) $transaction->project_id;
-        $categoryChanged = (int) $request->category_id !== (int) $transaction->category_id;
-        $typeChanged     = $request->type !== $transaction->type;
+        $paymentGroupId = null;
+        if ($isAdmin) {
+            $projectChanged  = (int) $request->project_id  !== (int) $transaction->project_id;
+            $categoryChanged = (int) $request->category_id !== (int) $transaction->category_id;
+            $typeChanged     = $request->type !== $transaction->type;
 
-        $paymentGroupId = $transaction->payment_group_id;
-        if ($projectChanged || $categoryChanged || $typeChanged || !$transaction->payment_group_id) {
-            if ($transaction->payment_group_id) {
-                PaymentGroup::find($transaction->payment_group_id)?->syncStatus();
+            $paymentGroupId = $transaction->payment_group_id;
+            if ($projectChanged || $categoryChanged || $typeChanged || !$transaction->payment_group_id) {
+                if ($transaction->payment_group_id) {
+                    PaymentGroup::find($transaction->payment_group_id)?->syncStatus();
+                }
+                $paymentGroupId = $this->resolvePaymentGroup(
+                    $request->project_id,
+                    $request->category_id,
+                    $request->type,
+                    $request->payment_group_action,
+                    $request->payment_group_label
+                );
             }
-            $paymentGroupId = $this->resolvePaymentGroup(
-                $request->project_id,
-                $request->category_id,
-                $request->type,
-                $isAdmin ? $request->payment_group_action : null,
-                $isAdmin ? $request->payment_group_label  : null
-            );
         }
 
         $stage = $request->payment_stage;
         if (!$isAdmin && $isExistingCompleted) {
             $stage = null;
-        } elseif ($hasActiveGroup && $stage === 'uang_muka' && $request->payment_group_action !== 'baru') {
+        } elseif ($hasActiveGroup && $stage === 'uang_muka' && (!$isAdmin || $request->payment_group_action !== 'baru')) {
             // Safety net: normalisasi uang_muka → proses jika grup aktif berjalan
             $stage = 'proses';
         } elseif (!$isAdmin && $hasActiveGroup) {
@@ -729,7 +730,7 @@ class TransactionController extends Controller
             'payment_group_label.required_if' => 'Label kelompok baru wajib diisi.',
         ]);
 
-        $paymentGroupId = $transaction->payment_group_id;
+        $paymentGroupId = null;
 
         // Resolusi Payment Group saat Approval
         if ($request->payment_group_action === 'baru') {
@@ -741,7 +742,7 @@ class TransactionController extends Controller
                 $request->payment_group_label
             );
         } elseif ($request->payment_group_action === 'lanjutkan') {
-            $paymentGroupId = $paymentGroupId ?: $this->resolvePaymentGroup(
+            $paymentGroupId = $this->resolvePaymentGroup(
                 $transaction->project_id,
                 $transaction->category_id,
                 $transaction->type,
@@ -749,7 +750,7 @@ class TransactionController extends Controller
                 null
             );
         } else {
-            // Direct approve: pastikan transaksi pending terhubung ke kelompok aktif terbaru
+            // Direct approve: cari kelompok aktif terbaru untuk proyek+kategori+tipe
             $latestGroup = PaymentGroup::where('project_id', $transaction->project_id)
                 ->where('category_id', $transaction->category_id)
                 ->where('type', $transaction->type)
@@ -757,14 +758,10 @@ class TransactionController extends Controller
                 ->first();
 
             if ($latestGroup) {
-                $currentGroup = $paymentGroupId ? PaymentGroup::find($paymentGroupId) : null;
-                // Jika kelompok lama sudah selesai tetapi ada kelompok baru yang aktif, re-route ke kelompok aktif
-                if ($currentGroup && $currentGroup->payment_status === 'selesai' && $latestGroup->id !== $currentGroup->id && $latestGroup->payment_status !== 'selesai') {
-                    $paymentGroupId = $latestGroup->id;
-                } elseif (!$paymentGroupId) {
-                    $paymentGroupId = $latestGroup->id;
-                }
+                // Gunakan latest group
+                $paymentGroupId = $latestGroup->id;
             } else {
+                // Buat PaymentGroup baru jika belum ada
                 $paymentGroupId = $this->resolvePaymentGroup(
                     $transaction->project_id,
                     $transaction->category_id,
@@ -783,6 +780,10 @@ class TransactionController extends Controller
 
         if ($request->filled('payment_stage')) {
             $updateData['payment_stage'] = $request->payment_stage;
+        } elseif (!$transaction->payment_stage) {
+            // Default stage jika belum ada: sesuaikan dengan grup
+            $group = PaymentGroup::find($paymentGroupId);
+            $updateData['payment_stage'] = ($group && $group->transactions()->where('status', 'approved')->count() > 0) ? 'proses' : 'uang_muka';
         }
 
         $transaction->update($updateData);
@@ -902,13 +903,6 @@ class TransactionController extends Controller
             ])->id;
         }
 
-        // Jika user yang menginput BUKAN admin (misal pegawai):
-        // Pegawai selalu menempel ke group existing, tidak pernah membuat record baru secara prematur!
-        if (auth()->check() && auth()->user()->role !== 'admin') {
-            return $existing->id;
-        }
-
-        // Sisi Admin:
         // Status belum Selesai → gabung ke kelompok aktif
         if ($existing->payment_status !== 'selesai') {
             return $existing->id;
